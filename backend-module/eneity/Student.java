@@ -2,6 +2,7 @@
 public class Student {
     private int id;
     private int userId;
+    private String studentNo;
     private String name;
     private String gender;
     private int classId;
