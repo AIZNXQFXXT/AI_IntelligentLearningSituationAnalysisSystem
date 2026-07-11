@@ -1,4 +1,4 @@
-package com.campus.backend.eneity;
+package com.campus.backend.entity;
 
 import lombok.Data;
 import java.time.LocalDateTime;

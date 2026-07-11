@@ -1,15 +1,17 @@
-package com.campus.backend.eneity;
+package com.campus.backend.entity;
 
 import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class TeachingTask {
+public class Exam {
     private int id;
-    private int teacherId;
-    private int classId;
-    private int courseId;
+    private String name;
+    private String type;
     private String semester;
+    private int classId;
+    private LocalDateTime examDate;
+    private int isArchived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isDeleted;

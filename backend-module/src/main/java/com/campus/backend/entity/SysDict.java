@@ -1,16 +1,15 @@
-package com.campus.backend.eneity;
+package com.campus.backend.entity;
 
 import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class User {
+public class SysDict {
     private int id;
-    private String userName;
-    private String password;
-    private String role;
-    private String avatar;
-    private String phone;
+    private String typeCode;
+    private String itemCode;
+    private String itemValue;
+    private int sortOrder;
     private int status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
