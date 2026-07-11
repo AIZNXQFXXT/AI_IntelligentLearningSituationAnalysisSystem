@@ -1,24 +1,24 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class OperationLog {
-    private int id;
+@EqualsAndHashCode(callSuper = true)
+@TableName("operation_log")
+public class OperationLog extends BaseEntity {
     private String username;
-    private int operatorId;
+    private Long operatorId;
     private String operation;
     private String targetType;
-    private int targetId;
+    private Long targetId;
     private String detail;
     private String oldData;
     private String newData;
     private String ip;
     private String userAgent;
-    private int durationMs;
+    private Long durationMs;
     private String resultStatus;
     private String failReason;
-    private LocalDateTime createdAt;
-    private boolean isDeleted;
 }

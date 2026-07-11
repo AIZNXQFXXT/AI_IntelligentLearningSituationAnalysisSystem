@@ -16,6 +16,11 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.9.22.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.campus</groupId>
             <artifactId>common-module</artifactId>
             <version>${project.version}</version>
