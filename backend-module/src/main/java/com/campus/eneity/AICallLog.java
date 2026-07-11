@@ -1,3 +1,8 @@
+package com.campus.eneity;
+
+import lombok.Data;
+import java.time.LocalDateTime;
+
 @Data
 public class AICallLog {
     private int id;

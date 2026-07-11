@@ -1,3 +1,8 @@
+package com.campus.eneity;
+
+import lombok.Data;
+import java.time.LocalDateTime;
+
 @Data
 public class Exam {
     private int id;
@@ -5,7 +10,7 @@ public class Exam {
     private String type;
     private String semester;
     private int classId;
-    private LocalDate examDate;
+    private LocalDateTime examDate;
     private int isArchived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
