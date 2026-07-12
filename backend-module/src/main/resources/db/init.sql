@@ -30,7 +30,7 @@ COMMENT ON COLUMN sys_user.status IS '1=启用 0=禁用';
 
 -- 插入默认管理员（密码: 123456）
 INSERT INTO sys_user (username, password, role, status)
-VALUES ('admin', '$10$sJtiAKrk0tL79NwzD6IA1e8IC75fn14YgEYf8Rl1PjjNjeht1RCeK', 'ADMIN', 1);
+VALUES ('admin', '$2a$10$FRwew0l4DX3kuZVHhsOOg.pEoWMdaO7KAYZEcZ2iPWn10HnRndWKa', 'ADMIN', 1);
 
 -- =====================================================
 -- 2. 班级信息
