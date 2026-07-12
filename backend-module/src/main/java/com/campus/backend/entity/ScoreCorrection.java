@@ -1,17 +1,19 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class ScoreCorrection {
-    private int id;
-    private int scoreId;
-    private double oldFinalScore;
-    private double newFinalScore;
+@EqualsAndHashCode(callSuper = true)
+@TableName("score_correction")
+public class ScoreCorrection extends BaseEntity {
+    private Long scoreId;
+    private BigDecimal oldFinalScore;
+    private BigDecimal newFinalScore;
     private String reason;
-    private int operatorId;
+    private Long operatorId;
     private LocalDateTime operatedAt;
-    private LocalDateTime createdAt;
-    private boolean isDeleted;
 }

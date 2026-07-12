@@ -1,17 +1,16 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class SysDict {
-    private int id;
+@EqualsAndHashCode(callSuper = true)
+@TableName("sys_dict")
+public class SysDict extends BaseEntity {
     private String typeCode;
     private String itemCode;
     private String itemValue;
-    private int sortOrder;
-    private int status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
+    private Integer sortOrder;
+    private Integer status;
 }

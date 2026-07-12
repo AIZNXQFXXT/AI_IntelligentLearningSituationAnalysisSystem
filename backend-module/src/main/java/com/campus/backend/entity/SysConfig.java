@@ -1,15 +1,14 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class SysConfig {
-    private int id;
+@EqualsAndHashCode(callSuper = true)
+@TableName("sys_config")
+public class SysConfig extends BaseEntity {
     private String configKey;
     private String configValue;
     private String description;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
 }

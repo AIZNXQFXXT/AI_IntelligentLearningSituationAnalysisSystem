@@ -1,20 +1,19 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class AIComment {
-    private int id;
-    private int studentId;
-    private int teacherId;
+@EqualsAndHashCode(callSuper = true)
+@TableName("ai_comment")
+public class AIComment extends BaseEntity {
+    private Long studentId;
+    private Long teacherId;
     private String semester;
     private String content;
-    private int isTeacherEdited;
+    private Integer isTeacherEdited;
     private String status;
     private String generatedBy;
-    private int tokensUsed;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
+    private Integer tokensUsed;
 }
