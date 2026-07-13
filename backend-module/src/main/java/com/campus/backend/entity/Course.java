@@ -1,17 +1,16 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class Course {
-    private int id;
+@EqualsAndHashCode(callSuper = true)
+@TableName("course")
+public class Course extends BaseEntity {
     private String name;
-    private String type;
-    private double credit;
+    private String type;         // ELECTIVE / REQUIRED / MAJOR
+    private Double credit;
     private String description;
-    private int status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
+    private Integer status;      // 1=启用 0=停用
 }

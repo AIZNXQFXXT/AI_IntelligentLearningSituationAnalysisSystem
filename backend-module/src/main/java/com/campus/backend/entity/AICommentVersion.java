@@ -1,16 +1,16 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class AICommentVersion {
-    private int id;
-    private int commentId;
-    private int versionNo;
+@EqualsAndHashCode(callSuper = true)
+@TableName("ai_comment_version")
+public class AICommentVersion extends BaseEntity {
+    private Long commentId;
+    private Integer versionNo;
     private String content;
     private String source;
-    private int tokensUsed;
-    private LocalDateTime createdAt;
-    private boolean isDeleted;
+    private Integer tokensUsed;
 }

@@ -1,25 +1,25 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import java.math.BigDecimal;
 
 @Data
-public class Score {
-    private int id;
-    private int studentId;
-    private int examId;
-    private int courseId;
-    private double regularScore;
-    private double examScore;
-    private double finalScore;
-    private int rankClass;
-    private int rankGrade;
-    private int isAbsent;
-    private int isCheat;
-    private String auditStatus;
-    private int enteredBy;
+@EqualsAndHashCode(callSuper = true)
+@TableName("score")
+public class Score extends BaseEntity {
+    private Long studentId;
+    private Long examId;
+    private Long courseId;
+    private BigDecimal regularScore;
+    private BigDecimal examScore;
+    private BigDecimal finalScore;
+    private Integer rankClass;
+    private Integer rankGrade;
+    private Integer isAbsent;
+    private Integer isCheat;
+    private String auditStatus;    // DRAFT / SUBMITTED / ARCHIVED
+    private Long enteredBy;
     private String reason;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
 }

@@ -1,18 +1,18 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import java.time.LocalDate;
 
 @Data
-public class Exam {
-    private int id;
+@EqualsAndHashCode(callSuper = true)
+@TableName("exam")
+public class Exam extends BaseEntity {
     private String name;
-    private String type;
+    private String type;         // MOCK / MIDTERM / FINAL / RETEST
     private String semester;
-    private int classId;
-    private LocalDateTime examDate;
-    private int isArchived;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
+    private Long classId;
+    private LocalDate examDate;
+    private Integer isArchived;
 }

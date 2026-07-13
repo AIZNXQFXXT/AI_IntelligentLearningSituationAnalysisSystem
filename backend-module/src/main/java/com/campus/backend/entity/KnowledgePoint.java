@@ -1,17 +1,16 @@
 package com.campus.backend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class KnowledgePoint {
-    private int id;
-    private int parentId;
+@EqualsAndHashCode(callSuper = true)
+@TableName("knowledge_point")
+public class KnowledgePoint extends BaseEntity {
+    private Long parentId;
     private String name;
     private String subjectType;
-    private int level;
-    private int sortOrder;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDeleted;
+    private Integer level;
+    private Integer sortOrder;
 }
