@@ -30,6 +30,7 @@ public class ClassServiceImpl implements ClassService {
     @Transactional
     public ClassInfo create(ClassDTO dto) {
         ClassInfo entity = classConverter.toEntity(dto);
+        entity.setStudentCount(0);
         entity.setCreatedAt(LocalDateTime.now());
         classMapper.insert(entity);
         return entity;
@@ -39,8 +40,7 @@ public class ClassServiceImpl implements ClassService {
     @Transactional
     public ClassInfo update(ClassDTO dto) {
         ClassInfo entity = classConverter.toEntity(dto);
-        entity.setStudentCount(0);
-        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
         classMapper.updateById(entity);
         return entity;
     }

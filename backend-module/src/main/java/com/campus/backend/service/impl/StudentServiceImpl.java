@@ -70,6 +70,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public Student update(StudentDTO dto) {
         Student entity = studentConverter.toEntity(dto);
+        entity.setUpdatedAt(LocalDateTime.now());
         studentMapper.updateById(entity);
         return entity;
     }
