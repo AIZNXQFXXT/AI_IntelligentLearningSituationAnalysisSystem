@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/exams")
 @AllArgsConstructor
 public class ExamController {
-    private ExamService examService;
+    private final ExamService examService;
 
     @PostMapping
     public ApiResponse<Exam> create(@RequestBody ExamDTO dto) {
