@@ -42,6 +42,12 @@ public class StudentController {
                 result.getRecords(), result.getTotal(), page, size));
     }
 
+    @PutMapping("/{id}/status")
+    public ApiResponse<Student> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
+        studentService.toggleStatus(id, status);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/export/excel")
     public ApiResponse<Void> exportExcel() {
         // EasyExcel 导出逻辑（见 ExcelUtil）

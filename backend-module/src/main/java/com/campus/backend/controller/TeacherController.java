@@ -1,6 +1,7 @@
 package com.campus.backend.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.campus.backend.entity.Student;
 import com.campus.backend.entity.Teacher;
 import com.campus.backend.service.TeacherService;
 import com.campus.common.dto.TeacherDTO;
@@ -42,7 +43,13 @@ public class TeacherController {
                 result.getRecords(), result.getTotal(), page, size));
     }
 
-    @GetMapping("/export/excel")
+    @PutMapping("/{id}/status")
+    public ApiResponse<Student> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
+        teacherService.toggleStatus(id, status);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/batch")
     public ApiResponse<Void> exportExcel() {
         // EasyExcel 导出逻辑（见 ExcelUtil）
         return ApiResponse.success();

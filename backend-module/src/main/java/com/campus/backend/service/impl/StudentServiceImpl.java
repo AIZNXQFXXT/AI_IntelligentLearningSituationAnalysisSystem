@@ -104,5 +104,8 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public void toggleStatus(Long id, Integer status) {
+        Student entity = studentMapper.selectById(id);
+        entity.setStatus(status);
+        studentMapper.updateById(entity);
     }
 }

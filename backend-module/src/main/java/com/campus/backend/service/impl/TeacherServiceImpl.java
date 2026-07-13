@@ -88,5 +88,8 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void toggleStatus(Long id, Integer status) {
+        Teacher entity = teacherMapper.selectById(id);
+        entity.setStatus(status);
+        teacherMapper.updateById(entity);
     }
 }
