@@ -94,6 +94,12 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public Student findByStudentNo(String studentNo) {
+        return studentMapper.selectOne(
+            new LambdaQueryWrapper<Student>().eq(Student::getStudentNo, studentNo));
+    }
+
+    @Override
     public IPage<Student> pageList(int page, int size, String keyword, Long classId, String role, Long userId) {
         Page<Student> p = new Page<>(page, size);
         LambdaQueryWrapper<Student> wrapper = new LambdaQueryWrapper<>();

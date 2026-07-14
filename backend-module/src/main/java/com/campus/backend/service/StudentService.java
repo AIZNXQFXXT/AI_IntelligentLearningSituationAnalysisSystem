@@ -10,6 +10,7 @@ public interface StudentService {
     Student update(StudentDTO dto);
     void delete(Long id);
     Student findById(Long id);
+    Student findByStudentNo(String studentNo);
     IPage<Student> pageList(int page, int size, String keyword, Long classId, String role, Long userId);
     void batchImport(MultipartFile file);  // EasyExcel 批量导入
     void toggleStatus(Long id, Integer status);
