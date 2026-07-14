@@ -8,5 +8,4 @@ public class DashboardVO {
     private long teacherCount;
     private long studentCount;
     private long courseCount;
-    private long pendingTaskCount;
 }

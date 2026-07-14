@@ -6,6 +6,7 @@ import com.campus.backend.service.StudentService;
 import com.campus.common.dto.StudentDTO;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/students")
 @AllArgsConstructor
 public class StudentController {
-    private StudentService studentService;
+    private final StudentService studentService;
 
     @PostMapping
     public ApiResponse<Student> create(@RequestBody StudentDTO dto) {
@@ -36,15 +37,24 @@ public class StudentController {
     public ApiResponse<PageResult<Student>> pageList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String keyword) {
-        IPage<Student> result = studentService.pageList(page, size, keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long classId,
+            HttpServletRequest request) {
+        String role = (String) request.getAttribute("role");
+        Long userId = (Long) request.getAttribute("userId");
+        IPage<Student> result = studentService.pageList(page, size, keyword, classId, role, userId);
         return ApiResponse.success(PageResult.of(
                 result.getRecords(), result.getTotal(), page, size));
     }
 
+    @PutMapping("/{id}/status")
+    public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
+        studentService.toggleStatus(id, status);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/export/excel")
     public ApiResponse<Void> exportExcel() {
-        // EasyExcel 导出逻辑（见 ExcelUtil）
         return ApiResponse.success();
     }
 }

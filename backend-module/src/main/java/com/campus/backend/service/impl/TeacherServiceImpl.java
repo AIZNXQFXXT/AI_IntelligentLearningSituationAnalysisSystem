@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.TeacherConverter;
-import com.campus.backend.entity.ClassInfo;
 import com.campus.backend.entity.Teacher;
 import com.campus.backend.entity.User;
 import com.campus.backend.mapper.TeacherMapper;
@@ -15,7 +14,6 @@ import com.campus.common.dto.TeacherDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -44,6 +42,7 @@ public class TeacherServiceImpl implements TeacherService {
         // 2. 创建 teacher（关联 user_id）
         Teacher entity = teacherConverter.toEntity(dto);
         entity.setUserId(user.getId());
+        entity.setCreatedAt(LocalDateTime.now());
         teacherMapper.insert(entity);
         return entity;
     }
@@ -52,6 +51,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional
     public Teacher update(TeacherDTO dto) {
         Teacher entity = teacherConverter.toEntity(dto);
+        entity.setUpdatedAt(LocalDateTime.now());
         teacherMapper.updateById(entity);
         return entity;
     }
@@ -77,6 +77,7 @@ public class TeacherServiceImpl implements TeacherService {
                     .or().like(Teacher::getDepartment, keyword)
                     .or().like(Teacher::getSubject, keyword);
         }
+        wrapper.orderByAsc(Teacher::getId);
         return teacherMapper.selectPage(p, wrapper);
     }
 
@@ -88,5 +89,8 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void toggleStatus(Long id, Integer status) {
+        Teacher entity = teacherMapper.selectById(id);
+        entity.setStatus(status);
+        teacherMapper.updateById(entity);
     }
 }
