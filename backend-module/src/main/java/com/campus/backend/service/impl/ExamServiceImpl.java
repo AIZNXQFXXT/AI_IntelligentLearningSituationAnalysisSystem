@@ -59,6 +59,7 @@ public class ExamServiceImpl implements ExamService {
                     .or().like(Exam::getType, keyword)
                     .or().like(Exam::getSemester, keyword);
         }
+        wrapper.orderByAsc(Exam::getId);
         return examMapper.selectPage(p, wrapper);
     }
 

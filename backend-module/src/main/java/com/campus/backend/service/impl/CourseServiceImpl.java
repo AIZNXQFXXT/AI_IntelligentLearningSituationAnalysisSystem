@@ -59,6 +59,7 @@ public class CourseServiceImpl implements CourseService {
             wrapper.like(Course::getName, keyword)
                     .or().like(Course::getType, keyword);
         }
+        wrapper.orderByAsc(Course::getId);
         return courseMapper.selectPage(p, wrapper);
     }
 

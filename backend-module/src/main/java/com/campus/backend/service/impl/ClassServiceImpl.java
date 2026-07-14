@@ -70,6 +70,7 @@ public class ClassServiceImpl implements ClassService {
             wrapper.like(ClassInfo::getClassName, keyword)
                     .or().like(ClassInfo::getGrade, keyword);
         }
+        wrapper.orderByAsc(ClassInfo::getId);
         return classMapper.selectPage(p, wrapper);
     }
 

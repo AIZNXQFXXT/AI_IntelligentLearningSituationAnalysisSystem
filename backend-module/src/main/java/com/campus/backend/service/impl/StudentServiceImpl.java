@@ -7,9 +7,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.StudentConverter;
 import com.campus.backend.entity.ClassInfo;
 import com.campus.backend.entity.Student;
+import com.campus.backend.entity.Teacher;
+import com.campus.backend.entity.TeachingTask;
 import com.campus.backend.entity.User;
 import com.campus.backend.mapper.ClassMapper;
 import com.campus.backend.mapper.StudentMapper;
+import com.campus.backend.mapper.TeacherMapper;
+import com.campus.backend.mapper.TeachingTaskMapper;
 import com.campus.backend.mapper.UserMapper;
 import com.campus.backend.security.PasswordEncoder;
 import com.campus.backend.service.StudentService;
@@ -22,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -31,6 +36,8 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final StudentConverter studentConverter;
     private final ClassMapper classMapper;
+    private final TeacherMapper teacherMapper;
+    private final TeachingTaskMapper teachingTaskMapper;
 
     @Override
     @Transactional
@@ -87,13 +94,28 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public IPage<Student> pageList(int page, int size, String keyword) {
+    public IPage<Student> pageList(int page, int size, String keyword, Long classId, String role, Long userId) {
         Page<Student> p = new Page<>(page, size);
         LambdaQueryWrapper<Student> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
-            wrapper.like(Student::getName, keyword)
-                    .or().like(Student::getStudentNo, keyword);
+            wrapper.and(w -> w.like(Student::getName, keyword)
+                    .or().like(Student::getStudentNo, keyword));
         }
+        if (classId != null) {
+            wrapper.eq(Student::getClassId, classId);
+        } else if ("TEACHER".equals(role) && userId != null) {
+            Teacher teacher = teacherMapper.selectOne(
+                    new LambdaQueryWrapper<Teacher>().eq(Teacher::getUserId, userId));
+            if (teacher != null) {
+                List<TeachingTask> tasks = teachingTaskMapper.selectList(
+                        new LambdaQueryWrapper<TeachingTask>().eq(TeachingTask::getTeacherId, teacher.getId()));
+                List<Long> classIds = tasks.stream().map(TeachingTask::getClassId).distinct().toList();
+                if (!classIds.isEmpty()) {
+                    wrapper.in(Student::getClassId, classIds);
+                }
+            }
+        }
+        wrapper.orderByAsc(Student::getId);
         return studentMapper.selectPage(p, wrapper);
     }
 

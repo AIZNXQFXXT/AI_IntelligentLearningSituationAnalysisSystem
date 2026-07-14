@@ -57,6 +57,7 @@ public class TeachingTaskServiceImpl implements TeachingTaskService {
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(TeachingTask::getSemester, keyword);
         }
+        wrapper.orderByAsc(TeachingTask::getId);
         return teachingTaskMapper.selectPage(p, wrapper);
     }
 

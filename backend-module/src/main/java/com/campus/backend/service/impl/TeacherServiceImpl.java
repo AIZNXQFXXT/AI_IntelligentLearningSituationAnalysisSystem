@@ -77,6 +77,7 @@ public class TeacherServiceImpl implements TeacherService {
                     .or().like(Teacher::getDepartment, keyword)
                     .or().like(Teacher::getSubject, keyword);
         }
+        wrapper.orderByAsc(Teacher::getId);
         return teacherMapper.selectPage(p, wrapper);
     }
 
