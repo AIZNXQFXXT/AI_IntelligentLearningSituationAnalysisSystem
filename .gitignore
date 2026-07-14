@@ -7,3 +7,5 @@ build/
 *.yml
 .log
 logs/
+.xlsx
+test/

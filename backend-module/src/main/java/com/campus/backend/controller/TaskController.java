@@ -7,7 +7,6 @@ import com.campus.backend.service.StudentService;
 import com.campus.backend.service.TaskService;
 import com.campus.common.vo.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -22,17 +21,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/tasks")
-@AllArgsConstructor
+@RequestMapping("/api/scores")
 public class TaskController {
 
     private final TaskService taskService;
     private final ScoreService scoreService;
     private final StudentService studentService;
-    @Qualifier("importExecutor")
     private final ThreadPoolTaskExecutor importExecutor;
 
-    @PostMapping(value = "/import-scores", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public TaskController(TaskService taskService, ScoreService scoreService,
+                          StudentService studentService,
+                          @Qualifier("importExecutor") ThreadPoolTaskExecutor importExecutor) {
+        this.taskService = taskService;
+        this.scoreService = scoreService;
+        this.studentService = studentService;
+        this.importExecutor = importExecutor;
+    }
+
+    @PostMapping(value = "/batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Map<String, Long>> importScores(
             @RequestParam("file") MultipartFile file,
             @RequestParam("examId") Long examId,

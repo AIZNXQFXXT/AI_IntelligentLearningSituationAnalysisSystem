@@ -11,9 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,8 +34,7 @@ public class ScoreImportTask implements Runnable {
     public void run() {
         Path tempFile = null;
         try {
-            String path = fileUrl.replace("file://", "").replace("file:", "");
-            tempFile = Paths.get(path);
+            tempFile = Path.of(URI.create(fileUrl));
 
             List<ScoreRow> rows;
             try (InputStream is = Files.newInputStream(tempFile)) {
@@ -74,8 +73,12 @@ public class ScoreImportTask implements Runnable {
             result.put("failed", failed);
             result.put("errors", errors);
             taskService.complete(taskId, new ObjectMapper().writeValueAsString(result));
-        } catch (Exception e) {
-            taskService.fail(taskId, e.getMessage() != null ? e.getMessage() : "未知错误");
+        } catch (Throwable e) {
+            try {
+                taskService.fail(taskId, e.getClass().getName() + ": " + (e.getMessage() != null ? e.getMessage() : ""));
+            } catch (Throwable ignored) {
+                // fail() also failed — nothing more we can do
+            }
         } finally {
             if (tempFile != null) {
                 try { Files.deleteIfExists(tempFile); } catch (Exception ignored) {}

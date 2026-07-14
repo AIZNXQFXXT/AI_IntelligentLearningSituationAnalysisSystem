@@ -5,6 +5,8 @@ import com.campus.backend.mapper.TaskRecordMapper;
 import com.campus.backend.service.TaskService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -35,6 +37,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateProgress(Long taskId, int progress, int current, int total) {
         TaskRecord record = taskRecordMapper.selectById(taskId);
         if (record != null) {
@@ -46,6 +49,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void complete(Long taskId, String resultJson) {
         TaskRecord record = taskRecordMapper.selectById(taskId);
         if (record != null) {
@@ -57,6 +61,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void fail(Long taskId, String error) {
         TaskRecord record = taskRecordMapper.selectById(taskId);
         if (record != null) {
