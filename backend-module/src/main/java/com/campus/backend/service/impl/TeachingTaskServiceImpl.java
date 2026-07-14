@@ -3,37 +3,51 @@ package com.campus.backend.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.campus.backend.entity.Exam;
+import com.campus.backend.converter.TeachingTaskConverter;
 import com.campus.backend.entity.TeachingTask;
 import com.campus.backend.mapper.TeachingTaskMapper;
 import com.campus.backend.service.TeachingTaskService;
+import com.campus.common.dto.TeachingTaskDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class TeachingTaskServiceImpl implements TeachingTaskService {
     private final TeachingTaskMapper teachingTaskMapper;
+    private final TeachingTaskConverter teachingTaskConverter;
 
     @Override
     @Transactional
-    public TeachingTask create(Long teacherId, Long classId, Long courseId, String semester) {
-        TeachingTask teachingTask = new TeachingTask(teacherId, classId, courseId, semester);
-        teachingTask.setCreatedAt(LocalDateTime.now());
-        teachingTask.setUpdatedAt(LocalDateTime.now());
-        teachingTaskMapper.insert(teachingTask);
-        return teachingTask;
+    public TeachingTask create(TeachingTaskDTO dto) {
+        TeachingTask entity = teachingTaskConverter.toEntity(dto);
+        entity.setCreatedAt(LocalDateTime.now());
+        teachingTaskMapper.insert(entity);
+        return entity;
+    }
+
+    @Override
+    @Transactional
+    public TeachingTask update(TeachingTaskDTO dto) {
+        TeachingTask entity = teachingTaskConverter.toEntity(dto);
+        entity.setUpdatedAt(LocalDateTime.now());
+        teachingTaskMapper.updateById(entity);
+        return entity;
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
         teachingTaskMapper.deleteById(id);
+    }
+
+    @Override
+    public TeachingTask findById(Long id) {
+        return teachingTaskMapper.selectById(id);
     }
 
     @Override
@@ -48,23 +62,15 @@ public class TeachingTaskServiceImpl implements TeachingTaskService {
 
     @Override
     public List<TeachingTask> findByTeacher(Long teacherId) {
-        ArrayList<TeachingTask> teachingTasks = new ArrayList<>();
-        TeachingTask teachingTask;
-        do {
-            teachingTask = teachingTaskMapper.selectById(teacherId);
-            teachingTasks.add(teachingTask);
-        } while (teachingTask != null);
-        return teachingTasks;
+        LambdaQueryWrapper<TeachingTask> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TeachingTask::getTeacherId, teacherId);
+        return teachingTaskMapper.selectList(wrapper);
     }
 
     @Override
     public List<TeachingTask> findByClass(Long classId) {
-        ArrayList<TeachingTask> teachingTasks = new ArrayList<>();
-        TeachingTask teachingTask;
-        do {
-            teachingTask = teachingTaskMapper.selectById(classId);
-            teachingTasks.add(teachingTask);
-        } while (teachingTask != null);
-        return teachingTasks;
+        LambdaQueryWrapper<TeachingTask> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TeachingTask::getClassId, classId);
+        return teachingTaskMapper.selectList(wrapper);
     }
 }
