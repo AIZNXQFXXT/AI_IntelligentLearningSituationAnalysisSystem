@@ -16,10 +16,11 @@ client-module/   JavaFX/FXML desktop client
 # compile everything (required for multi-module)
 mvn compile -DskipTests
 
-# run backend
+# run backend (JAVA_HOME must be set on Linux)
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 mvn compile -DskipTests && mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
 
-# single test class (pure mockito, no Spring context)
+# single test class
 mvn test -pl backend-module -Dtest=UserControllerTest -DfailIfNoTests=false
 ```
 
@@ -29,7 +30,7 @@ Default admin: `admin / 123456`
 
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
 - **Entity → DTO**: manual `*Converter` per domain, no MapStruct
-- **Validation groups**: `Create.class` / `Update.class` on request DTOs
+- **Validation groups**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs (not `@Valid`)
 - **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
 - **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Login: `username` + `password`.
 - **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`
@@ -89,6 +90,17 @@ PUT  /api/auth/password  → body: {oldPassword, newPassword}
 - Logout stores token in Redis key `blacklist:{token}` with TTL matching remaining validity
 - Interceptor checks Redis blacklist before accepting any token
 
+## Stats Endpoints
+
+```
+GET /api/stats/class/{classId}?examId=&courseId=            → ClassStatsVO
+GET /api/stats/score-distribution?examId=&courseId=&classId= → List<ScoreDistributionVO>
+GET /api/stats/ranking?examId=&courseId=&classId=            → List<RankingItemVO>
+GET /api/stats/trend?classId=&courseId=                      → List<TrendItemVO>
+```
+
+StatsController uses `LambdaQueryWrapper` + Java computation — no raw SQL.
+
 ## Known Pitfalls
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — auto-fill is dead. Set timestamps manually in service code.
@@ -97,3 +109,4 @@ PUT  /api/auth/password  → body: {oldPassword, newPassword}
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
 - **No AI controllers/services**: AI tables/entities exist but no DeepSeek integration yet.
 - **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `{"status": 1}` and convert via `convertStatus()` (1→ARCHIVED, 2→SUBMITTED, default→DRAFT).
+- **JAVA_HOME**: On Linux, `mvn spring-boot:run` may fail without JAVA_HOME set. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
