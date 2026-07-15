@@ -1,20 +1,42 @@
 package com.campus.backend.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.campus.backend.async.TeacherImportTask;
 import com.campus.backend.entity.Student;
+import com.campus.backend.entity.TaskRecord;
 import com.campus.backend.entity.Teacher;
 import com.campus.backend.service.TeacherService;
+import com.campus.backend.service.TaskService;
 import com.campus.common.dto.TeacherDTO;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
-import lombok.AllArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/teachers")
-@AllArgsConstructor
 public class TeacherController {
     private final TeacherService teacherService;
+    private final TaskService taskService;
+    private final ThreadPoolTaskExecutor importExecutor;
+
+    public TeacherController(TeacherService teacherService, TaskService taskService,
+                             @Qualifier("importExecutor") ThreadPoolTaskExecutor importExecutor) {
+        this.teacherService = teacherService;
+        this.taskService = taskService;
+        this.importExecutor = importExecutor;
+    }
 
     @PostMapping
     public ApiResponse<Teacher> create(@RequestBody TeacherDTO dto) {
@@ -47,6 +69,28 @@ public class TeacherController {
     public ApiResponse<Student> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         teacherService.toggleStatus(id, status);
         return ApiResponse.success();
+    }
+
+    @PostMapping(value = "/batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Map<String, Long>> batchImport(
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request) throws Exception {
+        Long teacherId = (Long) request.getAttribute("userId");
+
+        String tempDir = System.getProperty("java.io.tmpdir");
+        String fileName = "teacher_import_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = Paths.get(tempDir, fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        TaskRecord task = taskService.createTask("TEACHER_IMPORT", null);
+
+        TeacherImportTask importTask = new TeacherImportTask(
+                task.getId(), filePath.toUri().toString(), teacherService, taskService);
+        importExecutor.submit(importTask);
+
+        Map<String, Long> result = new HashMap<>();
+        result.put("taskId", task.getId());
+        return ApiResponse.success(result);
     }
 
     @GetMapping("/batch")
