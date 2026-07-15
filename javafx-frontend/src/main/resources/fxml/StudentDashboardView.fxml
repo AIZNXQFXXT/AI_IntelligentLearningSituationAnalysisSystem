@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aicampus.controller.StudentDashboardController"
+      spacing="20" prefWidth="900">
+
+    <Label text="学生控制台" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <!-- Stat Cards -->
+    <HBox spacing="20">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="最新平均分"/>
+            <Label fx:id="valueAvgScore" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="预警数量"/>
+            <Label fx:id="valueWarnings" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="欢迎"/>
+            <Label fx:id="valueUsername" styleClass="stat-card-value" text="--"/>
+        </VBox>
+    </HBox>
+
+    <!-- Recent Scores + Warnings -->
+    <HBox spacing="20">
+        <!-- Recent Scores -->
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label text="最近成绩" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <TableView fx:id="scoreTable" prefHeight="200">
+                <columns>
+                <TableColumn fx:id="colCourseId" text="课程ID" prefWidth="80"/>
+                <TableColumn fx:id="colFinalScore" text="成绩" prefWidth="80"/>
+                <TableColumn fx:id="colRankClass" text="班级排名" prefWidth="90"/>
+                <TableColumn fx:id="colRankGrade" text="年级排名" prefWidth="90"/>
+                </columns>
+            </TableView>
+            <Label fx:id="noScoreLabel" text="暂无成绩数据" visible="false"
+                   style="-fx-text-fill: #909399; -fx-alignment: CENTER;"/>
+        </VBox>
+        <!-- Recent Warnings -->
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label text="我的预警" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <TableView fx:id="warningTable" prefHeight="200">
+                <columns>
+                <TableColumn fx:id="colSemester" text="学期" prefWidth="100"/>
+                <TableColumn fx:id="colRiskLevel" text="等级" prefWidth="80"/>
+                <TableColumn fx:id="colRiskReason" text="原因" prefWidth="200"/>
+                <TableColumn fx:id="colHandleStatus" text="状态" prefWidth="80"/>
+                </columns>
+            </TableView>
+            <Label fx:id="noWarningLabel" text="暂无预警信息" visible="false"
+                   style="-fx-text-fill: #909399; -fx-alignment: CENTER;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Feature Navigation Cards -->
+    <HBox spacing="20">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
+              onMouseClicked="#goToScores" style="-fx-cursor: hand;">
+            <Label text="成绩查询" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
+            <Label text="查看各科成绩和班级排名" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
+              onMouseClicked="#goToAnalysis" style="-fx-cursor: hand;">
+            <Label text="成绩分析" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
+            <Label text="查看成绩趋势和能力雷达图" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
+              onMouseClicked="#goToDiagnosis" style="-fx-cursor: hand;">
+            <Label text="诊断报告" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
+            <Label text="查看AI学情诊断分析" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        </VBox>
+    </HBox>
+    <HBox spacing="20">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
+              onMouseClicked="#goToAdvice" style="-fx-cursor: hand;">
+            <Label text="学习建议" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
+            <Label text="查看个性化学习提升方案" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
+              onMouseClicked="#goToComment" style="-fx-cursor: hand;">
+            <Label text="期末评语" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
+            <Label text="查看教师评语" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
+              onMouseClicked="#goToRisk" style="-fx-cursor: hand;">
+            <Label text="我的预警" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
+            <Label text="查看学业预警信息" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        </VBox>
+    </HBox>
+</VBox>

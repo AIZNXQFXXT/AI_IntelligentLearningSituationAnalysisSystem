@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aicampus.controller.StudentScoresController"
+      spacing="0" prefWidth="900" styleClass="crud-card">
+
+    <HBox styleClass="crud-card-header" alignment="CENTER_LEFT" spacing="10">
+        <Label text="成绩查询"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <Label text="学期:"/>
+        <ComboBox fx:id="semesterFilter" prefWidth="150"/>
+    </HBox>
+
+    <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <Label fx:id="emptyLabel" text="暂无成绩数据" visible="false" managed="false"
+               style="-fx-text-fill: #999; -fx-font-size: 14;" VBox.vgrow="ALWAYS"
+               alignment="CENTER"/>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" prefHeight="500">
+            <columns>
+                <TableColumn fx:id="colCourseId" text="课程ID" prefWidth="80"/>
+                <TableColumn fx:id="colRegular" text="平时分" prefWidth="100"/>
+                <TableColumn fx:id="colExam" text="卷面分" prefWidth="100"/>
+                <TableColumn fx:id="colFinal" text="总评成绩" prefWidth="100"/>
+                <TableColumn fx:id="colRankClass" text="班级排名" prefWidth="100"/>
+                <TableColumn fx:id="colRankGrade" text="年级排名" prefWidth="100"/>
+                <TableColumn fx:id="colAudit" text="审核状态" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

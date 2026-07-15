@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aicampus.controller.TeacherDashboardController"
+      spacing="20" prefWidth="900">
+
+    <Label text="教师控制台" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <!-- Stat Cards -->
+    <HBox spacing="20">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="所带学生数"/>
+            <Label fx:id="valueStudents" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="待处理预警"/>
+            <Label fx:id="valueWarnings" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="用户名"/>
+            <Label fx:id="valueUsername" styleClass="stat-card-value" text="--"/>
+        </VBox>
+    </HBox>
+
+    <!-- Quick Actions + Feature Description -->
+    <HBox spacing="20">
+        <!-- Quick Actions -->
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12">
+            <Label text="快捷操作" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <VBox spacing="12">
+                <Button text="成绩录入" styleClass="quick-action-btn" onAction="#goToScoreEntry"/>
+                <Button text="批量导入" styleClass="quick-action-btn" onAction="#goToScoreImport"/>
+                <Button text="AI诊断" styleClass="quick-action-btn" onAction="#goToDiagnosis"/>
+                <Button text="评语管理" styleClass="quick-action-btn" onAction="#goToComment"/>
+            </VBox>
+        </VBox>
+        <!-- Feature Description -->
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label text="功能说明" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <GridPane hgap="16" vgap="8">
+                <Label text="本班学生" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label text="查看所带班级学生花名册和360度画像" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Label text="成绩录入" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label text="单条录入或Excel批量导入学生成绩" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label text="班级统计" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label text="查看班级平均分、排名、分数分布等" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <Label text="AI诊断" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <Label text="生成学情诊断报告和个性化评语" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            </GridPane>
+        </VBox>
+    </HBox>
+</VBox>

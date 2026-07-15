@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aicampus.controller.ClassManagementController"
+      spacing="0" prefWidth="900" styleClass="crud-card">
+
+    <HBox styleClass="crud-card-header" alignment="CENTER_LEFT">
+        <Label text="班级管理" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <HBox spacing="12" alignment="CENTER_RIGHT">
+            <TextField fx:id="keywordField" promptText="搜索班级/年级"
+                       prefWidth="200" onKeyPressed="#onSearchKeyPressed" styleClass="crud-search"/>
+            <Button text="新增班级" styleClass="btn-primary" onAction="#handleCreate"/>
+        </HBox>
+    </HBox>
+
+    <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="80"/>
+                <TableColumn fx:id="colGrade" text="年级" prefWidth="120"/>
+                <TableColumn fx:id="colClassName" text="班级名称" prefWidth="200"/>
+                <TableColumn fx:id="colHeadTeacherId" text="班主任ID" prefWidth="100"/>
+                <TableColumn fx:id="colStudentCount" text="学生人数" prefWidth="100"/>
+                <TableColumn fx:id="colCreatedAt" text="创建时间" prefWidth="180"/>
+                <TableColumn fx:id="colActions" text="操作" prefWidth="180"/>
+            </columns>
+        </TableView>
+        <Pagination fx:id="pagination" styleClass="crud-pagination"/>
+    </VBox>
+</VBox>

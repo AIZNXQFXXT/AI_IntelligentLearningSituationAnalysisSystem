@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aicampus.controller.ScoreEntryController"
+      spacing="0" prefWidth="900" styleClass="crud-card">
+
+    <Label text="成绩录入" styleClass="crud-card-header"/>
+
+    <HBox styleClass="crud-card-body" spacing="10" padding="10" alignment="CENTER_LEFT">
+        <Label text="考试:"/>
+        <ComboBox fx:id="examCombo" prefWidth="150"/>
+        <Label text="课程:"/>
+        <ComboBox fx:id="courseCombo" prefWidth="150"/>
+        <Label text="班级:"/>
+        <ComboBox fx:id="classCombo" prefWidth="150"/>
+        <Button fx:id="loadBtn" text="加载学生" onAction="#handleLoadStudents" styleClass="btn-primary"/>
+    </HBox>
+
+    <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" prefHeight="450">
+            <columns>
+                <TableColumn fx:id="colStudentNo" text="学号" prefWidth="120"/>
+                <TableColumn fx:id="colName" text="姓名" prefWidth="100"/>
+                <TableColumn fx:id="colRegular" text="平时分" prefWidth="120"/>
+                <TableColumn fx:id="colExam" text="卷面分" prefWidth="120"/>
+                <TableColumn fx:id="colAction" text="操作" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

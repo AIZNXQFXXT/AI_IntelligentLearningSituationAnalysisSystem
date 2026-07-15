@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aicampus.controller.StudentDiagnosisController"
+      spacing="0" prefWidth="900" styleClass="crud-card">
+
+    <Label text="诊断报告" styleClass="crud-card-header"/>
+
+    <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <Label fx:id="emptyLabel" text="暂无诊断报告" visible="false" managed="false"
+               style="-fx-text-fill: #999; -fx-font-size: 14;" VBox.vgrow="ALWAYS"
+               alignment="CENTER"/>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" prefHeight="500">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colSemester" text="学期" prefWidth="120"/>
+                <TableColumn fx:id="colRiskLevel" text="风险等级" prefWidth="100"/>
+                <TableColumn fx:id="colDiagnosis" text="诊断摘要" prefWidth="300"/>
+                <TableColumn fx:id="colCreatedAt" text="创建时间" prefWidth="160"/>
+                <TableColumn fx:id="colAction" text="操作" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

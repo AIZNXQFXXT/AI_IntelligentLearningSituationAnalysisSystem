@@ -1,0 +1,232 @@
+package com.aicampus.controller;
+
+import com.aicampus.model.PageResult;
+import com.aicampus.model.Teacher;
+import com.aicampus.service.TeacherService;
+import com.aicampus.util.CrudHelper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
+
+import java.io.File;
+
+public class TeacherManagementController {
+
+    @FXML private TextField keywordField;
+    @FXML private TableView<Teacher> table;
+    @FXML private TableColumn<Teacher, Integer> colId;
+    @FXML private TableColumn<Teacher, String> colTeacherNo;
+    @FXML private TableColumn<Teacher, String> colName;
+    @FXML private TableColumn<Teacher, String> colTitle;
+    @FXML private TableColumn<Teacher, String> colSubject;
+    @FXML private TableColumn<Teacher, String> colDepartment;
+    @FXML private TableColumn<Teacher, String> colEducation;
+    @FXML private TableColumn<Teacher, Void> colActions;
+    @FXML private Pagination pagination;
+
+    private final ObservableList<Teacher> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
+
+    @FXML
+    public void initialize() {
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colTeacherNo.setCellValueFactory(new PropertyValueFactory<>("teacherNo"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
+        colSubject.setCellValueFactory(new PropertyValueFactory<>("subject"));
+        colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
+        colEducation.setCellValueFactory(new PropertyValueFactory<>("education"));
+
+        colActions.setCellFactory(param -> new TableCell<>() {
+            {
+                Button editBtn = new Button("编辑");
+                editBtn.getStyleClass().addAll("btn-edit", "btn-sm");
+                Button deleteBtn = new Button("删除");
+                deleteBtn.getStyleClass().addAll("btn-delete", "btn-sm");
+                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
+                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
+                HBox box = new HBox(8, editBtn, deleteBtn);
+                box.setAlignment(Pos.CENTER);
+                setGraphic(box);
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : getGraphic());
+            }
+        });
+
+        table.setItems(tableData);
+        loadData();
+    }
+
+    private void loadData() {
+        String keyword = keywordField.getText();
+        Task<PageResult<Teacher>> task = new Task<>() {
+            @Override
+            protected PageResult<Teacher> call() throws Exception {
+                return TeacherService.getPage(currentPage, pageSize, keyword);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            PageResult<Teacher> result = task.getValue();
+            tableData.clear();
+            tableData.addAll(result.getRecords());
+            totalItems = result.getTotal();
+            updatePagination();
+        });
+        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
+        new Thread(task).start();
+    }
+
+    private void updatePagination() {
+        int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+        if (pageCount < 1) pageCount = 1;
+        pagination.setPageCount(pageCount);
+        pagination.setCurrentPageIndex(currentPage - 1);
+        pagination.setPageFactory(pageIndex -> {
+            if (pageIndex + 1 != currentPage) {
+                currentPage = pageIndex + 1;
+                loadData();
+            }
+            return new Label("");
+        });
+    }
+
+    @FXML
+    private void onSearchKeyPressed(javafx.scene.input.KeyEvent event) {
+        if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+            currentPage = 1;
+            loadData();
+        }
+    }
+
+    @FXML
+    private void handleCreate() { showFormDialog("新增教师", null); }
+
+    private void handleEdit(Teacher item) { showFormDialog("编辑教师", item); }
+
+    private void showFormDialog(String title, Teacher existing) {
+        Dialog<Teacher> dialog = new Dialog<>();
+        dialog.setTitle(title);
+
+        TextField teacherNoField = new TextField();
+        TextField nameField = new TextField();
+        TextField titleField = new TextField();
+        TextField subjectField = new TextField();
+        TextField educationField = new TextField();
+        TextField departmentField = new TextField();
+        TextField usernameField = new TextField();
+        PasswordField passwordField = new PasswordField();
+
+        if (existing != null) {
+            teacherNoField.setText(existing.getTeacherNo());
+            nameField.setText(existing.getName());
+            titleField.setText(existing.getTitle());
+            subjectField.setText(existing.getSubject());
+            educationField.setText(existing.getEducation());
+            departmentField.setText(existing.getDepartment());
+            teacherNoField.setDisable(true);
+        }
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(12);
+        grid.setPadding(new Insets(20));
+        int row = 0;
+        grid.add(new Label("工号:"), 0, row); grid.add(teacherNoField, 1, row++);
+        grid.add(new Label("姓名:"), 0, row); grid.add(nameField, 1, row++);
+        grid.add(new Label("职称:"), 0, row); grid.add(titleField, 1, row++);
+        grid.add(new Label("学科:"), 0, row); grid.add(subjectField, 1, row++);
+        grid.add(new Label("学历:"), 0, row); grid.add(educationField, 1, row++);
+        grid.add(new Label("部门:"), 0, row); grid.add(departmentField, 1, row++);
+        if (existing == null) {
+            grid.add(new Label("用户名:"), 0, row); grid.add(usernameField, 1, row++);
+            grid.add(new Label("密码:"), 0, row); grid.add(passwordField, 1, row++);
+        }
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
+
+        dialog.setResultConverter(button -> {
+            if (button == ButtonType.OK) {
+                if (teacherNoField.getText().isEmpty() || nameField.getText().isEmpty()) {
+                    CrudHelper.showError("请填写必填项");
+                    return null;
+                }
+                if (existing == null && (usernameField.getText().isEmpty() || passwordField.getText().isEmpty())) {
+                    CrudHelper.showError("请填写用户名和密码");
+                    return null;
+                }
+                Teacher t = existing != null ? existing : new Teacher();
+                t.setTeacherNo(teacherNoField.getText());
+                t.setName(nameField.getText());
+                t.setTitle(titleField.getText());
+                t.setSubject(subjectField.getText());
+                t.setEducation(educationField.getText());
+                t.setDepartment(departmentField.getText());
+                return t;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(result -> {
+            Task<Void> saveTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    if (existing != null) TeacherService.update(existing.getId(), result);
+                    else TeacherService.create(result);
+                    return null;
+                }
+            };
+            saveTask.setOnSucceeded(e -> {
+                CrudHelper.showAlert(existing != null ? "更新成功" : "新增成功");
+                loadData();
+            });
+            saveTask.setOnFailed(e -> CrudHelper.showError("操作失败"));
+            new Thread(saveTask).start();
+        });
+    }
+
+    @FXML
+    private void handleBatchImport() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("选择Excel文件");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel文件", "*.xlsx", "*.xls"));
+        File file = chooser.showOpenDialog(table.getScene().getWindow());
+        if (file != null) {
+            Task<Void> task = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    TeacherService.batchImport(file.toPath());
+                    return null;
+                }
+            };
+            task.setOnSucceeded(e -> { CrudHelper.showAlert("导入成功"); loadData(); });
+            task.setOnFailed(e -> CrudHelper.showError("导入失败"));
+            new Thread(task).start();
+        }
+    }
+
+    private void handleDelete(Teacher item) {
+        CrudHelper.confirmDelete(selected -> {
+            Task<Void> task = new Task<>() {
+                @Override
+                protected Void call() throws Exception { TeacherService.delete(selected.getId()); return null; }
+            };
+            task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
+            task.setOnFailed(e -> CrudHelper.showError("删除失败"));
+            new Thread(task).start();
+        }, item);
+    }
+}
