@@ -10,7 +10,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
@@ -64,15 +67,5 @@ public class TaskController {
         Map<String, Long> result = new HashMap<>();
         result.put("taskId", task.getId());
         return ApiResponse.success(result);
-    }
-
-    @GetMapping("/{id}/progress")
-    public ApiResponse<TaskRecord> getProgress(@PathVariable Long id) {
-        return ApiResponse.success(taskService.getProgress(id));
-    }
-
-    @GetMapping("/{id}/result")
-    public ApiResponse<TaskRecord> getResult(@PathVariable Long id) {
-        return ApiResponse.success(taskService.getResult(id));
     }
 }

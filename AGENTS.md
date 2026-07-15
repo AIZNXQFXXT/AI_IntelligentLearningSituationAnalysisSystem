@@ -18,11 +18,18 @@ mvn compile -DskipTests
 
 # run backend (JAVA_HOME must be set on Linux)
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-mvn compile -DskipTests && mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
+mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
 
 # single test class
 mvn test -pl backend-module -Dtest=UserControllerTest -DfailIfNoTests=false
 ```
+
+> **CRITICAL**: Adding/editing VO/DTO classes in `common-module` requires installing the JAR to the local Maven repo before running backend:
+> ```bash
+> mvn install -DskipTests -pl common-module -am
+> ```
+> Without this step, `spring-boot:run -pl backend-module` will fail with `ClassNotFoundException` for the new classes.
+> For running tests with `-pl backend-module`, Maven resolves common-module from `target/classes` directly, so re-compilation is sufficient.
 
 Default admin: `admin / 123456`
 
@@ -56,7 +63,7 @@ class XxxServiceTest {
 }
 ```
 
-Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `StudentServiceImplTest`, `SystemServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`.
+Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AcademicStatsControllerTest`, `AcademicStatsServiceImplTest`.
 
 ## Async Import Pipeline (scores / teachers / students)
 
@@ -99,7 +106,17 @@ GET /api/stats/ranking?examId=&courseId=&classId=            → List<RankingIte
 GET /api/stats/trend?classId=&courseId=                      → List<TrendItemVO>
 ```
 
-StatsController uses `LambdaQueryWrapper` + Java computation — no raw SQL.
+All stats use `LambdaQueryWrapper` + Java computation — no raw SQL.
+
+## Academic Stats Endpoints
+
+```
+GET /api/academic-stats/grade-summary?grade=&courseId=          → List<GradeSummaryVO>
+GET /api/academic-stats/course-summary?grade=&courseId=         → List<CourseSummaryVO>
+GET /api/academic-stats/risk-distribution?grade=&groupBy=       → List<RiskDistributionVO>
+```
+
+No role restriction (any authenticated user). `grade` / `courseId` are optional global filters.
 
 ## Log Endpoints
 
@@ -113,8 +130,9 @@ GET /api/logs/operation?page=&size=&username=&operation=&targetType=&resultStatu
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — auto-fill is dead. Set timestamps manually in service code.
 - **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier` to constructor params. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController`).
-- **`.gitignore` traps**: `*.yml` (application config not tracked after first commit), `.xlsx` (import templates not tracked).
+- **`.gitignore` traps**: `*.yml` (application config not tracked after first commit), `.xlsx` (import templates not tracked), `test/` (test files may not be committed).
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
 - **No AI controllers/services**: `ai/` package exists but empty — no DeepSeek integration yet.
 - **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `{"status": 1}` and convert via `convertStatus()` (1→ARCHIVED, 2→SUBMITTED, default→DRAFT).
 - **JAVA_HOME**: On Linux, `mvn spring-boot:run` may fail without JAVA_HOME set. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
+- **SystemServiceImplTest pre-existing breakage**: This test references `SysConfigDTO`/`SysDictDTO` that don't exist in common-module. Skip it or exclude it from builds.
