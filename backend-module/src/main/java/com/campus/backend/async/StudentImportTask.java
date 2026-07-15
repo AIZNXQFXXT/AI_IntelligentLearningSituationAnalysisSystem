@@ -93,6 +93,8 @@ public class StudentImportTask implements Runnable {
                     new LambdaQueryWrapper<ClassInfo>().eq(ClassInfo::getClassName, row.getClassName()));
             if (classInfo != null) {
                 dto.setClassId(classInfo.getId());
+            } else {
+                throw new RuntimeException("班级 '" + row.getClassName() + "' 不存在");
             }
         }
         dto.setEnrollYear(row.getEnrollYear());

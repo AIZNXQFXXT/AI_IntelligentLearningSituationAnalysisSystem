@@ -86,8 +86,6 @@ public class StudentController {
     public ApiResponse<Map<String, Long>> batchImport(
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request) throws Exception {
-        Long teacherId = (Long) request.getAttribute("userId");
-
         String tempDir = System.getProperty("java.io.tmpdir");
         String fileName = "student_import_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(tempDir, fileName);

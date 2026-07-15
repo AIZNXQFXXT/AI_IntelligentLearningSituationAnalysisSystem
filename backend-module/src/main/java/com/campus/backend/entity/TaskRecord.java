@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("task_record")
 public class TaskRecord extends BaseEntity {
-    private String taskType;       // SCORE_IMPORT / AI_COMMENT_BATCH / EXPORT
+    private String taskType;       // SCORE_IMPORT / TEACHER_IMPORT / STUDENT_IMPORT / AI_COMMENT_BATCH / EXPORT
     private String status;         // PENDING → PROCESSING → COMPLETED → FAILED
     private Integer progress;      // 0-100
     private Integer currentCount;
