@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.ExamController"
+            stylesheets="/css/main.css"
+            styleClass="content-area">
+
+    <VBox spacing="16" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <Label text="考试批次管理" styleClass="page-title"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="新增考试" onAction="#handleAdd" styleClass="button-success"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Label fx:id="totalLabel" text="" styleClass="text-muted"/>
+        </HBox>
+
+        <TableView fx:id="examTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colExamName" text="考试名称" prefWidth="160"/>
+                <TableColumn fx:id="colCourseName" text="课程" prefWidth="120"/>
+                <TableColumn fx:id="colExamType" text="类型" prefWidth="80"/>
+                <TableColumn fx:id="colExamDate" text="考试日期" prefWidth="110"/>
+                <TableColumn fx:id="colStartTime" text="开始时间" prefWidth="80"/>
+                <TableColumn fx:id="colEndTime" text="结束时间" prefWidth="80"/>
+                <TableColumn fx:id="colActions" text="操作" prefWidth="160"/>
+            </columns>
+        </TableView>
+
+        <HBox spacing="10" alignment="CENTER">
+            <Button fx:id="prevBtn" text="上一页" onAction="#handlePrevPage" styleClass="button-outline"/>
+            <Label fx:id="pageInfo" text="第 1 页"/>
+            <Button fx:id="nextBtn" text="下一页" onAction="#handleNextPage" styleClass="button-outline"/>
+        </HBox>
+    </VBox>
+</AnchorPane>

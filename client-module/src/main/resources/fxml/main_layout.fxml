@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.MainLayoutController"
+            stylesheets="/css/main.css">
+
+    <!-- Left: Sidebar -->
+    <left>
+        <VBox fx:id="sidebar" styleClass="sidebar" prefWidth="220" minHeight="Infinity">
+            <VBox styleClass="sidebar-logo">
+                <Label text="🎓 AI Campus"/>
+            </VBox>
+
+            <VBox fx:id="menuContainer" spacing="2" VBox.vgrow="ALWAYS">
+                <padding>
+                    <Insets top="8" bottom="8"/>
+                </padding>
+            </VBox>
+
+            <VBox spacing="4" alignment="BOTTOM_CENTER">
+                <padding>
+                    <Insets top="8" right="12" bottom="12" left="12"/>
+                </padding>
+                <Separator/>
+                <HBox spacing="8" alignment="CENTER">
+                    <Label fx:id="roleLabel" styleClass="text-muted" style="-fx-font-size:11px;"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER">
+                    <Label fx:id="usernameLabel" styleClass="text-muted" style="-fx-font-size:11px;"/>
+                </HBox>
+                <Button fx:id="logoutButton" text="退出登录" maxWidth="Infinity"
+                        onAction="#handleLogout" styleClass="button-outline"
+                        style="-fx-font-size:11px;">
+                    <VBox.margin>
+                        <Insets top="4"/>
+                    </VBox.margin>
+                </Button>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- Right: Content Area -->
+    <center>
+        <VBox>
+            <!-- Header Bar -->
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+                <padding>
+                    <Insets top="10" right="24" bottom="10" left="24"/>
+                </padding>
+                <Label fx:id="pageTitle" text="首页"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Button fx:id="profileButton" text="个人信息" styleClass="button-outline"
+                        onAction="#handleProfile"/>
+            </HBox>
+            <!-- Content -->
+            <StackPane fx:id="contentArea" VBox.vgrow="ALWAYS">
+                <padding>
+                    <Insets top="4" right="24" bottom="24" left="24"/>
+                </padding>
+            </StackPane>
+        </VBox>
+    </center>
+</BorderPane>

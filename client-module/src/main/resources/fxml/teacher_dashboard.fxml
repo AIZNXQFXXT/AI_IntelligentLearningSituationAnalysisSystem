@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.TeacherDashboardController"
+            stylesheets="/css/main.css"
+            styleClass="content-area">
+
+    <VBox spacing="16" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <Label text="教师工作台" styleClass="page-title"/>
+
+        <HBox spacing="16">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="我的班级" styleClass="stat-label"/>
+                <Label fx:id="myClassCount" text="0" styleClass="stat-value"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="我的学生" styleClass="stat-label"/>
+                <Label fx:id="myStudentCount" text="0" styleClass="stat-value"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="待处理预警" styleClass="stat-label"/>
+                <Label fx:id="myPendingWarnings" text="0" styleClass="stat-value"/>
+            </VBox>
+        </HBox>
+
+        <VBox styleClass="card" spacing="12">
+            <Label text="班级成绩概览" styleClass="card-title"/>
+            <TableView fx:id="classOverviewTable" VBox.vgrow="ALWAYS" prefHeight="200">
+                <columns>
+                    <TableColumn fx:id="colClassName" text="班级" prefWidth="150"/>
+                    <TableColumn fx:id="colAvgScore" text="平均分" prefWidth="100"/>
+                    <TableColumn fx:id="colMaxScore" text="最高分" prefWidth="100"/>
+                    <TableColumn fx:id="colMinScore" text="最低分" prefWidth="100"/>
+                    <TableColumn fx:id="colPassRate" text="及格率" prefWidth="100"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="导出成绩表" onAction="#handleExportScores" styleClass="button-outline"/>
+            <Button text="导出评语" onAction="#handleExportComments" styleClass="button-outline"/>
+            <Button text="导出预警列表" onAction="#handleExportRiskList" styleClass="button-outline"/>
+        </HBox>
+    </VBox>
+</AnchorPane>

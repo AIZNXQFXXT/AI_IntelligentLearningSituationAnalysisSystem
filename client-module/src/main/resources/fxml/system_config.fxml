@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.SystemConfigController"
+            stylesheets="/css/main.css"
+            styleClass="content-area">
+
+    <VBox spacing="16" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <Label text="系统配置" styleClass="page-title"/>
+
+        <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS">
+            <Tab text="系统参数" closable="false">
+                <VBox spacing="12" styleClass="card">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="系统配置参数" styleClass="card-title"/>
+                    <TableView fx:id="configTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colConfigKey" text="配置项" prefWidth="200"/>
+                            <TableColumn fx:id="colConfigValue" text="配置值" prefWidth="250"/>
+                            <TableColumn fx:id="colDescription" text="说明" prefWidth="300"/>
+                        </columns>
+                    </TableView>
+                    <Button text="保存修改" onAction="#handleSaveConfigs" styleClass="button"/>
+                </VBox>
+            </Tab>
+            <Tab text="数据字典" closable="false">
+                <VBox spacing="12" styleClass="card">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="数据字典管理" styleClass="card-title"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                        <Button text="新增字典" onAction="#handleAddDict" styleClass="button-success"/>
+                    </HBox>
+                    <TableView fx:id="dictTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colDictType" text="字典类型" prefWidth="140"/>
+                            <TableColumn fx:id="colDictCode" text="字典编码" prefWidth="140"/>
+                            <TableColumn fx:id="colDictLabel" text="字典标签" prefWidth="140"/>
+                            <TableColumn fx:id="colSortOrder" text="排序" prefWidth="60"/>
+                            <TableColumn fx:id="colDictStatus" text="状态" prefWidth="80"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </VBox>
+</AnchorPane>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.TeacherDiagnosisController"
+            stylesheets="/css/main.css"
+            styleClass="content-area">
+
+    <VBox spacing="16" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <Label text="学业诊断" styleClass="page-title"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="新建诊断" onAction="#handleAdd" styleClass="button-success"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <TableView fx:id="diagnosisTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colStudentName" text="学生" prefWidth="100"/>
+                <TableColumn fx:id="colCourseName" text="课程" prefWidth="120"/>
+                <TableColumn fx:id="colDiagnosisType" text="诊断类型" prefWidth="100"/>
+                <TableColumn fx:id="colContent" text="诊断内容" prefWidth="250"/>
+                <TableColumn fx:id="colSuggestion" text="建议" prefWidth="250"/>
+                <TableColumn fx:id="colCreateTime" text="时间" prefWidth="140"/>
+            </columns>
+        </TableView>
+    </VBox>
+</AnchorPane>

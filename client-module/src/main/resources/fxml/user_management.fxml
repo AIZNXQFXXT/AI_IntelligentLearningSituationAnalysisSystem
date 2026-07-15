@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.UserController"
+            stylesheets="/css/main.css"
+            styleClass="content-area">
+
+    <VBox spacing="16" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <Label text="用户管理" styleClass="page-title"/>
+
+        <!-- Toolbar -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <ComboBox fx:id="roleFilter" promptText="筛选角色" prefWidth="140"/>
+            <Button text="查询" onAction="#handleSearch" styleClass="button"/>
+            <Button text="新增用户" onAction="#handleAdd" styleClass="button-success"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Label fx:id="totalLabel" text="" styleClass="text-muted"/>
+        </HBox>
+
+        <!-- Table -->
+        <TableView fx:id="userTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colUsername" text="用户名" prefWidth="120"/>
+                <TableColumn fx:id="colRealName" text="姓名" prefWidth="100"/>
+                <TableColumn fx:id="colRole" text="角色" prefWidth="80"/>
+                <TableColumn fx:id="colPhone" text="手机号" prefWidth="120"/>
+                <TableColumn fx:id="colEmail" text="邮箱" prefWidth="160"/>
+                <TableColumn fx:id="colStatus" text="状态" prefWidth="80"/>
+                <TableColumn fx:id="colCreateTime" text="创建时间" prefWidth="150"/>
+                <TableColumn fx:id="colActions" text="操作" prefWidth="200"/>
+            </columns>
+        </TableView>
+
+        <!-- Pagination -->
+        <HBox spacing="10" alignment="CENTER">
+            <Button fx:id="prevBtn" text="上一页" onAction="#handlePrevPage" styleClass="button-outline"/>
+            <Label fx:id="pageInfo" text="第 1 页"/>
+            <Button fx:id="nextBtn" text="下一页" onAction="#handleNextPage" styleClass="button-outline"/>
+        </HBox>
+    </VBox>
+</AnchorPane>
