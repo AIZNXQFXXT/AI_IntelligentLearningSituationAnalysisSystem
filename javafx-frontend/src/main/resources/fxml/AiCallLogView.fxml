@@ -9,7 +9,7 @@
       spacing="0" prefWidth="900" styleClass="crud-card">
 
     <HBox styleClass="crud-card-header" alignment="CENTER_LEFT">
-        <Label text="AI调用日志" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <Label text="AI调用日志" styleClass="crud-card-header-title"/>
         <HBox HBox.hgrow="ALWAYS"/>
         <HBox spacing="12" alignment="CENTER_RIGHT">
             <TextField fx:id="functionField" promptText="功能名称" prefWidth="150" styleClass="crud-search"/>

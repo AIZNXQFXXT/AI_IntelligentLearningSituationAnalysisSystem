@@ -16,7 +16,7 @@
 
     <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
         <Label fx:id="emptyLabel" text="暂无成绩数据" visible="false" managed="false"
-               style="-fx-text-fill: #999; -fx-font-size: 14;" VBox.vgrow="ALWAYS"
+               styleClass="empty-state-label" VBox.vgrow="ALWAYS"
                alignment="CENTER"/>
         <TableView fx:id="table" VBox.vgrow="ALWAYS" prefHeight="500">
             <columns>

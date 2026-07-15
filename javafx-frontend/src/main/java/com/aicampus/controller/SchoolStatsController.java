@@ -4,6 +4,7 @@ import com.aicampus.model.*;
 import com.aicampus.service.ClassService;
 import com.aicampus.service.CourseService;
 import com.aicampus.service.StatsService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -46,12 +47,12 @@ public class SchoolStatsController {
         };
         task.setOnSucceeded(e -> {
             SchoolOverview ov = task.getValue();
-            valueAvgScore.setText(String.format("%.1f", ov.getSchoolAvgScore()));
-            valuePassRate.setText(String.format("%.1f%%", ov.getSchoolPassRate()));
-            valueFailCount.setText(String.valueOf(ov.getFailCount()));
+            valueAvgScore.setText("--");
+            valuePassRate.setText("--");
+            valueFailCount.setText("--");
             valueTotalStudents.setText(String.valueOf(ov.getTotalStudents()));
         });
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadFilters() {
@@ -67,7 +68,7 @@ public class SchoolStatsController {
             for (ClassInfo c : classList) classFilter.getItems().add(c.getId() + " - " + c.getClassName());
             for (Course c : courseList) courseFilter.getItems().add(c.getId() + " - " + c.getName());
         });
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadChart() {
@@ -93,6 +94,6 @@ public class SchoolStatsController {
             chart.getData().add(series);
         });
         task.setOnFailed(e -> CrudHelper.showError("加载图表失败"));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 }

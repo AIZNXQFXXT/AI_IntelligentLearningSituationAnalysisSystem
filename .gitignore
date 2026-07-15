@@ -10,3 +10,4 @@ logs/
 .xlsx
 test/
 docs/
+.opencode/

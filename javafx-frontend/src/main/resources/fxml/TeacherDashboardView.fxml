@@ -8,7 +8,7 @@
       fx:controller="com.aicampus.controller.TeacherDashboardController"
       spacing="20" prefWidth="900">
 
-    <Label text="教师控制台" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label text="教师控制台" styleClass="page-title"/>
 
     <!-- Stat Cards -->
     <HBox spacing="20">
@@ -30,7 +30,7 @@
     <HBox spacing="20">
         <!-- Quick Actions -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12">
-            <Label text="快捷操作" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="快捷操作" styleClass="section-title"/>
             <VBox spacing="12">
                 <Button text="成绩录入" styleClass="quick-action-btn" onAction="#goToScoreEntry"/>
                 <Button text="批量导入" styleClass="quick-action-btn" onAction="#goToScoreImport"/>
@@ -40,7 +40,7 @@
         </VBox>
         <!-- Feature Description -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
-            <Label text="功能说明" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="功能说明" styleClass="section-title"/>
             <GridPane hgap="16" vgap="8">
                 <Label text="本班学生" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <Label text="查看所带班级学生花名册和360度画像" GridPane.columnIndex="1" GridPane.rowIndex="0"/>

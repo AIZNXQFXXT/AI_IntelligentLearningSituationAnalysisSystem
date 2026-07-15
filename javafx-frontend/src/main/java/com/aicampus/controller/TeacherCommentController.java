@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.model.AiComment;
 import com.aicampus.service.CommentService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -93,8 +94,11 @@ public class TeacherCommentController {
             }
         };
         task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     @FXML

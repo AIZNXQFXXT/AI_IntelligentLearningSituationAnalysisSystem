@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.service.StatsService;
 import com.aicampus.session.UserSession;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,7 +49,7 @@ public class StudentAnalysisController {
             trendChart.getData().add(series);
         });
         task.setOnFailed(e -> CrudHelper.showError("加载成绩趋势失败"));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadRadar() {
@@ -70,7 +71,7 @@ public class StudentAnalysisController {
             radarChart.getData().add(series);
         });
         task.setOnFailed(e -> CrudHelper.showError("加载课程成绩失败"));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private int getCurrentUserId() {

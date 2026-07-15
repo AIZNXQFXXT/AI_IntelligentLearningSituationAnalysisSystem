@@ -20,9 +20,9 @@
                 <TextField fx:id="usernameField" promptText="请输入用户名" prefHeight="40"/>
                 <PasswordField fx:id="passwordField" promptText="请输入密码" prefHeight="40"
                                onKeyPressed="#onPasswordKeyPressed"/>
-                <Label fx:id="errorLabel" style="-fx-text-fill: red; -fx-font-size: 12px;" visible="false" managed="false"/>
+                <Label fx:id="errorLabel" styleClass="login-error" visible="false" managed="false"/>
                 <Button fx:id="loginButton" text="登 录" styleClass="btn-primary"
-                        onAction="#handleLogin" maxWidth="Infinity" prefHeight="40"/>
+                        onAction="#handleLogin" maxWidth="1.7976931348623157E308" prefHeight="40"/>
             </VBox>
         </VBox>
     </VBox>

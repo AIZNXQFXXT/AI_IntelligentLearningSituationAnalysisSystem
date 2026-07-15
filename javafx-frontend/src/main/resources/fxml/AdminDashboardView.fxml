@@ -8,7 +8,7 @@
       fx:controller="com.aicampus.controller.AdminDashboardController"
       spacing="20" prefWidth="900">
 
-    <Label text="管理员控制台" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label text="管理员控制台" styleClass="page-title"/>
 
     <!-- Stat Cards Row -->
     <HBox spacing="20">
@@ -34,7 +34,7 @@
     <HBox spacing="20">
         <!-- Quick Actions -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12">
-            <Label text="快捷操作" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="快捷操作" styleClass="section-title"/>
             <HBox spacing="12">
                 <Button text="班级管理" styleClass="quick-action-btn"
                         onAction="#goToClasses"/>
@@ -48,20 +48,14 @@
         </VBox>
         <!-- System Overview -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
-            <Label text="系统概览" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="系统概览" styleClass="section-title"/>
             <GridPane hgap="16" vgap="8">
                 <Label text="系统状态" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                <Label text="正常运行" style="-fx-text-fill: #67c23a;" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Label text="正常运行" styleClass="status-success" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
                 <Label text="AI服务" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                 <Label text="DeepSeek" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                <Label text="不及格人数" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                <Label fx:id="failCountLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                <Label text="全校平均分" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                <Label fx:id="avgScoreLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                <Label text="全校及格率" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                <Label fx:id="passRateLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                <Label text="版本" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-                <Label text="v1.0.0" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                <Label text="版本" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label text="v1.0.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
             </GridPane>
         </VBox>
     </HBox>

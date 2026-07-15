@@ -54,6 +54,7 @@ public class ViewLoader {
             Parent root = loader.load();
             Stage stage = App.getPrimaryStage();
             Scene scene = new Scene(root, 1200, 800);
+            scene.getStylesheets().add(App.getCssPath());
             stage.setScene(scene);
             if (title != null) {
                 stage.setTitle(title);

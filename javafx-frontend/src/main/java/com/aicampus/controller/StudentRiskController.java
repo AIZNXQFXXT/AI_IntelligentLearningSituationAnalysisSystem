@@ -2,7 +2,9 @@ package com.aicampus.controller;
 
 import com.aicampus.model.RiskWarning;
 import com.aicampus.service.RiskWarningService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
+import com.aicampus.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -32,37 +34,8 @@ public class StudentRiskController {
         colHandleStatus.setCellValueFactory(new PropertyValueFactory<>("handleStatus"));
         colRemark.setCellValueFactory(new PropertyValueFactory<>("handleRemark"));
 
-        colRiskLevel.setCellFactory(param -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                } else {
-                    Label label = new Label(item);
-                    switch (item) {
-                        case "HIGH" -> label.getStyleClass().add("tag-danger");
-                        case "MEDIUM" -> label.getStyleClass().add("tag-warning");
-                        default -> label.getStyleClass().add("tag-success");
-                    }
-                    setGraphic(label);
-                }
-            }
-        });
-
-        colHandleStatus.setCellFactory(param -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                } else {
-                    Label label = new Label("HANDLED".equals(item) ? "已处理" : "未处理");
-                    label.getStyleClass().add("HANDLED".equals(item) ? "tag-success" : "tag-danger");
-                    setGraphic(label);
-                }
-            }
-        });
+        TableUtils.setupRiskLevelCell(colRiskLevel);
+        TableUtils.setupStatusCell(colHandleStatus);
 
         table.setItems(tableData);
         loadData();
@@ -84,7 +57,10 @@ public class StudentRiskController {
             table.setVisible(!warnings.isEmpty());
             table.setManaged(!warnings.isEmpty());
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 }

@@ -2,15 +2,17 @@ package com.aicampus.controller;
 
 import com.aicampus.model.RiskWarning;
 import com.aicampus.service.RiskWarningService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
+import com.aicampus.util.TableUtils;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,31 +49,8 @@ public class TeacherRiskController {
         colReason.setCellValueFactory(new PropertyValueFactory<>("riskReason"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("handleStatus"));
 
-        colRiskLevel.setCellFactory(param -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) { setGraphic(null); return; }
-                Label label = new Label(item);
-                switch (item) {
-                    case "HIGH" -> label.getStyleClass().add("tag-danger");
-                    case "MEDIUM" -> label.getStyleClass().add("tag-warning");
-                    default -> label.getStyleClass().add("tag-success");
-                }
-                setGraphic(label);
-            }
-        });
-
-        colStatus.setCellFactory(param -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) { setGraphic(null); return; }
-                Label label = new Label("HANDLED".equals(item) ? "已处理" : "未处理");
-                label.getStyleClass().add("HANDLED".equals(item) ? "tag-success" : "tag-danger");
-                setGraphic(label);
-            }
-        });
+        TableUtils.setupRiskLevelCell(colRiskLevel);
+        TableUtils.setupStatusCell(colStatus);
 
         colAction.setCellFactory(param -> new TableCell<>() {
             private final Button btn = new Button("处理");
@@ -105,8 +84,11 @@ public class TeacherRiskController {
             }
         };
         task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void handleProcess(RiskWarning w) {
@@ -129,7 +111,7 @@ public class TeacherRiskController {
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("处理成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("处理失败"));
-            new Thread(task).start();
+            AppExecutors.submit(task::run);
         });
     }
 }

@@ -5,13 +5,14 @@ import com.aicampus.model.ClassInfo;
 import com.aicampus.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.io.File;
 import java.util.List;
 
 public class ClassService {
     public static PageResult<ClassInfo> getPage(int page, int size, String keyword) throws Exception {
         String path = "/classes?page=" + page + "&size=" + size;
         if (keyword != null && !keyword.isEmpty()) {
-            path += "&keyword=" + keyword;
+            path += "&keyword=" + ApiClient.encodeParam(keyword);
         }
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<ClassInfo>>>() {});
     }
@@ -30,5 +31,9 @@ public class ClassService {
 
     public static Void delete(int id) throws Exception {
         return ApiClient.delete("/classes/" + id, new TypeReference<ApiResponse<Void>>() {});
+    }
+
+    public static Void batchImport(File file) throws Exception {
+        return ApiClient.uploadFile("/classes/batch", file, new TypeReference<ApiResponse<Void>>() {});
     }
 }

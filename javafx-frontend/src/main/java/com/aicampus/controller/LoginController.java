@@ -1,9 +1,9 @@
 package com.aicampus.controller;
 
 import com.aicampus.model.LoginResult;
-import com.aicampus.service.ApiClient;
 import com.aicampus.service.AuthService;
 import com.aicampus.session.UserSession;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.ViewLoader;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -21,13 +21,6 @@ public class LoginController {
     @FXML private PasswordField passwordField;
     @FXML private Button loginButton;
     @FXML private Label errorLabel;
-
-    @FXML
-    public void initialize() {
-        ApiClient.setErrorCallback((code, message) -> {
-            showError(message);
-        });
-    }
 
     @FXML
     private void handleLogin() {
@@ -71,7 +64,7 @@ public class LoginController {
             loginButton.setText("登 录");
         });
 
-        new Thread(loginTask).start();
+        AppExecutors.submit(loginTask::run);
     }
 
     @FXML

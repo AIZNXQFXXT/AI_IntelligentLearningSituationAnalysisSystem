@@ -3,6 +3,7 @@ package com.aicampus.controller;
 import com.aicampus.model.Course;
 import com.aicampus.model.PageResult;
 import com.aicampus.service.CourseService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -10,11 +11,13 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import com.aicampus.util.TableUtils;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
+
+import java.io.File;
 
 public class CourseManagementController {
 
@@ -43,24 +46,12 @@ public class CourseManagementController {
 
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colType.setCellValueFactory(cellData -> new SimpleStringProperty(switch (cellData.getValue().getType()) {
-            case "REQUIRED" -> "必修"; case "ELECTIVE" -> "选修"; case "MAJOR" -> "专业"; default -> cellData.getValue().getType();
-        }));
+        colType.setCellValueFactory(cellData -> new SimpleStringProperty(mapCourseType(cellData.getValue().getType())));
         colCredit.setCellValueFactory(new PropertyValueFactory<>("credit"));
         colDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
         colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus() == 1 ? "启用" : "停用"));
 
-        colActions.setCellFactory(param -> new TableCell<>() {
-            {
-                Button editBtn = new Button("编辑"); editBtn.getStyleClass().addAll("btn-edit", "btn-sm");
-                Button deleteBtn = new Button("删除"); deleteBtn.getStyleClass().addAll("btn-delete", "btn-sm");
-                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
-                HBox box = new HBox(8, editBtn, deleteBtn); box.setAlignment(Pos.CENTER); setGraphic(box);
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) { super.updateItem(item, empty); setGraphic(empty ? null : getGraphic()); }
-        });
+        TableUtils.setupActionColumn(colActions, this::handleEdit, this::handleDelete);
 
         table.setItems(tableData);
         loadData();
@@ -69,7 +60,30 @@ public class CourseManagementController {
     private String getSelectedType() {
         String val = typeFilter.getValue();
         if (val == null || "全部".equals(val)) return null;
-        return switch (val) { case "必修" -> "REQUIRED"; case "选修" -> "ELECTIVE"; case "专业" -> "MAJOR"; default -> null; };
+        switch (val) {
+            case "必修": return "REQUIRED";
+            case "选修": return "ELECTIVE";
+            case "专业": return "MAJOR";
+            default: return null;
+        }
+    }
+
+    private String mapCourseType(String type) {
+        switch (type) {
+            case "REQUIRED": return "必修";
+            case "ELECTIVE": return "选修";
+            case "MAJOR": return "专业";
+            default: return type;
+        }
+    }
+
+    private String mapToApiType(String val) {
+        switch (val) {
+            case "必修": return "REQUIRED";
+            case "选修": return "ELECTIVE";
+            case "专业": return "MAJOR";
+            default: return val;
+        }
     }
 
     private void loadData() {
@@ -84,8 +98,11 @@ public class CourseManagementController {
             tableData.clear(); tableData.addAll(result.getRecords());
             totalItems = result.getTotal(); updatePagination();
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void updatePagination() {
@@ -109,6 +126,26 @@ public class CourseManagementController {
 
     private void handleEdit(Course item) { showFormDialog("编辑课程", item); }
 
+    @FXML
+    private void handleBatchImport() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("选择Excel文件");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel文件", "*.xlsx", "*.xls"));
+        File file = chooser.showOpenDialog(table.getScene().getWindow());
+        if (file != null) {
+            Task<Void> task = new Task<>() {
+                @Override
+                protected Void call() throws Exception { CourseService.batchImport(file); return null; }
+            };
+            task.setOnSucceeded(e -> { CrudHelper.showAlert("导入成功"); loadData(); });
+            task.setOnFailed(e -> {
+                Throwable ex = task.getException();
+                CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "导入失败");
+            });
+            AppExecutors.submit(task::run);
+        }
+    }
+
     private void showFormDialog(String title, Course existing) {
         Dialog<Course> dialog = new Dialog<>();
         dialog.setTitle(title);
@@ -121,7 +158,7 @@ public class CourseManagementController {
 
         if (existing != null) {
             nameField.setText(existing.getName());
-            typeBox.setValue(switch (existing.getType()) { case "REQUIRED" -> "必修"; case "ELECTIVE" -> "选修"; case "MAJOR" -> "专业"; default -> existing.getType(); });
+            typeBox.setValue(mapCourseType(existing.getType()));
             creditField.setText(String.valueOf(existing.getCredit()));
             descArea.setText(existing.getDescription());
             statusCheck.setSelected(existing.getStatus() == 1);
@@ -146,7 +183,7 @@ public class CourseManagementController {
                 }
                 Course c = existing != null ? existing : new Course();
                 c.setName(nameField.getText());
-                c.setType(switch (typeBox.getValue()) { case "必修" -> "REQUIRED"; case "选修" -> "ELECTIVE"; case "专业" -> "MAJOR"; default -> typeBox.getValue(); });
+                c.setType(mapToApiType(typeBox.getValue()));
                 c.setCredit(Double.parseDouble(creditField.getText()));
                 c.setDescription(descArea.getText());
                 c.setStatus(statusCheck.isSelected() ? 1 : 0);
@@ -165,8 +202,11 @@ public class CourseManagementController {
                 }
             };
             saveTask.setOnSucceeded(e -> { CrudHelper.showAlert(existing != null ? "更新成功" : "新增成功"); loadData(); });
-            saveTask.setOnFailed(e -> CrudHelper.showError("操作失败"));
-            new Thread(saveTask).start();
+            saveTask.setOnFailed(e -> {
+                Throwable ex = saveTask.getException();
+                CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "操作失败");
+            });
+            AppExecutors.submit(saveTask::run);
         });
     }
 
@@ -178,7 +218,7 @@ public class CourseManagementController {
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("删除失败"));
-            new Thread(task).start();
+            AppExecutors.submit(task::run);
         }, item);
     }
 }

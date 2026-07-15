@@ -13,6 +13,7 @@ import com.campus.backend.service.ScoreService;
 import com.campus.common.dto.ScoreDTO;
 import com.campus.common.enums.ErrorCode;
 import com.campus.common.exception.BusinessException;
+import com.campus.common.vo.ScoreArchiveVO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,6 +93,12 @@ public class ScoreServiceImpl implements ScoreService {
                 .le(maxScore != null, Score::getFinalScore, maxScore);
         wrapper.orderByAsc(Score::getId);
         return scoreMapper.selectPage(p, wrapper);
+    }
+
+    @Override
+    public IPage<ScoreArchiveVO> archiveOverview(int page, int size) {
+        Page<ScoreArchiveVO> p = new Page<>(page, size);
+        return scoreMapper.selectArchivePage(p);
     }
 
     @Override

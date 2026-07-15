@@ -5,6 +5,7 @@ import com.aicampus.model.Exam;
 import com.aicampus.service.ClassService;
 import com.aicampus.service.ExamService;
 import com.aicampus.service.ScoreService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -35,7 +36,7 @@ public class ScoreImportController {
             @Override protected List<Exam> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
         };
         task.setOnSucceeded(e -> examCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadClasses() {
@@ -43,7 +44,7 @@ public class ScoreImportController {
             @Override protected List<ClassInfo> call() throws Exception { return ClassService.getAll(); }
         };
         task.setOnSucceeded(e -> classCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     @FXML
@@ -97,6 +98,6 @@ public class ScoreImportController {
             resultLabel.setVisible(true);
         });
         task.setOnFailed(e -> CrudHelper.showError("导入失败"));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 }

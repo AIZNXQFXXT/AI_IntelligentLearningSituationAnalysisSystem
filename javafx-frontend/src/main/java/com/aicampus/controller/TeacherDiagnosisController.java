@@ -4,6 +4,7 @@ import com.aicampus.model.AiDiagnosis;
 import com.aicampus.model.Student;
 import com.aicampus.service.DiagnosisService;
 import com.aicampus.service.StudentService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -57,9 +58,9 @@ public class TeacherDiagnosisController {
                 if (empty || item == null) { setGraphic(null); return; }
                 Label label = new Label(item);
                 switch (item) {
-                    case "HIGH" -> label.getStyleClass().add("tag-danger");
-                    case "MEDIUM" -> label.getStyleClass().add("tag-warning");
-                    default -> label.getStyleClass().add("tag-success");
+                    case "HIGH": label.getStyleClass().add("tag-danger"); break;
+                    case "MEDIUM": label.getStyleClass().add("tag-warning"); break;
+                    default: label.getStyleClass().add("tag-success"); break;
                 }
                 setGraphic(label);
             }
@@ -106,7 +107,7 @@ public class TeacherDiagnosisController {
             }
         };
         task.setOnSucceeded(e -> studentCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadData() {
@@ -121,8 +122,11 @@ public class TeacherDiagnosisController {
             tableData.clear();
             tableData.addAll(task.getValue());
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     @FXML
@@ -146,7 +150,7 @@ public class TeacherDiagnosisController {
             loadData();
         });
         task.setOnFailed(e -> CrudHelper.showError("生成失败"));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void showDetail(AiDiagnosis d) {

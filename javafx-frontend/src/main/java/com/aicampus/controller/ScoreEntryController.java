@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.model.*;
 import com.aicampus.service.*;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -85,7 +86,7 @@ public class ScoreEntryController {
             @Override protected List<Exam> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
         };
         task.setOnSucceeded(e -> examCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadCourses() {
@@ -93,7 +94,7 @@ public class ScoreEntryController {
             @Override protected List<Course> call() throws Exception { return CourseService.getAll(); }
         };
         task.setOnSucceeded(e -> courseCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadClasses() {
@@ -101,7 +102,7 @@ public class ScoreEntryController {
             @Override protected List<ClassInfo> call() throws Exception { return ClassService.getAll(); }
         };
         task.setOnSucceeded(e -> classCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     @FXML
@@ -121,7 +122,7 @@ public class ScoreEntryController {
             task.getValue().forEach(s -> tableData.add(new StudentScoreEntry(s)));
         });
         task.setOnFailed(e -> CrudHelper.showError("加载学生失败"));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void handleSubmit(StudentScoreEntry entry) {
@@ -142,7 +143,7 @@ public class ScoreEntryController {
             };
             task.setOnSucceeded(e -> CrudHelper.showAlert("提交成功"));
             task.setOnFailed(e -> CrudHelper.showError("提交失败"));
-            new Thread(task).start();
+            AppExecutors.submit(task::run);
         } catch (NumberFormatException ex) {
             CrudHelper.showAlert("请输入有效的分数");
         }

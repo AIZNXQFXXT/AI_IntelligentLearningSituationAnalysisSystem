@@ -1,7 +1,10 @@
 package com.aicampus.session;
 
 import com.aicampus.model.LoginResult;
+import com.aicampus.service.ApiClient;
 import com.aicampus.util.AuthStorage;
+
+import java.util.Map;
 
 public class UserSession {
     private static UserSession instance;
@@ -50,7 +53,14 @@ public class UserSession {
 
     /** Build JSON string for WebView localStorage injection */
     public String toJson() {
-        return String.format("{\"token\":\"%s\",\"role\":\"%s\",\"username\":\"%s\",\"userId\":%d}",
-                token, role, username, userId);
+        try {
+            return ApiClient.getMapper().writeValueAsString(
+                    Map.of("token", token != null ? token : "",
+                            "role", role != null ? role : "",
+                            "username", username != null ? username : "",
+                            "userId", userId));
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 }

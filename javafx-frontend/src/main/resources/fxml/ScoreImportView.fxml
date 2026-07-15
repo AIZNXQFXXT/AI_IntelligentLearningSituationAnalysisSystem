@@ -25,7 +25,7 @@
                 <Button text="下载Excel模板" onAction="#handleDownloadTemplate" styleClass="btn-primary"/>
             </VBox>
 
-            <Label text="→" style="-fx-font-size: 24;"/>
+            <Label text="→" styleClass="arrow-separator"/>
 
             <VBox spacing="10" alignment="CENTER" styleClass="import-step">
                 <Label text="第2步" styleClass="step-title"/>
@@ -33,7 +33,7 @@
                 <Label text="在模板中填写学生成绩"/>
             </VBox>
 
-            <Label text="→" style="-fx-font-size: 24;"/>
+            <Label text="→" styleClass="arrow-separator"/>
 
             <VBox spacing="10" alignment="CENTER" styleClass="import-step">
                 <Label text="第3步" styleClass="step-title"/>
@@ -42,6 +42,6 @@
             </VBox>
         </HBox>
 
-        <Label fx:id="resultLabel" text="" style="-fx-text-fill: #67C23A;" visible="false"/>
+        <Label fx:id="resultLabel" text="" styleClass="result-success" visible="false"/>
     </VBox>
 </VBox>

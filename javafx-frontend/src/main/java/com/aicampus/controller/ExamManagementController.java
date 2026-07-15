@@ -3,6 +3,7 @@ package com.aicampus.controller;
 import com.aicampus.model.Exam;
 import com.aicampus.model.PageResult;
 import com.aicampus.service.ExamService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -39,9 +40,7 @@ public class ExamManagementController {
     public void initialize() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colType.setCellValueFactory(cellData -> new SimpleStringProperty(switch (cellData.getValue().getType()) {
-            case "MOCK" -> "月考"; case "MIDTERM" -> "期中"; case "FINAL" -> "期末"; case "RETEST" -> "补考"; default -> cellData.getValue().getType();
-        }));
+        colType.setCellValueFactory(cellData -> new SimpleStringProperty(mapExamType(cellData.getValue().getType())));
         colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
         colClassId.setCellValueFactory(new PropertyValueFactory<>("classId"));
         colExamDate.setCellValueFactory(new PropertyValueFactory<>("examDate"));
@@ -62,7 +61,8 @@ public class ExamManagementController {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
                 Exam exam = getTableView().getItems().get(getIndex());
-                if (getGraphic() instanceof HBox hbox && hbox.getChildren().get(1) instanceof Button ab) {
+                if (getGraphic() instanceof HBox && ((HBox) getGraphic()).getChildren().get(1) instanceof Button) {
+                    Button ab = (Button) ((HBox) getGraphic()).getChildren().get(1);
                     ab.setVisible(!exam.getIsArchived()); ab.setManaged(!exam.getIsArchived());
                 }
             }
@@ -70,6 +70,26 @@ public class ExamManagementController {
 
         table.setItems(tableData);
         loadData();
+    }
+
+    private String mapExamType(String type) {
+        switch (type) {
+            case "MOCK": return "月考";
+            case "MIDTERM": return "期中";
+            case "FINAL": return "期末";
+            case "RETEST": return "补考";
+            default: return type;
+        }
+    }
+
+    private String mapExamTypeReverse(String type) {
+        switch (type) {
+            case "月考": return "MOCK";
+            case "期中": return "MIDTERM";
+            case "期末": return "FINAL";
+            case "补考": return "RETEST";
+            default: return type;
+        }
     }
 
     private void loadData() {
@@ -84,8 +104,11 @@ public class ExamManagementController {
             tableData.clear(); tableData.addAll(result.getRecords());
             totalItems = result.getTotal(); updatePagination();
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void updatePagination() {
@@ -121,7 +144,7 @@ public class ExamManagementController {
 
         if (existing != null) {
             nameField.setText(existing.getName());
-            typeBox.setValue(switch (existing.getType()) { case "MOCK" -> "月考"; case "MIDTERM" -> "期中"; case "FINAL" -> "期末"; case "RETEST" -> "补考"; default -> existing.getType(); });
+            typeBox.setValue(mapExamType(existing.getType()));
             semesterFieldLocal.setText(existing.getSemester());
             if (existing.getClassId() > 0) classIdField.setText(String.valueOf(existing.getClassId()));
             examDateField.setText(existing.getExamDate());
@@ -146,7 +169,7 @@ public class ExamManagementController {
                 }
                 Exam e = existing != null ? existing : new Exam();
                 e.setName(nameField.getText());
-                e.setType(switch (typeBox.getValue()) { case "月考" -> "MOCK"; case "期中" -> "MIDTERM"; case "期末" -> "FINAL"; case "补考" -> "RETEST"; default -> typeBox.getValue(); });
+                e.setType(mapExamTypeReverse(typeBox.getValue()));
                 e.setSemester(semesterFieldLocal.getText());
                 if (!classIdField.getText().isEmpty()) e.setClassId(Integer.parseInt(classIdField.getText()));
                 e.setExamDate(examDateField.getText());
@@ -166,7 +189,7 @@ public class ExamManagementController {
             };
             saveTask.setOnSucceeded(ev -> { CrudHelper.showAlert(existing != null ? "更新成功" : "新增成功"); loadData(); });
             saveTask.setOnFailed(ev -> CrudHelper.showError("操作失败"));
-            new Thread(saveTask).start();
+            AppExecutors.submit(saveTask::run);
         });
     }
 
@@ -178,7 +201,7 @@ public class ExamManagementController {
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("归档成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("归档失败"));
-            new Thread(task).start();
+            AppExecutors.submit(task::run);
         }, item);
     }
 
@@ -190,7 +213,7 @@ public class ExamManagementController {
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("删除失败"));
-            new Thread(task).start();
+            AppExecutors.submit(task::run);
         }, item);
     }
 }

@@ -6,12 +6,14 @@ import com.campus.backend.service.ScoreService;
 import com.campus.common.dto.ScoreDTO;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
+import com.campus.common.vo.ScoreArchiveVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/scores")
@@ -48,9 +50,28 @@ public class ScoreController {
                 result.getRecords(), result.getTotal(), page, size));
     }
 
+    @GetMapping("/archive/overview")
+    public ApiResponse<PageResult<ScoreArchiveVO>> archiveOverview(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        IPage<ScoreArchiveVO> result = scoreService.archiveOverview(page, size);
+        return ApiResponse.success(PageResult.of(
+                result.getRecords(), result.getTotal(), page, size));
+    }
+
     @PutMapping("/{id}/status")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody String status) {
-        scoreService.updateStatus(id, status);
+    public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        String auditStatus = convertStatus(body.get("status"));
+        scoreService.updateStatus(id, auditStatus);
         return ApiResponse.success();
+    }
+
+    private String convertStatus(Integer status) {
+        if (status == null) return "DRAFT";
+        return switch (status) {
+            case 1 -> "ARCHIVED";
+            case 2 -> "SUBMITTED";
+            default -> "DRAFT";
+        };
     }
 }

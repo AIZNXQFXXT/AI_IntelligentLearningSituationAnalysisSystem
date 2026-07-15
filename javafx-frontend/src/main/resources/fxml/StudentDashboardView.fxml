@@ -9,7 +9,7 @@
       fx:controller="com.aicampus.controller.StudentDashboardController"
       spacing="20" prefWidth="900">
 
-    <Label text="学生控制台" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label text="学生控制台" styleClass="page-title"/>
 
     <!-- Stat Cards -->
     <HBox spacing="20">
@@ -31,7 +31,7 @@
     <HBox spacing="20">
         <!-- Recent Scores -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
-            <Label text="最近成绩" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="最近成绩" styleClass="section-title"/>
             <TableView fx:id="scoreTable" prefHeight="200">
                 <columns>
                 <TableColumn fx:id="colCourseId" text="课程ID" prefWidth="80"/>
@@ -41,11 +41,11 @@
                 </columns>
             </TableView>
             <Label fx:id="noScoreLabel" text="暂无成绩数据" visible="false"
-                   style="-fx-text-fill: #909399; -fx-alignment: CENTER;"/>
+                   styleClass="empty-state-label"/>
         </VBox>
         <!-- Recent Warnings -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
-            <Label text="我的预警" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="我的预警" styleClass="section-title"/>
             <TableView fx:id="warningTable" prefHeight="200">
                 <columns>
                 <TableColumn fx:id="colSemester" text="学期" prefWidth="100"/>
@@ -55,43 +55,43 @@
                 </columns>
             </TableView>
             <Label fx:id="noWarningLabel" text="暂无预警信息" visible="false"
-                   style="-fx-text-fill: #909399; -fx-alignment: CENTER;"/>
+                   styleClass="empty-state-label"/>
         </VBox>
     </HBox>
 
     <!-- Feature Navigation Cards -->
     <HBox spacing="20">
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
-              onMouseClicked="#goToScores" style="-fx-cursor: hand;">
-            <Label text="成绩查询" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
-            <Label text="查看各科成绩和班级排名" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
+              onMouseClicked="#goToScores">
+            <Label text="成绩查询" styleClass="quick-action-card-icon"/>
+            <Label text="查看各科成绩和班级排名" styleClass="quick-action-card-sub"/>
         </VBox>
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
-              onMouseClicked="#goToAnalysis" style="-fx-cursor: hand;">
-            <Label text="成绩分析" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
-            <Label text="查看成绩趋势和能力雷达图" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
+              onMouseClicked="#goToAnalysis">
+            <Label text="成绩分析" styleClass="quick-action-card-icon"/>
+            <Label text="查看成绩趋势和能力雷达图" styleClass="quick-action-card-sub"/>
         </VBox>
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
-              onMouseClicked="#goToDiagnosis" style="-fx-cursor: hand;">
-            <Label text="诊断报告" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
-            <Label text="查看AI学情诊断分析" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
+              onMouseClicked="#goToDiagnosis">
+            <Label text="诊断报告" styleClass="quick-action-card-icon"/>
+            <Label text="查看AI学情诊断分析" styleClass="quick-action-card-sub"/>
         </VBox>
     </HBox>
     <HBox spacing="20">
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
-              onMouseClicked="#goToAdvice" style="-fx-cursor: hand;">
-            <Label text="学习建议" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
-            <Label text="查看个性化学习提升方案" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
+              onMouseClicked="#goToAdvice">
+            <Label text="学习建议" styleClass="quick-action-card-icon"/>
+            <Label text="查看个性化学习提升方案" styleClass="quick-action-card-sub"/>
         </VBox>
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
-              onMouseClicked="#goToComment" style="-fx-cursor: hand;">
-            <Label text="期末评语" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
-            <Label text="查看教师评语" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
+              onMouseClicked="#goToComment">
+            <Label text="期末评语" styleClass="quick-action-card-icon"/>
+            <Label text="查看教师评语" styleClass="quick-action-card-sub"/>
         </VBox>
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="8"
-              onMouseClicked="#goToRisk" style="-fx-cursor: hand;">
-            <Label text="我的预警" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: CENTER;"/>
-            <Label text="查看学业预警信息" style="-fx-text-fill: #909399; -fx-font-size: 13px; -fx-alignment: CENTER;"/>
+        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
+              onMouseClicked="#goToRisk">
+            <Label text="我的预警" styleClass="quick-action-card-icon"/>
+            <Label text="查看学业预警信息" styleClass="quick-action-card-sub"/>
         </VBox>
     </HBox>
 </VBox>

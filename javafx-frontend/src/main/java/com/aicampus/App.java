@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 public class App extends Application {
 
     private static Stage primaryStage;
+    private static final String CSS_PATH = "/css/styles.css";
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -26,12 +27,17 @@ public class App extends Application {
 
         Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
         Scene scene = new Scene(root, 1200, 800);
+        scene.getStylesheets().add(getClass().getResource(CSS_PATH).toExternalForm());
         stage.setScene(scene);
         stage.show();
     }
 
     public static Stage getPrimaryStage() {
         return primaryStage;
+    }
+
+    public static String getCssPath() {
+        return CSS_PATH;
     }
 
     public static void main(String[] args) {

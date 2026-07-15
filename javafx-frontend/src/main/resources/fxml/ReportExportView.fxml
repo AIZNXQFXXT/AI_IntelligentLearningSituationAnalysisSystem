@@ -29,6 +29,6 @@
 
         <Button text="导出报表" onAction="#handleExport" styleClass="btn-primary" prefWidth="120"/>
 
-        <Label fx:id="resultLabel" text="" style="-fx-text-fill: #67C23A;" visible="false"/>
+        <Label fx:id="resultLabel" text="" styleClass="result-success" visible="false"/>
     </VBox>
 </VBox>

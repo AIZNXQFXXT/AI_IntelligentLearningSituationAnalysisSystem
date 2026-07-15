@@ -9,10 +9,10 @@ public class OperationLogService {
     public static PageResult<OperationLog> getPage(int page, int size, String username,
             String operation, String startDate, String endDate) throws Exception {
         String path = "/operation-logs?page=" + page + "&size=" + size;
-        if (username != null && !username.isEmpty()) path += "&username=" + username;
-        if (operation != null && !operation.isEmpty()) path += "&operation=" + operation;
-        if (startDate != null && !startDate.isEmpty()) path += "&startDate=" + startDate;
-        if (endDate != null && !endDate.isEmpty()) path += "&endDate=" + endDate;
+        if (username != null && !username.isEmpty()) path += "&username=" + ApiClient.encodeParam(username);
+        if (operation != null && !operation.isEmpty()) path += "&operation=" + ApiClient.encodeParam(operation);
+        if (startDate != null && !startDate.isEmpty()) path += "&startDate=" + ApiClient.encodeParam(startDate);
+        if (endDate != null && !endDate.isEmpty()) path += "&endDate=" + ApiClient.encodeParam(endDate);
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<OperationLog>>>() {});
     }
 }

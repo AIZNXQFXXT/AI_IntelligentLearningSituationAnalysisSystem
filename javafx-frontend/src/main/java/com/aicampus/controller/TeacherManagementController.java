@@ -3,17 +3,17 @@ package com.aicampus.controller;
 import com.aicampus.model.PageResult;
 import com.aicampus.model.Teacher;
 import com.aicampus.service.TeacherService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import com.aicampus.util.TableUtils;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -47,24 +47,7 @@ public class TeacherManagementController {
         colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
         colEducation.setCellValueFactory(new PropertyValueFactory<>("education"));
 
-        colActions.setCellFactory(param -> new TableCell<>() {
-            {
-                Button editBtn = new Button("编辑");
-                editBtn.getStyleClass().addAll("btn-edit", "btn-sm");
-                Button deleteBtn = new Button("删除");
-                deleteBtn.getStyleClass().addAll("btn-delete", "btn-sm");
-                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
-                HBox box = new HBox(8, editBtn, deleteBtn);
-                box.setAlignment(Pos.CENTER);
-                setGraphic(box);
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : getGraphic());
-            }
-        });
+        TableUtils.setupActionColumn(colActions, this::handleEdit, this::handleDelete);
 
         table.setItems(tableData);
         loadData();
@@ -85,8 +68,11 @@ public class TeacherManagementController {
             totalItems = result.getTotal();
             updatePagination();
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void updatePagination() {
@@ -193,8 +179,11 @@ public class TeacherManagementController {
                 CrudHelper.showAlert(existing != null ? "更新成功" : "新增成功");
                 loadData();
             });
-            saveTask.setOnFailed(e -> CrudHelper.showError("操作失败"));
-            new Thread(saveTask).start();
+            saveTask.setOnFailed(e -> {
+                Throwable ex = saveTask.getException();
+                CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "操作失败");
+            });
+            AppExecutors.submit(saveTask::run);
         });
     }
 
@@ -208,13 +197,16 @@ public class TeacherManagementController {
             Task<Void> task = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    TeacherService.batchImport(file.toPath());
+                    TeacherService.batchImport(file);
                     return null;
                 }
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("导入成功"); loadData(); });
-            task.setOnFailed(e -> CrudHelper.showError("导入失败"));
-            new Thread(task).start();
+            task.setOnFailed(e -> {
+                Throwable ex = task.getException();
+                CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "导入失败");
+            });
+            AppExecutors.submit(task::run);
         }
     }
 
@@ -226,7 +218,7 @@ public class TeacherManagementController {
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("删除失败"));
-            new Thread(task).start();
+            AppExecutors.submit(task::run);
         }, item);
     }
 }

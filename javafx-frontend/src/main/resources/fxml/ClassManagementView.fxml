@@ -9,12 +9,13 @@
       spacing="0" prefWidth="900" styleClass="crud-card">
 
     <HBox styleClass="crud-card-header" alignment="CENTER_LEFT">
-        <Label text="班级管理" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <Label text="班级管理" styleClass="crud-card-header-title"/>
         <HBox HBox.hgrow="ALWAYS"/>
         <HBox spacing="12" alignment="CENTER_RIGHT">
             <TextField fx:id="keywordField" promptText="搜索班级/年级"
                        prefWidth="200" onKeyPressed="#onSearchKeyPressed" styleClass="crud-search"/>
             <Button text="新增班级" styleClass="btn-primary" onAction="#handleCreate"/>
+            <Button text="批量导入" styleClass="btn-warning" onAction="#handleBatchImport"/>
         </HBox>
     </HBox>
 

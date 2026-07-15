@@ -16,7 +16,7 @@
                 <Label text="AI学情分析" styleClass="sidebar-logo-label"/>
             </VBox>
             <!-- Menu items will be added dynamically -->
-            <VBox fx:id="menuContainer" VBox.vgrow="ALWAYS" style="-fx-background-color: #001529;">
+            <VBox fx:id="menuContainer" VBox.vgrow="ALWAYS" styleClass="sidebar-menu-container">
             </VBox>
         </VBox>
     </left>
@@ -31,7 +31,7 @@
                     <Label fx:id="pageTitle" text="控制台" styleClass="header-title" HBox.hgrow="ALWAYS"/>
                     <Label fx:id="usernameLabel" styleClass="header-username"/>
                     <Button fx:id="logoutBtn" text="退出" onAction="#handleLogout"
-                            style="-fx-background-color: transparent; -fx-text-fill: #ff4d4f; -fx-cursor: hand;"/>
+                            styleClass="btn-danger"/>
                 </HBox>
             </VBox>
             <!-- Content Center -->

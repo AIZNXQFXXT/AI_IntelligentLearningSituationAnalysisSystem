@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.model.Student;
 import com.aicampus.service.StudentService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -80,8 +81,11 @@ public class TeacherStudentsController {
             tableData.clear();
             tableData.addAll(task.getValue());
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void showPortrait(Student s) {

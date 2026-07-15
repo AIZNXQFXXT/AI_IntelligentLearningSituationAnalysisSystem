@@ -9,9 +9,11 @@ import javafx.application.Platform;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 public class ApiClient {
@@ -21,16 +23,6 @@ public class ApiClient {
             .build();
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    public interface ErrorCallback {
-        void onError(int code, String message);
-    }
-
-    private static ErrorCallback errorCallback;
-
-    public static void setErrorCallback(ErrorCallback callback) {
-        errorCallback = callback;
-    }
 
     private static HttpRequest.Builder buildRequest(String path) {
         String token = UserSession.getInstance().getToken();
@@ -44,31 +36,27 @@ public class ApiClient {
         return builder;
     }
 
+    private static void checkAuth(HttpResponse<String> response) throws Exception {
+        if (response.statusCode() == 401 || response.statusCode() == 403) {
+            Platform.runLater(() -> {
+                UserSession.getInstance().logout();
+            });
+            throw new RuntimeException("登录已过期，请重新登录");
+        }
+    }
+
     private static <T> T handleResponse(HttpResponse<String> response, TypeReference<ApiResponse<T>> typeRef) throws Exception {
         ApiResponse<T> apiResponse = MAPPER.readValue(response.body(), typeRef);
         if (apiResponse.isSuccess()) {
             return apiResponse.getData();
         }
-        Platform.runLater(() -> {
-            if (errorCallback != null) {
-                errorCallback.onError(apiResponse.getCode(), apiResponse.getMsg());
-            }
-        });
-        throw new RuntimeException("API error: " + apiResponse.getMsg());
+        throw new RuntimeException(apiResponse.getMsg());
     }
 
     public static <T> T get(String path, TypeReference<ApiResponse<T>> typeRef) throws Exception {
         HttpRequest request = buildRequest(path).GET().build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() == 401 || response.statusCode() == 403) {
-            Platform.runLater(() -> {
-                UserSession.getInstance().logout();
-                if (errorCallback != null) {
-                    errorCallback.onError(response.statusCode(), "登录已过期，请重新登录");
-                }
-            });
-            throw new RuntimeException("Unauthorized");
-        }
+        checkAuth(response);
         return handleResponse(response, typeRef);
     }
 
@@ -78,15 +66,7 @@ public class ApiClient {
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() == 401 || response.statusCode() == 403) {
-            Platform.runLater(() -> {
-                UserSession.getInstance().logout();
-                if (errorCallback != null) {
-                    errorCallback.onError(response.statusCode(), "登录已过期，请重新登录");
-                }
-            });
-            throw new RuntimeException("Unauthorized");
-        }
+        checkAuth(response);
         return handleResponse(response, typeRef);
     }
 
@@ -96,21 +76,24 @@ public class ApiClient {
                 .PUT(HttpRequest.BodyPublishers.ofString(json))
                 .build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        checkAuth(response);
         return handleResponse(response, typeRef);
     }
 
     public static <T> T patch(String path, Object body, TypeReference<ApiResponse<T>> typeRef) throws Exception {
-        String json = MAPPER.writeValueAsString(body);
+        String json = body != null ? MAPPER.writeValueAsString(body) : "";
         HttpRequest request = buildRequest(path)
                 .method("PATCH", HttpRequest.BodyPublishers.ofString(json))
                 .build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        checkAuth(response);
         return handleResponse(response, typeRef);
     }
 
     public static <T> T delete(String path, TypeReference<ApiResponse<T>> typeRef) throws Exception {
         HttpRequest request = buildRequest(path).DELETE().build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        checkAuth(response);
         return handleResponse(response, typeRef);
     }
 
@@ -148,7 +131,43 @@ public class ApiClient {
         }
         HttpRequest request = builder.POST(HttpRequest.BodyPublishers.ofByteArray(fullBody)).build();
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        checkAuth(response);
         return handleResponse(response, typeRef);
+    }
+
+    public static <T> T uploadFile(String path, File file, TypeReference<ApiResponse<T>> typeRef) throws Exception {
+        String boundary = "----FormBoundary" + System.currentTimeMillis();
+        String CRLF = "\r\n";
+        byte[] fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
+        String fileName = file.getName();
+
+        String header = "--" + boundary + CRLF
+                + "Content-Disposition: form-data; name=\"file\"; filename=\"" + fileName + "\"" + CRLF
+                + "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" + CRLF + CRLF;
+        byte[] footer = (CRLF + "--" + boundary + "--" + CRLF).getBytes();
+
+        byte[] fullBody = new byte[header.getBytes().length + fileBytes.length + footer.length];
+        System.arraycopy(header.getBytes(), 0, fullBody, 0, header.getBytes().length);
+        System.arraycopy(fileBytes, 0, fullBody, header.getBytes().length, fileBytes.length);
+        System.arraycopy(footer, 0, fullBody, header.getBytes().length + fileBytes.length, footer.length);
+
+        String token = UserSession.getInstance().getToken();
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .timeout(Duration.ofSeconds(60))
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary);
+        if (token != null && !token.isEmpty()) {
+            builder.header("Authorization", "Bearer " + token);
+        }
+        HttpRequest request = builder.POST(HttpRequest.BodyPublishers.ofByteArray(fullBody)).build();
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        checkAuth(response);
+        return handleResponse(response, typeRef);
+    }
+
+    public static String encodeParam(String value) {
+        if (value == null || value.isEmpty()) return "";
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     public static ObjectMapper getMapper() { return MAPPER; }

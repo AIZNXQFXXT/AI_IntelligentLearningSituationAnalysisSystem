@@ -23,6 +23,7 @@
         <lombok.version>1.18.38</lombok.version>
         <javafx.version>17</javafx.version>
         <maven.compiler.proc>full</maven.compiler.proc>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencyManagement>

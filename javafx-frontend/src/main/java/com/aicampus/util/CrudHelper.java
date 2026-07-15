@@ -34,4 +34,36 @@ public class CrudHelper {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    public static <T> void runAsync(java.util.function.Supplier<T> operation,
+                                     Consumer<T> onSuccess,
+                                     String errorMessage) {
+        javafx.concurrent.Task<T> task = new javafx.concurrent.Task<>() {
+            @Override
+            protected T call() throws Exception {
+                return operation.get();
+            }
+        };
+        task.setOnSucceeded(e -> {
+            T result = task.getValue();
+            if (result != null) onSuccess.accept(result);
+        });
+        task.setOnFailed(e -> showError(errorMessage));
+        AppExecutors.submit(task::run);
+    }
+
+    public static void runAsyncVoid(Runnable operation,
+                                     Runnable onSuccess,
+                                     String errorMessage) {
+        javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                operation.run();
+                return null;
+            }
+        };
+        task.setOnSucceeded(e -> onSuccess.run());
+        task.setOnFailed(e -> showError(errorMessage));
+        AppExecutors.submit(task::run);
+    }
 }

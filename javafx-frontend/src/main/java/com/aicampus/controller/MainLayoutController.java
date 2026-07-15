@@ -21,7 +21,13 @@ public class MainLayoutController {
     private final List<Button> menuButtons = new ArrayList<>();
     private String currentRoute = null;
 
-    private record MenuItem(String path, String title) {}
+    private static class MenuItem {
+        private final String path;
+        private final String title;
+        MenuItem(String path, String title) { this.path = path; this.title = title; }
+        String path() { return path; }
+        String title() { return title; }
+    }
 
     private final MenuItem[] adminMenus = {
         new MenuItem("/admin/dashboard", "控制台"),
@@ -99,12 +105,12 @@ public class MainLayoutController {
     }
 
     private MenuItem[] getMenusForRole(String role) {
-        return switch (role) {
-            case "ADMIN" -> adminMenus;
-            case "TEACHER" -> teacherMenus;
-            case "STUDENT" -> studentMenus;
-            default -> adminMenus;
-        };
+        switch (role) {
+            case "ADMIN": return adminMenus;
+            case "TEACHER": return teacherMenus;
+            case "STUDENT": return studentMenus;
+            default: return adminMenus;
+        }
     }
 
     private void buildSidebar(MenuItem[] menus) {
@@ -143,34 +149,34 @@ public class MainLayoutController {
         }
 
         switch (route) {
-            case ADMIN_DASHBOARD -> ViewLoader.loadFXMLInto(contentArea, "/fxml/AdminDashboardView.fxml");
-            case ADMIN_CLASSES -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ClassManagementView.fxml");
-            case ADMIN_TEACHERS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherManagementView.fxml");
-            case ADMIN_STUDENTS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentManagementView.fxml");
-            case ADMIN_COURSES -> ViewLoader.loadFXMLInto(contentArea, "/fxml/CourseManagementView.fxml");
-            case ADMIN_EXAMS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ExamManagementView.fxml");
-            case ADMIN_TEACHING_TASKS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeachingTaskManagementView.fxml");
-            case ADMIN_STATS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/SchoolStatsView.fxml");
-            case ADMIN_CONFIG -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ConfigView.fxml");
-            case ADMIN_LOGS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/OperationLogView.fxml");
-            case ADMIN_AI_LOGS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/AiCallLogView.fxml");
-            case TEACHER_DASHBOARD -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherDashboardView.fxml");
-            case TEACHER_STUDENTS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherStudentsView.fxml");
-            case SCORE_ENTRY -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ScoreEntryView.fxml");
-            case SCORE_IMPORT -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ScoreImportView.fxml");
-            case CLASS_STATS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ClassStatsView.fxml");
-            case TEACHER_DIAGNOSIS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherDiagnosisView.fxml");
-            case TEACHER_COMMENT -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherCommentView.fxml");
-            case TEACHER_RISK -> ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherRiskView.fxml");
-            case REPORT_EXPORT -> ViewLoader.loadFXMLInto(contentArea, "/fxml/ReportExportView.fxml");
-            case STUDENT_DASHBOARD -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentDashboardView.fxml");
-            case STUDENT_SCORES -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentScoresView.fxml");
-            case STUDENT_ANALYSIS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentAnalysisView.fxml");
-            case STUDENT_DIAGNOSIS -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentDiagnosisView.fxml");
-            case STUDENT_ADVICE -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentAdviceView.fxml");
-            case STUDENT_COMMENT -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentCommentView.fxml");
-            case STUDENT_RISK -> ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentRiskView.fxml");
-            default -> ViewLoader.loadWebView(contentArea, route);
+            case ADMIN_DASHBOARD: ViewLoader.loadFXMLInto(contentArea, "/fxml/AdminDashboardView.fxml"); break;
+            case ADMIN_CLASSES: ViewLoader.loadFXMLInto(contentArea, "/fxml/ClassManagementView.fxml"); break;
+            case ADMIN_TEACHERS: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherManagementView.fxml"); break;
+            case ADMIN_STUDENTS: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentManagementView.fxml"); break;
+            case ADMIN_COURSES: ViewLoader.loadFXMLInto(contentArea, "/fxml/CourseManagementView.fxml"); break;
+            case ADMIN_EXAMS: ViewLoader.loadFXMLInto(contentArea, "/fxml/ExamManagementView.fxml"); break;
+            case ADMIN_TEACHING_TASKS: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeachingTaskManagementView.fxml"); break;
+            case ADMIN_STATS: ViewLoader.loadFXMLInto(contentArea, "/fxml/SchoolStatsView.fxml"); break;
+            case ADMIN_CONFIG: ViewLoader.loadFXMLInto(contentArea, "/fxml/ConfigView.fxml"); break;
+            case ADMIN_LOGS: ViewLoader.loadFXMLInto(contentArea, "/fxml/OperationLogView.fxml"); break;
+            case ADMIN_AI_LOGS: ViewLoader.loadFXMLInto(contentArea, "/fxml/AiCallLogView.fxml"); break;
+            case TEACHER_DASHBOARD: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherDashboardView.fxml"); break;
+            case TEACHER_STUDENTS: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherStudentsView.fxml"); break;
+            case SCORE_ENTRY: ViewLoader.loadFXMLInto(contentArea, "/fxml/ScoreEntryView.fxml"); break;
+            case SCORE_IMPORT: ViewLoader.loadFXMLInto(contentArea, "/fxml/ScoreImportView.fxml"); break;
+            case CLASS_STATS: ViewLoader.loadFXMLInto(contentArea, "/fxml/ClassStatsView.fxml"); break;
+            case TEACHER_DIAGNOSIS: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherDiagnosisView.fxml"); break;
+            case TEACHER_COMMENT: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherCommentView.fxml"); break;
+            case TEACHER_RISK: ViewLoader.loadFXMLInto(contentArea, "/fxml/TeacherRiskView.fxml"); break;
+            case REPORT_EXPORT: ViewLoader.loadFXMLInto(contentArea, "/fxml/ReportExportView.fxml"); break;
+            case STUDENT_DASHBOARD: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentDashboardView.fxml"); break;
+            case STUDENT_SCORES: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentScoresView.fxml"); break;
+            case STUDENT_ANALYSIS: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentAnalysisView.fxml"); break;
+            case STUDENT_DIAGNOSIS: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentDiagnosisView.fxml"); break;
+            case STUDENT_ADVICE: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentAdviceView.fxml"); break;
+            case STUDENT_COMMENT: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentCommentView.fxml"); break;
+            case STUDENT_RISK: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentRiskView.fxml"); break;
+            default: ViewLoader.loadWebView(contentArea, route); break;
         }
     }
 

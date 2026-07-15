@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.model.*;
 import com.aicampus.service.*;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -55,7 +56,7 @@ public class ReportExportController {
             @Override protected List<ClassInfo> call() throws Exception { return ClassService.getAll(); }
         };
         task.setOnSucceeded(e -> classCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void loadExams() {
@@ -63,16 +64,16 @@ public class ReportExportController {
             @Override protected List<Exam> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
         };
         task.setOnSucceeded(e -> examCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     @FXML
     private void handleExport() {
         String type = exportTypeCombo.getValue();
         switch (type) {
-            case "成绩表" -> exportScores();
-            case "评语汇总" -> exportComments();
-            case "高风险学生" -> exportRisks();
+            case "成绩表": exportScores(); break;
+            case "评语汇总": exportComments(); break;
+            case "高风险学生": exportRisks(); break;
         }
     }
 
@@ -118,7 +119,7 @@ public class ReportExportController {
                 CrudHelper.showError("导出失败: " + ex.getMessage());
             }
         });
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void exportComments() {
@@ -154,7 +155,7 @@ public class ReportExportController {
                 CrudHelper.showError("导出失败: " + ex.getMessage());
             }
         });
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private void exportRisks() {
@@ -193,7 +194,7 @@ public class ReportExportController {
                 CrudHelper.showError("导出失败: " + ex.getMessage());
             }
         });
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     private File showSaveDialog(String defaultName) {

@@ -3,6 +3,7 @@ package com.aicampus.controller;
 import com.aicampus.model.AiCallLog;
 import com.aicampus.model.PageResult;
 import com.aicampus.service.AiCallLogService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -79,8 +80,11 @@ public class AiCallLogController {
             tableData.clear(); tableData.addAll(result.getRecords());
             totalItems = result.getTotal(); updatePagination();
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void updatePagination() {

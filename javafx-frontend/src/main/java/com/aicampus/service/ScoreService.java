@@ -19,7 +19,7 @@ public class ScoreService {
     }
 
     public static String batchImportScore(File file, int examId, int classId) throws Exception {
-        return ApiClient.upload("/scores/import", file, examId, classId,
+        return ApiClient.upload("/scores/batch", file, examId, classId,
                 new TypeReference<ApiResponse<String>>() {});
     }
 

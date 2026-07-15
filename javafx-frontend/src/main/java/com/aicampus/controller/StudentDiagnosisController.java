@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.model.AiDiagnosis;
 import com.aicampus.service.DiagnosisService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -45,9 +46,9 @@ public class StudentDiagnosisController {
                 } else {
                     Label label = new Label(item);
                     switch (item) {
-                        case "HIGH" -> label.getStyleClass().add("tag-danger");
-                        case "MEDIUM" -> label.getStyleClass().add("tag-warning");
-                        default -> label.getStyleClass().add("tag-success");
+                        case "HIGH": label.getStyleClass().add("tag-danger"); break;
+                        case "MEDIUM": label.getStyleClass().add("tag-warning"); break;
+                        default: label.getStyleClass().add("tag-success"); break;
                     }
                     setGraphic(label);
                 }
@@ -102,8 +103,11 @@ public class StudentDiagnosisController {
             table.setVisible(!list.isEmpty());
             table.setManaged(!list.isEmpty());
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void showDetail(AiDiagnosis d) {

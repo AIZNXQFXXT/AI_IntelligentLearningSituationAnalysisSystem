@@ -1,9 +1,11 @@
 package com.aicampus.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TeachingTask {
     @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int id;
     @JsonProperty("teacherId")
     private int teacherId;

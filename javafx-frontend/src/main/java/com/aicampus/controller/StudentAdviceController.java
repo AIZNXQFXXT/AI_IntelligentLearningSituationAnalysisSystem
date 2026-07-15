@@ -2,6 +2,7 @@ package com.aicampus.controller;
 
 import com.aicampus.model.AiDiagnosis;
 import com.aicampus.service.DiagnosisService;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -47,7 +48,10 @@ public class StudentAdviceController {
                 contentBox.setVisible(true);
             }
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载失败"));
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
     }
 }

@@ -12,7 +12,7 @@
 
     <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS" spacing="15" padding="20">
         <Label fx:id="emptyLabel" text="暂无学习建议，请等待教师生成AI诊断"
-               style="-fx-text-fill: #999; -fx-font-size: 14;" visible="false"/>
+               styleClass="empty-state-label" visible="false"/>
 
         <VBox fx:id="contentBox" spacing="10" visible="false">
             <Label styleClass="section-title" text="诊断文本"/>

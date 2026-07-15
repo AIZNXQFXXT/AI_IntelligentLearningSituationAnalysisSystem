@@ -6,6 +6,7 @@ import com.aicampus.model.Student;
 import com.aicampus.service.RiskWarningService;
 import com.aicampus.service.StudentService;
 import com.aicampus.session.UserSession;
+import com.aicampus.util.AppExecutors;
 import com.aicampus.util.ViewLoader;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -43,7 +44,7 @@ public class TeacherDashboardController {
             // Silently handle
         });
 
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
     @FXML private void goToScoreEntry() { navigateToWebView("/teacher/score/entry"); }
@@ -54,7 +55,8 @@ public class TeacherDashboardController {
     private void navigateToWebView(String route) {
         javafx.scene.Node node = valueStudents;
         while (node != null) {
-            if (node instanceof BorderPane bp) {
+            if (node instanceof BorderPane) {
+                BorderPane bp = (BorderPane) node;
                 if (bp.getCenter() != null || bp.getLeft() == null) {
                     ViewLoader.loadWebView(bp, route);
                     return;
