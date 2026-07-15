@@ -35,7 +35,7 @@ Default admin: `admin / 123456`
 - **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Login: `username` + `password`.
 - **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`
 - **Pagination**: `PageResult.of(records, total, page, size)` from MyBatis-Plus `Page`
-- **RBAC**: ADMIN / TEACHER / STUDENT, role-based menu routing
+- **RBAC**: ADMIN / TEACHER / STUDENT, role-based menu routing, `SecurityHelper.requireAdmin(request)` for admin-only endpoints
 - **All entities** extend `BaseEntity` (id auto, createdAt, updatedAt, isDeleted)
 
 ## Testing (pure JUnit + Mockito, no Spring test context)
@@ -56,7 +56,7 @@ class XxxServiceTest {
 }
 ```
 
-Existing tests: `UserControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`.
+Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `StudentServiceImplTest`, `SystemServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`.
 
 ## Async Import Pipeline (scores / teachers / students)
 
@@ -101,12 +101,20 @@ GET /api/stats/trend?classId=&courseId=                      → List<TrendItemV
 
 StatsController uses `LambdaQueryWrapper` + Java computation — no raw SQL.
 
+## Log Endpoints
+
+```
+GET /api/logs/operation?page=&size=&username=&operation=&targetType=&resultStatus=&startDate=&endDate=
+→ 200 { code, data: { records, total, page, size } }
+→ 403 (non ADMIN)
+```
+
 ## Known Pitfalls
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — auto-fill is dead. Set timestamps manually in service code.
-- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier` to constructor params. Write a manual constructor (see `TaskController` / `TeacherController` / `UserController`).
-- **`.gitignore` traps**: `*.yml` (application config not tracked after first commit), `.xlsx` (import templates not tracked, put in `backend-module/` for local testing).
+- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier` to constructor params. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController`).
+- **`.gitignore` traps**: `*.yml` (application config not tracked after first commit), `.xlsx` (import templates not tracked).
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
-- **No AI controllers/services**: AI tables/entities exist but no DeepSeek integration yet.
+- **No AI controllers/services**: `ai/` package exists but empty — no DeepSeek integration yet.
 - **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `{"status": 1}` and convert via `convertStatus()` (1→ARCHIVED, 2→SUBMITTED, default→DRAFT).
 - **JAVA_HOME**: On Linux, `mvn spring-boot:run` may fail without JAVA_HOME set. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
