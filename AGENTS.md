@@ -6,14 +6,21 @@ Maven multi-module (Java 17+, Spring Boot 3.2, JavaFX, MyBatis-Plus, PostgreSQL,
 
 ```
 common-module/   → shared DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups
-backend-module/  → Spring Boot REST API on :8080, JWT auth, MyBatis-Plus ORM, AOP logging, No tests
-client-module/   → JavaFX/FXML desktop client via OkHttp → backend; **still a skeleton** (CampusApp.java empty)
+backend-module/  → Spring Boot REST API on :8080, JWT auth, MyBatis-Plus ORM, AOP logging
+client-module/   → JavaFX/FXML desktop client; **still a skeleton** (CampusApp.java empty, no FXML/CSS)
 ```
 
-Build **always from root** (`pom.xml` has `<packaging>pom</packaging>`):
+## Build
+
 ```
+# compile all modules from root (required for multi-module dependency resolution)
 mvn clean compile -DskipTests
+
+# run tests
+mvn test -pl backend-module -am -Dsurefire.failIfNoSpecifiedTests=false
 ```
+
+No `mvnw`, no `lombok.config`, no CI/CD.
 
 ## Quick start
 
@@ -21,8 +28,9 @@ mvn clean compile -DskipTests
 # 1. Init DB
 psql -U test -d ai_campus -f backend-module/src/main/resources/db/init.sql
 
-# 2. Run backend
-mvn spring-boot:run -pl backend-module
+# 2. Run backend (skip test-compile to avoid GenerateTestExcel dependency issue)
+mvn compile -DskipTests && \
+mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
 
 # 3. App entrypoint
 com.campus.backend.CampusApplication
@@ -33,41 +41,40 @@ Default admin: `admin / 123456`
 ## Architecture conventions
 
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus BaseMapper)
-- **Soft delete**: MyBatis-Plus `is_deleted` field (0=active, 1=deleted). Never `DELETE FROM`.
-- **Entity → DTO**: dedicated `*Converter` classes per domain (no MapStruct).
+- **Soft delete**: MyBatis-Plus `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
+- **Entity → DTO**: dedicated `*Converter` per domain (no MapStruct).
 - **Validation groups**: `Create.class` / `Update.class` on request DTOs.
-- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor`.
-- **AOP**: `OperationLogAspect` logs every controller method automatically.
+- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor`. Login requires `username` + `password` (not `account`).
+- **AOP**: `OperationLogAspect` logs every controller method.
 - **Pagination**: `PageResult<T>` wrapper, MyBatis-Plus `Page` under the hood.
 - **RBAC**: role enum `ADMIN / TEACHER / STUDENT`, role-based menu routing on client side.
 
-## Async import pipeline
+## Async score import pipeline
 
-- **POST** `/api/tasks/import-scores` (MultipartFile + examId + courseId) → returns `taskId`
-- **GET** `/api/tasks/{id}/progress` — polling
-- **GET** `/api/tasks/{id}/result` — final result
-- Excel format: columns `学号`, `平时分`, `卷面分`, `最终分`, `缺勤`, `作弊`
-- Exam and course selected on upload side, not in Excel
-- Thread pool: `importExecutor` (core=2, max=4, queue=10, CallerRunsPolicy)
-- Processing: reads temp file → converts rows → creates scores → cleans up temp file
-- Error handling: per-row failure doesn't abort the task; errors collected in result JSON
-- Missing `TaskService` implementation fixed, `ScoreImportTask.convertRow()` implemented
+- **POST** `/api/scores/batch` (MultipartFile + examId + courseId) → returns `taskId`
+- **GET** `/api/scores/{id}/progress` — polling
+- **GET** `/api/scores/{id}/result` — final result
+- Excel columns: `学号`, `平时分`, `卷面分`, `最终分`, `缺勤`, `作弊`
+- Thread pool: `importExecutor` (core=2, max=4, queue=10, `CallerRunsPolicy`, prefix `import-`)
+- Flow: saves temp file → creates task record (PENDING) → submits `ScoreImportTask` to executor → executor thread parses Excel, validates student numbers, inserts scores, updates progress/complete
+- `convertRow()` uses `studentService.findByStudentNo()` — throws if student doesn't exist
+- Per-row failure doesn't abort; errors collected in result JSON
+- `courseId` is required (NOT NULL in `score` table, `@NotNull` on `ScoreDTO`)
 
-## Known bugs
+## Known bugs / pitfalls
 
-- **`MyBatisPlusConfig` auto-fill broken**: `BaseEntity` uses `createdAt`/`updatedAt` but handler sets `"createTime"`/`"updateTime"` (wrong field names) — auto-fill effectively dead
-- **CRLF on WSL**: Files on the NTFS mount have `CRLF` line endings; git stores `LF`. After file writes (`Write` tool), run `git add` to convert. Set `core.autocrlf input` if not already.
-- **`TaskService` had no impl** (fixed now); `ScoreImportTask` had `convertRow()` as `UnsupportedOperationException` (fixed)
+- **`MyBatisPlusConfig` auto-fill broken**: `BaseEntity` uses `createdAt`/`updatedAt` but handler sets `"createTime"`/`"updateTime"` — auto-fill effectively dead.
+- **`@AllArgsConstructor` + `@Qualifier`**: Lombok does NOT copy `@Qualifier` to the constructor parameter. Write a manual constructor when using `@Qualifier` on an injected field (see `TaskController`).
+- **Background thread DB ops need `@Transactional`**: `ScoreImportTask` runs in a pool thread without an active transaction. Methods like `updateProgress()`, `complete()`, `fail()` must have `@Transactional(propagation = REQUIRES_NEW)` to persist.
+- **Cross-platform path**: `ScoreImportTask` receives `fileUrl` as a URI string (`file:///...`). Use `Path.of(URI.create(fileUrl))` to parse — NOT string replace (breaks on Windows `file:///C:/...`).
+- **`catch(Exception)` misses `Error`**: Background thread code should `catch(Throwable)` so that `NoClassDefFoundError` etc. are caught and `taskService.fail()` is called.
+- **`GenerateTestExcel.java` depends on `easyexcel`**: This test file requires `easyexcel` on the classpath. Running `spring-boot:run` triggers `test-compile` which fails. Use `-Dmaven.test.skip=true` or `-am`.
 
 ## Gotchas
 
-- **Client module is placeholder** — `CampusApp.java` is empty (0 bytes). No `src/main/resources/`, no FXML, no CSS.
-- **Tests exist now** in `backend-module/src/test/java/` (9 unit tests). Run with:
-  ```
-  mvn test -pl backend-module -am -Dsurefire.failIfNoSpecifiedTests=false
-  ```
-- **Build**: `mvn clean compile -DskipTests` from root (required for multi-module dependency resolution)
-- **No Maven wrapper** (`mvnw`), no `lombok.config`, no CI/CD.
+- **`application.yml` is in `.gitignore`** (`*.yml` pattern) but already tracked — changes won't be versioned after first commit.
 - **Plaintext secrets in YAML** — DB password and JWT secret committed. Rotate before production.
-- **`application*.yml` in `.gitignore`** but already tracked — changes ignored after first commit.
-- **No AI module code yet** — AI tables/entities exist but no services, controllers, or DeepSeek integration.
+- **No AI module code** — AI tables/entities exist but no services/controllers/DeepSeek integration.
+- **Test Excel file** is at `backend-module/import-test-data.xlsx` (generated by `GenerateTestExcel`). The test data uses student numbers `2024001`–`2024010` + `9999999` which don't exist in the DB unless seeded.
+- **CRLF on WSL**: Files on NTFS mount may have CRLF line endings; git stores LF. After file writes, run `git add` to convert. Set `core.autocrlf input` if not already.
+- **Redis configured** at `172.24.197.13:6379` — app starts even if Redis is unreachable (Lettuce lazy connect).

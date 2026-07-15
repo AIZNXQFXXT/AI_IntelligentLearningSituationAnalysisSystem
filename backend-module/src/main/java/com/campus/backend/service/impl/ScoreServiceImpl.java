@@ -1,6 +1,7 @@
 package com.campus.backend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.ScoreConverter;
@@ -95,12 +96,14 @@ public class ScoreServiceImpl implements ScoreService {
 
     @Override
     public void updateStatus(Long id, String status) {
-        Score entity = scoreMapper.selectById(id);
-        if (entity == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND);
+        LambdaUpdateWrapper<Score> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Score::getId, id)
+                .eq(Score::getIsDeleted, 0);
+        updateWrapper.set(Score::getAuditStatus, status);
+        int rows = scoreMapper.update(null, updateWrapper);
+        if (rows == 0) {
+            throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "成绩记录不存在或已被删除");
         }
-        entity.setAuditStatus(status);
-        scoreMapper.updateById(entity);
     }
 
     @Override
