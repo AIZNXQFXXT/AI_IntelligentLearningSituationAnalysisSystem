@@ -1,13 +1,13 @@
 # AI Campus — Agent Guide
 
-Maven multi-module (Java 17+, Spring Boot 3.2, JavaFX, MyBatis-Plus, PostgreSQL, Redis). C/S desktop app for academic analysis.
+Maven multi-module (Java 17, Spring Boot 3.2, JavaFX, MyBatis-Plus, PostgreSQL, Redis). C/S desktop app for academic analysis.
 
 ## Modules
 
 ```
 common-module/   DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups
 backend-module/  Spring Boot REST API :8080, JWT auth, MyBatis-Plus ORM, AOP logging
-client-module/   JavaFX/FXML desktop client — still a skeleton
+client-module/   JavaFX/FXML desktop client
 ```
 
 ## Build & Run
@@ -19,7 +19,7 @@ mvn compile -DskipTests
 # run backend
 mvn compile -DskipTests && mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
 
-# single test class (no Spring context needed — pure mockito)
+# single test class (pure mockito, no Spring context)
 mvn test -pl backend-module -Dtest=UserControllerTest -DfailIfNoTests=false
 ```
 
@@ -30,51 +30,32 @@ Default admin: `admin / 123456`
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
 - **Entity → DTO**: manual `*Converter` per domain, no MapStruct
 - **Validation groups**: `Create.class` / `Update.class` on request DTOs
-- **Soft delete**: MyBatis-Plus `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
-- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor`. Login: `username` + `password`.
+- **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
+- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Login: `username` + `password`.
 - **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`
-- **Pagination**: `PageResult<T>` wrapper over MyBatis-Plus `Page`
+- **Pagination**: `PageResult.of(records, total, page, size)` from MyBatis-Plus `Page`
 - **RBAC**: ADMIN / TEACHER / STUDENT, role-based menu routing
+- **All entities** extend `BaseEntity` (id auto, createdAt, updatedAt, isDeleted)
 
 ## Testing (pure JUnit + Mockito, no Spring test context)
 
-`@WebMvcTest` / `@SpringBootTest` **will fail** — `@MapperScan` on `CampusApplication` forces MyBatis MapperFactoryBean creation which requires a DataSource. All tests use standalone setup:
+`@WebMvcTest` / `@SpringBootTest` **will fail** — `@MapperScan` on `CampusApplication` forces DataSource dependency. All tests use standalone setup:
 
 ```java
-// Controller (MockMvc standalone — no interceptor/auth needed)
+// Controller (MockMvc standalone)
 MockMvcBuilders.standaloneSetup(controller)
     .setControllerAdvice(new GlobalExceptionHandler())
     .setValidator(new LocalValidatorFactoryBean())
     .build();
 
-// Service (pure mockito)
+// Service
 @ExtendWith(MockitoExtension.class)
 class XxxServiceTest {
     @Mock private XxxMapper mapper;
 }
 ```
 
-Existing test classes: `UserControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`.
-
-## Currently Implemented Endpoints
-
-| Module | Endpoints |
-|--------|-----------|
-| Auth | `POST /api/auth/login`, `GET /api/auth/me` |
-| Users | `GET /api/users`, `POST /api/users`, `PUT /api/users/{id}/status`, `PUT /api/users/{id}/password` |
-| Teachers | Full CRUD + `PUT /{id}/status` + batch import |
-| Students | Full CRUD + `PUT /{id}/status` + batch import + teacher-scoped filtering |
-| Classes, Courses, Exams, TeachingTasks, Scores | CRUD + batch import |
-| Tasks | `POST /api/scores/batch`, `GET .../{taskId}/progress`, `GET .../{taskId}/result` |
-
-## Known Pitfalls
-
-- **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` sets `"createTime"`/`"updateTime"` — auto-fill is dead. Set timestamps manually in service code.
-- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier` to constructor params. Write a manual constructor (see `TaskController` / `TeacherController` / `UserController`).
-- **`application.yml` in `.gitignore`**: `*.yml` pattern blocks tracking after first commit.
-- **`.xlsx` in `.gitignore`**: Excel import template files are not tracked. Put them in `backend-module/` for local testing.
-- **Redis unreachable**: App starts fine (Lettuce lazy connect).
-- **No AI controllers/services**: AI tables/entities exist but no DeepSeek integration yet.
+Existing tests: `UserControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`.
 
 ## Async Import Pipeline (scores / teachers / students)
 
@@ -94,6 +75,25 @@ Existing test classes: `UserControllerTest`, `StudentServiceImplTest`, `TaskServ
 - `ObjectMapper` instantiated per invocation (no shared state)
 - Use `@Transactional(propagation = REQUIRES_NEW)` on `TaskServiceImpl` methods that run in background threads
 
-## Import Templates
+## Auth Endpoints
 
-Sample .xlsx files at `backend-module/import-teachers-template.xlsx`, `backend-module/import-students-template.xlsx` (not tracked in git).
+```
+POST /api/auth/login     → {token, refreshToken, role, username, userId}
+POST /api/auth/logout    → Redis blacklists current token until expiry
+POST /api/auth/refresh   → body: {refreshToken} → {token, refreshToken}
+PATCH /api/auth/profile  → body: {avatar?, phone?} (partial)
+PUT  /api/auth/password  → body: {oldPassword, newPassword}
+```
+
+- `/api/auth/login` and `/api/auth/refresh` are whitelisted in `JwtAuthInterceptor`
+- Logout stores token in Redis key `blacklist:{token}` with TTL matching remaining validity
+- Interceptor checks Redis blacklist before accepting any token
+
+## Known Pitfalls
+
+- **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — auto-fill is dead. Set timestamps manually in service code.
+- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier` to constructor params. Write a manual constructor (see `TaskController` / `TeacherController` / `UserController`).
+- **`.gitignore` traps**: `*.yml` (application config not tracked after first commit), `.xlsx` (import templates not tracked, put in `backend-module/` for local testing).
+- **Redis unreachable**: App starts fine (Lettuce lazy connect).
+- **No AI controllers/services**: AI tables/entities exist but no DeepSeek integration yet.
+- **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `{"status": 1}` and convert via `convertStatus()` (1→ARCHIVED, 2→SUBMITTED, default→DRAFT).

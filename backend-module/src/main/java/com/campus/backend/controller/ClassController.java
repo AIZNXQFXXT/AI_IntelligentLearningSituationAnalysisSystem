@@ -6,6 +6,7 @@ import com.campus.backend.service.ClassService;
 import com.campus.common.dto.ClassDTO;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +41,18 @@ public class ClassController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
         IPage<ClassInfo> result = classService.pageList(page, size, keyword);
+        return ApiResponse.success(PageResult.of(
+                result.getRecords(), result.getTotal(), page, size));
+    }
+
+    @GetMapping("/my")
+    public ApiResponse<PageResult<ClassInfo>> findMyClasses(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        IPage<ClassInfo> result = classService.findMyClasses(page, size, keyword, userId);
         return ApiResponse.success(PageResult.of(
                 result.getRecords(), result.getTotal(), page, size));
     }

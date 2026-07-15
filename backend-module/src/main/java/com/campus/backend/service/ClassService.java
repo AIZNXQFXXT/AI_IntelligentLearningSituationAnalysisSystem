@@ -11,5 +11,6 @@ public interface ClassService {
     void delete(Long id);
     ClassInfo findById(Long id);
     IPage<ClassInfo> pageList(int page, int size, String keyword);
+    IPage<ClassInfo> findMyClasses(int page, int size, String keyword, Long userId);
     List<ClassInfo> listAll();
 }

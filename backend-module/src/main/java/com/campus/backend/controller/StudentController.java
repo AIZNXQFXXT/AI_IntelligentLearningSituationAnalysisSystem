@@ -71,6 +71,19 @@ public class StudentController {
                 result.getRecords(), result.getTotal(), page, size));
     }
 
+    @GetMapping("/my-class")
+    public ApiResponse<PageResult<Student>> findMyClassStudents(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest request) {
+        String role = (String) request.getAttribute("role");
+        Long userId = (Long) request.getAttribute("userId");
+        IPage<Student> result = studentService.pageList(page, size, keyword, null, role, userId);
+        return ApiResponse.success(PageResult.of(
+                result.getRecords(), result.getTotal(), page, size));
+    }
+
     @PutMapping("/{id}/status")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         studentService.toggleStatus(id, status);

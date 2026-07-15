@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.campus.backend.entity.Score;
 import com.campus.backend.service.ScoreService;
 import com.campus.common.dto.ScoreDTO;
+import com.campus.common.validator.Create;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
 import com.campus.common.vo.ScoreArchiveVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -22,7 +24,7 @@ public class ScoreController {
     private final ScoreService scoreService;
 
     @PostMapping
-    public ApiResponse<Score> create(@Valid @RequestBody ScoreDTO dto,
+    public ApiResponse<Score> create(@Validated(Create.class) @RequestBody ScoreDTO dto,
                                      HttpServletRequest request) {
         Long enteredBy = (Long) request.getAttribute("userId");
         return ApiResponse.success(scoreService.create(dto, enteredBy));
