@@ -3,6 +3,7 @@ package com.campus.backend.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.campus.backend.entity.ClassInfo;
 import com.campus.common.dto.ClassDTO;
+import com.campus.common.vo.ClassExportVO;
 import java.util.List;
 
 public interface ClassService {
@@ -13,4 +14,5 @@ public interface ClassService {
     IPage<ClassInfo> pageList(int page, int size, String keyword);
     IPage<ClassInfo> findMyClasses(int page, int size, String keyword, Long userId);
     List<ClassInfo> listAll();
+    List<ClassExportVO> exportList();
 }

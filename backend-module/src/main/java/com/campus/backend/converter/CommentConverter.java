@@ -35,6 +35,7 @@ public class CommentConverter {
         Student student = studentMapper.selectById(entity.getStudentId());
         if (student != null) {
             vo.setStudentName(student.getName());
+            vo.setStudentNo(student.getStudentNo());
             if (student.getClassId() != null) {
                 ClassInfo classInfo = classMapper.selectById(student.getClassId());
                 if (classInfo != null) {

@@ -118,6 +118,11 @@ public class ScoreServiceImpl implements ScoreService {
 
     }
 
+    @Override
+    public List<ScoreArchiveVO> exportList(Long examId, Long courseId, Long classId) {
+        return scoreMapper.selectExportList(examId, courseId, classId);
+    }
+
     private void updateRankings(Long examId, Long courseId) {
         // 计算该考试该课程的所有学生排名
         List<Score> scores = scoreMapper.selectList(new LambdaQueryWrapper<Score>()

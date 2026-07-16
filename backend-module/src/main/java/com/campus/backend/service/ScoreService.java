@@ -7,6 +7,7 @@ import com.campus.common.vo.ScoreArchiveVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface ScoreService {
     Score create(ScoreDTO dto, Long enteredBy);
@@ -16,5 +17,6 @@ public interface ScoreService {
                           BigDecimal minScore, BigDecimal maxScore, Long classId);
     IPage<ScoreArchiveVO> archiveOverview(int page, int size);
     void updateStatus(Long id, String status);
-    void batchImport(MultipartFile file, Long teacherId);  // 异步
+    void batchImport(MultipartFile file, Long teacherId);
+    List<ScoreArchiveVO> exportList(Long examId, Long courseId, Long classId);
 }

@@ -153,4 +153,24 @@ public class CommentServiceImpl implements CommentService {
                 .map(converter::toVO).collect(Collectors.toList());
         return PageResult.of(records, result.getTotal(), page, size);
     }
+
+    @Override
+    public List<CommentVO> exportList(Long classId, String semester) {
+        LambdaQueryWrapper<AIComment> wrapper = new LambdaQueryWrapper<>();
+        if (classId != null) {
+            List<Long> studentIds = studentMapper.selectList(
+                    new LambdaQueryWrapper<Student>()
+                            .eq(Student::getClassId, classId)
+                            .select(Student::getId)
+            ).stream().map(Student::getId).collect(Collectors.toList());
+            if (studentIds.isEmpty()) return List.of();
+            wrapper.in(AIComment::getStudentId, studentIds);
+        }
+        if (semester != null) {
+            wrapper.eq(AIComment::getSemester, semester);
+        }
+        wrapper.orderByDesc(AIComment::getCreatedAt);
+        return commentMapper.selectList(wrapper).stream()
+                .map(converter::toVO).collect(Collectors.toList());
+    }
 }

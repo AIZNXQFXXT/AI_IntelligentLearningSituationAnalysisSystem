@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface ScoreMapper extends BaseMapper<Score> {
 
@@ -54,4 +55,27 @@ public interface ScoreMapper extends BaseMapper<Score> {
             "WHERE s.is_deleted = 0 " +
             "ORDER BY s.id DESC")
     IPage<ScoreArchiveVO> selectArchivePage(Page<?> page);
+
+    @Select("<script>" +
+            "SELECT s.id, s.student_id, s.exam_id, s.course_id, s.regular_score, s.exam_score, " +
+            "s.final_score, s.rank_class, s.rank_grade, s.is_absent, s.is_cheat, " +
+            "s.audit_status, s.created_at, s.updated_at, " +
+            "stu.name AS student_name, stu.student_no, " +
+            "c.name AS course_name, " +
+            "e.name AS exam_name, e.semester, " +
+            "cl.id AS class_id, cl.class_name " +
+            "FROM score s " +
+            "LEFT JOIN student stu ON s.student_id = stu.id AND stu.is_deleted = 0 " +
+            "LEFT JOIN course c ON s.course_id = c.id AND c.is_deleted = 0 " +
+            "LEFT JOIN exam e ON s.exam_id = e.id AND e.is_deleted = 0 " +
+            "LEFT JOIN class_info cl ON stu.class_id = cl.id AND cl.is_deleted = 0 " +
+            "WHERE s.is_deleted = 0 " +
+            "AND s.exam_id = #{examId} " +
+            "AND s.course_id = #{courseId} " +
+            "<if test='classId != null'> AND stu.class_id = #{classId} </if>" +
+            "ORDER BY s.id ASC" +
+            "</script>")
+    List<ScoreArchiveVO> selectExportList(@Param("examId") Long examId,
+                                          @Param("courseId") Long courseId,
+                                          @Param("classId") Long classId);
 }

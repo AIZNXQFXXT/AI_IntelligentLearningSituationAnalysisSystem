@@ -14,6 +14,7 @@ import com.campus.backend.mapper.TeachingTaskMapper;
 import com.campus.backend.service.ClassService;
 import com.campus.backend.converter.ClassConverter;
 import com.campus.common.dto.ClassDTO;
+import com.campus.common.vo.ClassExportVO;
 import com.campus.common.enums.ErrorCode;
 import com.campus.common.exception.BusinessException;
 import lombok.AllArgsConstructor;
@@ -109,5 +110,10 @@ public class ClassServiceImpl implements ClassService {
     @Override
     public List<ClassInfo> listAll() {
         return classMapper.selectList(null);
+    }
+
+    @Override
+    public List<ClassExportVO> exportList() {
+        return classMapper.selectExportList();
     }
 }

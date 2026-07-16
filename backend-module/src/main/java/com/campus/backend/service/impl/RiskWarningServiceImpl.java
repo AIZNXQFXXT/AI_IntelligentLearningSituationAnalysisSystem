@@ -109,6 +109,17 @@ public class RiskWarningServiceImpl implements RiskWarningService {
     }
 
     @Override
+    public List<RiskWarningVO> exportList(String semester, String riskLevel, String handleStatus) {
+        LambdaQueryWrapper<RiskWarning> wrapper = new LambdaQueryWrapper<>();
+        if (semester != null) wrapper.eq(RiskWarning::getSemester, semester);
+        if (riskLevel != null) wrapper.eq(RiskWarning::getRiskLevel, riskLevel);
+        if (handleStatus != null) wrapper.eq(RiskWarning::getHandleStatus, handleStatus);
+        wrapper.orderByDesc(RiskWarning::getRiskLevel).orderByAsc(RiskWarning::getHandleStatus);
+        return riskWarningMapper.selectList(wrapper).stream()
+                .map(converter::toVO).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void handle(Long id, String remark, Long handlerId) {
         RiskWarning warning = riskWarningMapper.selectById(id);
