@@ -7,13 +7,15 @@ Maven multi-module (Java 17, Spring Boot 3.2, JavaFX, MyBatis-Plus, PostgreSQL, 
 ```
 common-module/   DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups
 backend-module/  Spring Boot REST API :8080, JWT auth, MyBatis-Plus ORM, AOP logging
-client-module/   JavaFX/FXML desktop client
+client-module/   JavaFX/FXML desktop client (multi-module build, older/less complete)
 ```
+
+**`javafx-frontend/`** — standalone JavaFX project (NOT in root pom.xml, separate `pom.xml` + own Maven wrapper). Tracked by git. Has its own `build.sh` that embeds a Vue.js build into resources for WebView screens. Run with `mvn javafx:run -f javafx-frontend/pom.xml`.
 
 ## Build & Run
 
 ```bash
-# compile everything (required for multi-module)
+# compile everything
 mvn compile -DskipTests
 
 # run backend (JAVA_HOME must be set on Linux)
@@ -22,14 +24,17 @@ mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
 
 # single test class
 mvn test -pl backend-module -Dtest=UserControllerTest -DfailIfNoTests=false
+
+# run backend-module tests (including common-module compilation)
+mvn test -pl backend-module -am -Dtest=SystemControllerTest,SystemServiceImplTest -DfailIfNoTests=false
 ```
 
-> **CRITICAL**: Adding/editing VO/DTO classes in `common-module` requires installing the JAR to the local Maven repo before running backend:
+> **CRITICAL**: Adding/editing VO/DTO classes in `common-module` requires installing the JAR:
 > ```bash
 > mvn install -DskipTests -pl common-module -am
 > ```
-> Without this step, `spring-boot:run -pl backend-module` will fail with `ClassNotFoundException` for the new classes.
-> For running tests with `-pl backend-module`, Maven resolves common-module from `target/classes` directly, so re-compilation is sufficient.
+> Without this, `spring-boot:run -pl backend-module` fails with `ClassNotFoundException`.
+> Tests with `-pl backend-module` resolve common-module from `target/classes` — re-compilation suffices.
 
 Default admin: `admin / 123456`
 
@@ -39,7 +44,7 @@ Default admin: `admin / 123456`
 - **Entity → DTO**: manual `*Converter` per domain, no MapStruct
 - **Validation groups**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs (not `@Valid`)
 - **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
-- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Login: `username` + `password`.
+- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Login: `username` + `password`. Whitelisted: `/api/auth/login`, `/api/auth/refresh`.
 - **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`
 - **Pagination**: `PageResult.of(records, total, page, size)` from MyBatis-Plus `Page`
 - **RBAC**: ADMIN / TEACHER / STUDENT, role-based menu routing, `SecurityHelper.requireAdmin(request)` for admin-only endpoints
@@ -47,30 +52,28 @@ Default admin: `admin / 123456`
 
 ## Testing (pure JUnit + Mockito, no Spring test context)
 
-`@WebMvcTest` / `@SpringBootTest` **will fail** — `@MapperScan` on `CampusApplication` forces DataSource dependency. All tests use standalone setup:
+`@WebMvcTest` / `@SpringBootTest` **will fail** — `@MapperScan` on `CampusApplication` forces DataSource dependency. All tests use standalone MockMvc setup:
 
 ```java
-// Controller (MockMvc standalone)
 MockMvcBuilders.standaloneSetup(controller)
     .setControllerAdvice(new GlobalExceptionHandler())
     .setValidator(new LocalValidatorFactoryBean())
     .build();
-
-// Service
-@ExtendWith(MockitoExtension.class)
-class XxxServiceTest {
-    @Mock private XxxMapper mapper;
-}
 ```
 
-Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AcademicStatsControllerTest`, `AcademicStatsServiceImplTest`.
+Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/`). Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AcademicStatsControllerTest`, `AcademicStatsServiceImplTest`, `GenericTaskControllerTest`, `AsyncConfigTest`.
 
-## Async Import Pipeline (scores / teachers / students)
+## Async Import Pipeline
 
+### Domain-specific endpoints
 - `POST /api/{domain}/batch` (MultipartFile) → `{taskId}`
-- `GET /api/scores/{taskId}/progress` / `.../result` — generic polling
-- Thread pool: `importExecutor` (core=2, max=4, queue=10, `CallerRunsPolicy`)
-- Per-row failure doesn't abort; errors collected in result JSON
+- `GET /api/scores/{taskId}/progress` / `.../result` — polling
+
+### Generic unified endpoint (`GenericTaskController`)
+- `POST /api/tasks?type=SCORE_IMPORT&examId=&courseId=` (MultipartFile) → `{taskId, status}`
+- `GET /api/tasks/{taskId}` — progress; `GET /api/tasks/{taskId}/result` — result
+- Params passed as request params (not body); `teacherId` injected from request attribute
+- `TaskHandler` interface: each handler registers via `getType()` and creates `Runnable` via `createRunnable()`
 
 ### Import task patterns (must follow exactly)
 
@@ -81,58 +84,19 @@ Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest
 - Progress: `10 + (i+1)*80/size` every 50 rows
 - Cleanup: delete temp file in `finally`
 - `ObjectMapper` instantiated per invocation (no shared state)
-- Use `@Transactional(propagation = REQUIRES_NEW)` on `TaskServiceImpl` methods that run in background threads
+- `@Transactional(propagation = REQUIRES_NEW)` on `TaskServiceImpl` methods called from background threads
 
-## Auth Endpoints
-
-```
-POST /api/auth/login     → {token, refreshToken, role, username, userId}
-POST /api/auth/logout    → Redis blacklists current token until expiry
-POST /api/auth/refresh   → body: {refreshToken} → {token, refreshToken}
-PATCH /api/auth/profile  → body: {avatar?, phone?} (partial)
-PUT  /api/auth/password  → body: {oldPassword, newPassword}
-```
-
-- `/api/auth/login` and `/api/auth/refresh` are whitelisted in `JwtAuthInterceptor`
-- Logout stores token in Redis key `blacklist:{token}` with TTL matching remaining validity
-- Interceptor checks Redis blacklist before accepting any token
-
-## Stats Endpoints
-
-```
-GET /api/stats/class/{classId}?examId=&courseId=            → ClassStatsVO
-GET /api/stats/score-distribution?examId=&courseId=&classId= → List<ScoreDistributionVO>
-GET /api/stats/ranking?examId=&courseId=&classId=            → List<RankingItemVO>
-GET /api/stats/trend?classId=&courseId=                      → List<TrendItemVO>
-```
-
-All stats use `LambdaQueryWrapper` + Java computation — no raw SQL.
-
-## Academic Stats Endpoints
-
-```
-GET /api/academic-stats/grade-summary?grade=&courseId=          → List<GradeSummaryVO>
-GET /api/academic-stats/course-summary?grade=&courseId=         → List<CourseSummaryVO>
-GET /api/academic-stats/risk-distribution?grade=&groupBy=       → List<RiskDistributionVO>
-```
-
-No role restriction (any authenticated user). `grade` / `courseId` are optional global filters.
-
-## Log Endpoints
-
-```
-GET /api/logs/operation?page=&size=&username=&operation=&targetType=&resultStatus=&startDate=&endDate=
-→ 200 { code, data: { records, total, page, size } }
-→ 403 (non ADMIN)
-```
+### Thread pool
+`importExecutor` (core=2, max=4, queue=10, `CallerRunsPolicy`). Per-row failure doesn't abort; errors collected in result JSON.
 
 ## Known Pitfalls
 
-- **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — auto-fill is dead. Set timestamps manually in service code.
-- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier` to constructor params. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController`).
-- **`.gitignore` traps**: `*.yml` (application config not tracked after first commit), `.xlsx` (import templates not tracked), `test/` (test files may not be committed).
+- **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code.
+- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier`. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController`).
+- **`.gitignore` traps**: `*.yml` (application config not tracked), `.xlsx` (import templates not tracked), `test/` (test files not committed), `docs/` (documentation not committed), `*.log`.
+- **application config**: `application.yml`, `application-dev.yml`, `application-prod.yml` all exist on disk but are gitignored. With `spring.profiles.active=dev` (or `prod`), the dev/prod overrides merge with defaults in `application.yml`.
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
-- **No AI controllers/services**: `ai/` package exists but empty — no DeepSeek integration yet.
-- **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `{"status": 1}` and convert via `convertStatus()` (1→ARCHIVED, 2→SUBMITTED, default→DRAFT).
-- **JAVA_HOME**: On Linux, `mvn spring-boot:run` may fail without JAVA_HOME set. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
-- **SystemServiceImplTest pre-existing breakage**: This test references `SysConfigDTO`/`SysDictDTO` that don't exist in common-module. Skip it or exclude it from builds.
+- **JAVA_HOME**: On Linux, `mvn spring-boot:run` fails without it. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
+- **No AI implementation**: `ai/` package is empty — no DeepSeek integration yet.
+- **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `?status=1` query param, not JSON body.
+- **Two frontends**: `client-module` (multi-module, less complete) and `javafx-frontend` (standalone, tracked, hybrid FXML + WebView/Vue).

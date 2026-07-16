@@ -9,4 +9,13 @@ public class SecurityHelper {
         String role = (String) request.getAttribute("role");
         if (!"ADMIN".equals(role)) throw new BusinessException(ErrorCode.FORBIDDEN);
     }
+
+    public static void requireAnyRole(HttpServletRequest request, String... roles) {
+        String role = (String) request.getAttribute("role");
+        if (role == null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        for (String r : roles) {
+            if (r.equals(role)) return;
+        }
+        throw new BusinessException(ErrorCode.FORBIDDEN);
+    }
 }
