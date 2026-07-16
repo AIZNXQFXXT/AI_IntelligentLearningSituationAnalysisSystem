@@ -37,6 +37,7 @@ mvn test -pl backend-module -am -Dtest=SystemControllerTest,SystemServiceImplTes
 > Tests with `-pl backend-module` resolve common-module from `target/classes` — re-compilation suffices.
 
 Default admin: `admin / 123456`
+Active profile defaults to `application.yml`; `-Dspring.profiles.active=dev` merges with `application-dev.yml`.
 
 ## Architecture
 
@@ -44,11 +45,66 @@ Default admin: `admin / 123456`
 - **Entity → DTO**: manual `*Converter` per domain, no MapStruct
 - **Validation groups**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs (not `@Valid`)
 - **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
-- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Login: `username` + `password`. Whitelisted: `/api/auth/login`, `/api/auth/refresh`.
-- **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`
+- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Interceptor sets `request.setAttribute("userId", ...)` and `request.setAttribute("role", ...)`. Login: `username` + `password`. Whitelisted: `/api/auth/login`, `/api/auth/refresh`.
+- **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`; `AiCallLogAspect` logs AI calls
 - **Pagination**: `PageResult.of(records, total, page, size)` from MyBatis-Plus `Page`
-- **RBAC**: ADMIN / TEACHER / STUDENT, role-based menu routing, `SecurityHelper.requireAdmin(request)` for admin-only endpoints
+- **RBAC**: ADMIN / TEACHER / STUDENT (`RoleEnum`). Controllers use `SecurityHelper.requireAdmin(request)` or `SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN")`. **Do NOT use `@RequireRole`** — it does not exist.
 - **All entities** extend `BaseEntity` (id auto, createdAt, updatedAt, isDeleted)
+
+## Controller Authentication Pattern
+
+Every controller that needs role checks follows this pattern (no annotations):
+```java
+import com.campus.backend.util.SecurityHelper;
+import jakarta.servlet.http.HttpServletRequest;
+
+@GetMapping
+public ApiResponse<XxxVO> list(@RequestParam(...) ..., HttpServletRequest request) {
+    SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN");
+    Long userId = (Long) request.getAttribute("userId");
+    // ...
+}
+```
+
+- `SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN")` — throws 403 if role doesn't match
+- `SecurityHelper.requireAdmin(request)` — throws 403 if not ADMIN
+- `(Long) request.getAttribute("userId")` — gets the caller's user ID (set by `JwtAuthInterceptor`)
+
+## AI Module
+
+`backend-module/.../ai/` — DeepSeek integration via OkHttp, fully implemented.
+
+| Component | File | Purpose |
+|---|---|---|
+| `AiService` (interface) | `ai/AiService.java` | `AiResult call(AiRequest)` |
+| `DeepSeekProvider` | `ai/DeepSeekProvider.java` | Active by default (`campus.ai.provider=deepseek`) |
+| `LocalMockProvider` | `ai/LocalMockProvider.java` | Opt-in only (`campus.ai.provider=mock`). NOT a transparent fallback — never active unless explicitly set |
+| `AiServiceFactory` | `ai/AiServiceFactory.java` | Retry with exponential backoff; throws `AI_SERVICE_ERROR` if all attempts fail |
+| `AiRateLimiter` | `ai/AiRateLimiter.java` | Redis daily quota (50/day default) |
+| `AiCallLogAspect` | `aop/AiCallLogAspect.java` | AOP logs every AI call to `ai_call_log` |
+| `AiProperties` | `config/AiProperties.java` | `campus.ai.*` config (API key, model, limits) |
+
+**Prompt templates** live in `common-module/.../constant/PromptTemplate.java` (diagnosis, comment, risk analysis, suggestions).
+
+**AI analysis APIs** (all in `backend-module`):
+
+| Endpoint | Controller | Entity (table) | Notes |
+|---|---|---|---|
+| `POST/GET /api/diagnoses` | `DiagnosisController` | `AIDiagnosisRecord` (`ai_diagnosis_record`) | Single diagnosis + history |
+| `POST /api/comments` | `CommentController` | `AIComment` (`ai_comment`) + `AICommentVersion` | Single comment generation |
+| `POST /api/comments/batch` | `CommentController` | Same + `TaskRecord` | Async batch (classId + semester), skips existing |
+| `GET/PUT /api/comments` + `/api/comments/{id}` | `CommentController` | Same | List + manual edit (creates new version) |
+| `GET /api/risk-warnings` | `RiskWarningController` | `RiskWarning` (`risk_warning`) | List with riskLevel/handleStatus filters |
+| `PUT /api/risk-warnings/{id}/handle` | `RiskWarningController` | Same | Mark as RESOLVED |
+| `POST /api/risk-warnings/detect` | `RiskWarningController` | Same | Auto-detect risk for all students |
+| `GET /api/suggestions` | `SuggestionController` | `AISuggestion` (`ai_suggestion`) | Cached via `diagnosisId`; regenerates if diagnosis changes |
+
+### AI Service best practices (already applied)
+
+- Always check `aiResult.isSuccess()` before using content
+- Clean Markdown code fences: `content.replaceAll("^```json\\s*|```$", "").trim()`
+- Do NOT put `@Transactional` on methods that call `AiServiceFactory.execute()` (HTTP call)
+- Convert `BigDecimal` to `.doubleValue()` before `String.format("%.1f", ...)`
 
 ## Testing (pure JUnit + Mockito, no Spring test context)
 
@@ -68,6 +124,7 @@ Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/
 ### Domain-specific endpoints
 - `POST /api/{domain}/batch` (MultipartFile) → `{taskId}`
 - `GET /api/scores/{taskId}/progress` / `.../result` — polling
+- `POST /api/comments/batch` — JSON body `{classId, semester}`, no file, async AI
 
 ### Generic unified endpoint (`GenericTaskController`)
 - `POST /api/tasks?type=SCORE_IMPORT&examId=&courseId=` (MultipartFile) → `{taskId, status}`
@@ -78,10 +135,10 @@ Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/
 ### Import task patterns (must follow exactly)
 
 - `@AllArgsConstructor`
-- Fields: `taskId`, `fileUrl`, domain service, `taskService`
+- Fields: `taskId`, `fileUrl` (only for file-based import), domain service, `taskService`
 - Parse: `Path.of(URI.create(fileUrl))` — NOT string replace (breaks on Windows `file:///C:/...`)
 - Catch: `catch(Throwable)` — not just Exception
-- Progress: `10 + (i+1)*80/size` every 50 rows
+- Progress: `10 + (i+1)*80/size` every 50 rows (or every 10 for AI tasks)
 - Cleanup: delete temp file in `finally`
 - `ObjectMapper` instantiated per invocation (no shared state)
 - `@Transactional(propagation = REQUIRES_NEW)` on `TaskServiceImpl` methods called from background threads
@@ -92,11 +149,12 @@ Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/
 ## Known Pitfalls
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code.
-- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier`. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController`).
+- **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier`. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController` / `CommentController`).
 - **`.gitignore` traps**: `*.yml` (application config not tracked), `.xlsx` (import templates not tracked), `test/` (test files not committed), `docs/` (documentation not committed), `*.log`.
 - **application config**: `application.yml`, `application-dev.yml`, `application-prod.yml` all exist on disk but are gitignored. With `spring.profiles.active=dev` (or `prod`), the dev/prod overrides merge with defaults in `application.yml`.
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
 - **JAVA_HOME**: On Linux, `mvn spring-boot:run` fails without it. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
-- **No AI implementation**: `ai/` package is empty — no DeepSeek integration yet.
 - **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `?status=1` query param, not JSON body.
+- **`@RequestBody` for batch comments**: `POST /api/comments/batch` uses `@RequestBody Map<String, Object>` (JSON body with classId + semester), NOT `@RequestParam` — follows the no-file async task pattern.
 - **Two frontends**: `client-module` (multi-module, less complete) and `javafx-frontend` (standalone, tracked, hybrid FXML + WebView/Vue).
+- **`MissingServletRequestParameterException`**: `GlobalExceptionHandler` now catches it and returns 400 `"缺少必填参数: {name}"` (not 500).

@@ -123,7 +123,7 @@ public class RiskWarningServiceImpl implements RiskWarningService {
     }
 
     private String buildRiskIndicators(List<Score> scores) {
-        long failCount = scores.stream().filter(s -> s.getFinalScore() != null && (s.getFinalScore().compareTo(BigDecimal.valueOf(60)) > 0)).count();
+        long failCount = scores.stream().filter(s -> s.getFinalScore() != null && (s.getFinalScore().compareTo(BigDecimal.valueOf(60)) < 0)).count();
         long absentCount = scores.stream().filter(s -> s.getIsAbsent() != null && s.getIsAbsent() == 1).count();
         long cheatCount = scores.stream().filter(s -> s.getIsCheat() != null && s.getIsCheat() == 1).count();
 

@@ -5,6 +5,7 @@ import com.campus.common.exception.BusinessException;
 import com.campus.common.vo.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,6 +23,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Void> handleBusiness(BusinessException e) {
         return ApiResponse.error(e.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<Void> handleMissingParam(MissingServletRequestParameterException e) {
+        return ApiResponse.error(ErrorCode.BAD_REQUEST.getCode(),
+                "缺少必填参数: " + e.getParameterName());
     }
 
     @ExceptionHandler(Exception.class)

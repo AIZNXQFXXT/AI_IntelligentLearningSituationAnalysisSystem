@@ -453,6 +453,35 @@ CREATE INDEX idx_oplog_operator ON operation_log(operator_id);
 CREATE INDEX idx_oplog_created ON operation_log(created_at);
 
 -- =====================================================
+-- 20. AI 学习建议
+-- =====================================================
+
+CREATE TABLE ai_suggestion (
+    id             BIGSERIAL PRIMARY KEY,
+    student_id     BIGINT NOT NULL,
+    semester       VARCHAR(20),
+    diagnosis_id   BIGINT NOT NULL,
+    content        TEXT NOT NULL,
+    short_term     TEXT,
+    long_term      TEXT,
+    daily_plan     VARCHAR(500),
+    resources      TEXT,
+    tokens_used    INTEGER DEFAULT 0,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted     SMALLINT DEFAULT 0
+);
+COMMENT ON TABLE ai_suggestion IS 'AI 学习建议';
+COMMENT ON COLUMN ai_suggestion.diagnosis_id IS '关联的诊断记录ID（用于判断缓存是否有效）';
+
+CREATE INDEX idx_as_student ON ai_suggestion(student_id);
+CREATE INDEX idx_as_semester ON ai_suggestion(semester);
+CREATE INDEX idx_as_diagnosis ON ai_suggestion(diagnosis_id);
+
+ALTER TABLE ai_suggestion ADD CONSTRAINT fk_as_student FOREIGN KEY (student_id) REFERENCES student(id);
+ALTER TABLE ai_suggestion ADD CONSTRAINT fk_as_diagnosis FOREIGN KEY (diagnosis_id) REFERENCES ai_diagnosis_record(id);
+
+-- =====================================================
 -- 外键约束
 -- =====================================================
 
