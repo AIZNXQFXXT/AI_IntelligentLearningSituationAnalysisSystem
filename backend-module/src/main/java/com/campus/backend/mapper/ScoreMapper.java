@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.entity.Score;
 import com.campus.common.vo.ScoreArchiveVO;
+import com.campus.common.vo.ScoreRadarVO;
+import com.campus.common.vo.ScoreTrendVO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -78,4 +80,48 @@ public interface ScoreMapper extends BaseMapper<Score> {
     List<ScoreArchiveVO> selectExportList(@Param("examId") Long examId,
                                           @Param("courseId") Long courseId,
                                           @Param("classId") Long classId);
+
+    @Select("<script>" +
+            "SELECT s.id, s.student_id, s.exam_id, s.course_id, s.regular_score, s.exam_score, " +
+            "s.final_score, s.rank_class, s.rank_grade, s.is_absent, s.is_cheat, " +
+            "s.audit_status, s.created_at, s.updated_at, " +
+            "stu.name AS student_name, stu.student_no, " +
+            "c.name AS course_name, " +
+            "e.name AS exam_name, e.semester, " +
+            "cl.id AS class_id, cl.class_name " +
+            "FROM score s " +
+            "LEFT JOIN student stu ON s.student_id = stu.id AND stu.is_deleted = 0 " +
+            "LEFT JOIN course c ON s.course_id = c.id AND c.is_deleted = 0 " +
+            "LEFT JOIN exam e ON s.exam_id = e.id AND e.is_deleted = 0 " +
+            "LEFT JOIN class_info cl ON stu.class_id = cl.id AND cl.is_deleted = 0 " +
+            "WHERE s.is_deleted = 0 AND s.student_id = #{studentId} " +
+            "<if test='semester != null and !semester.isEmpty()'> AND e.semester = #{semester} </if>" +
+            "ORDER BY s.created_at DESC" +
+            "</script>")
+    IPage<ScoreArchiveVO> selectByStudentPage(Page<?> page,
+                                              @Param("studentId") Long studentId,
+                                              @Param("semester") String semester);
+
+    @Select("SELECT e.semester, " +
+            "ROUND(AVG(s.final_score), 2) AS avg_score, " +
+            "MAX(s.final_score) AS max_score, " +
+            "MIN(s.final_score) AS min_score, " +
+            "COUNT(*) AS count " +
+            "FROM score s " +
+            "JOIN exam e ON s.exam_id = e.id AND e.is_deleted = 0 " +
+            "WHERE s.student_id = #{studentId} AND s.is_deleted = 0 AND s.final_score IS NOT NULL " +
+            "GROUP BY e.semester ORDER BY e.semester")
+    List<ScoreTrendVO> selectTrend(@Param("studentId") Long studentId);
+
+    @Select("<script>" +
+            "SELECT c.name AS course_name, s.final_score " +
+            "FROM score s " +
+            "JOIN course c ON s.course_id = c.id AND c.is_deleted = 0 " +
+            "JOIN exam e ON s.exam_id = e.id AND e.is_deleted = 0 " +
+            "WHERE s.student_id = #{studentId} AND s.is_deleted = 0 " +
+            "<if test='semester != null and semester != \"\"'> AND e.semester = #{semester} </if>" +
+            "ORDER BY c.name" +
+            "</script>")
+    List<ScoreRadarVO> selectRadar(@Param("studentId") Long studentId,
+                                   @Param("semester") String semester);
 }

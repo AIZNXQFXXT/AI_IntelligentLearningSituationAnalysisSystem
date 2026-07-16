@@ -65,7 +65,7 @@ public class TeacherController {
                 result.getRecords(), result.getTotal(), page, size));
     }
 
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     public ApiResponse<Student> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         teacherService.toggleStatus(id, status);
         return ApiResponse.success();

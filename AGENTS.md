@@ -5,7 +5,7 @@ Maven multi-module (Java 17, Spring Boot 3.2, JavaFX, MyBatis-Plus, PostgreSQL, 
 ## Modules
 
 ```
-common-module/   DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups
+common-module/   DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups, Excel row models (`dto/report/`)
 backend-module/  Spring Boot REST API :8080, JWT auth, MyBatis-Plus ORM, AOP logging
 client-module/   JavaFX/FXML desktop client (multi-module build, older/less complete)
 ```
@@ -42,6 +42,7 @@ Active profile defaults to `application.yml`; `-Dspring.profiles.active=dev` mer
 ## Architecture
 
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
+- **Excel**: EasyExcel 4.0.3 for both import (reading) and export (writing). Export row models in `common-module/.../dto/report/` with `@ExcelProperty`
 - **Entity → DTO**: manual `*Converter` per domain, no MapStruct
 - **Validation groups**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs (not `@Valid`)
 - **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
@@ -146,6 +147,41 @@ Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/
 ### Thread pool
 `importExecutor` (core=2, max=4, queue=10, `CallerRunsPolicy`). Per-row failure doesn't abort; errors collected in result JSON.
 
+## Sync Excel Export
+
+For small-to-medium data, `ReportController` streams `.xlsx` directly to `HttpServletResponse`:
+
+| Endpoint | Params | Notes |
+|---|---|---|
+| `GET /api/reports/excel/score-table` | `examId`, `courseId`, `classId?` | Score table via `ScoreArchiveVO` |
+| `GET /api/reports/excel/comments` | `classId?`, `semester?` | Comments; tries JSON extraction if content is JSON |
+| `GET /api/reports/excel/risk-list` | `semester?`, `riskLevel?`, `handleStatus?` | Risk warnings |
+| `GET /api/reports/excel/stats` | `examId`, `courseId`, `classId` | Class stats + distribution |
+
+**Pattern**: EasyExcel `write()` on the HTTP response output stream, no temp file, no async. Content-Disposition as `attachment; filename*=UTF-8''{encoded}`.
+
+**Export DTOs** in `common-module/.../dto/report/` annotated with `@ExcelProperty`.
+
+**Async extension stub**: `ExportTaskHandler` registered as type `EXPORT` in `GenericTaskController` — currently returns "not implemented yet". Accepted via `POST /api/tasks?type=EXPORT&reportType=...`.
+
+## Student-Facing APIs (`/api/my/*`)
+
+All in `MyController`. Uses `SecurityHelper.requireAnyRole(request, "STUDENT")`.
+
+**Key**: JWT's `userId` maps to `Student.userId`, not `Student.id`. Always resolve via `studentMapper.selectByUserId(userId)` first to get the actual `Student.id`.
+
+| Endpoint | Params | Notes |
+|---|---|---|
+| `GET /api/my/profile` | — | Combines `Student` + `User` + `ClassInfo` into `StudentProfileVO` |
+| `GET /api/my/courses` | `semester?` | Queries `TeachingTask` by student's `classId`, then loads `Course` entities |
+| `GET /api/my/scores` | `semester?`, `page?`, `size?` | `ScoreMapper.selectByStudentPage()` — paginated, semester filters via JOIN exam |
+| `GET /api/my/scores/trend` | — | `ScoreMapper.selectTrend()` — GROUP BY semester, avg/max/min/count |
+| `GET /api/my/scores/radar` | `semester?` | `ScoreMapper.selectRadar()` — per-course final scores |
+| `GET /api/my/diagnosis` | `page?`, `size?` | Reuses `DiagnosisService.pageHistory(studentId)` |
+| `GET /api/my/suggestions` | `semester?` | Reuses `SuggestionService.getSuggestion(studentId, semester, userId)` |
+| `GET /api/my/comments` | `semester?`, `page?`, `size?` | `CommentService.listByStudent()` — by studentId + optional semester |
+| `GET /api/my/warnings` | `page?`, `size?` | `RiskWarningService.listByStudent()` — by studentId |
+
 ## Known Pitfalls
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code.
@@ -158,3 +194,5 @@ Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/
 - **`@RequestBody` for batch comments**: `POST /api/comments/batch` uses `@RequestBody Map<String, Object>` (JSON body with classId + semester), NOT `@RequestParam` — follows the no-file async task pattern.
 - **Two frontends**: `client-module` (multi-module, less complete) and `javafx-frontend` (standalone, tracked, hybrid FXML + WebView/Vue).
 - **`MissingServletRequestParameterException`**: `GlobalExceptionHandler` now catches it and returns 400 `"缺少必填参数: {name}"` (not 500).
+- **Comment content may be JSON**: `COMMENT_PROMPT` tells AI to return plain text, but AI sometimes wraps in JSON. Export code in `ReportController` uses `extractContent()` that tries to parse JSON and extract `comment`/`content`/`text` fields as fallback.
+- **PostgreSQL `@Select` + `<script>`**: Never use `AND (#{param} IS NULL OR ...)` in a raw `@Select` — PG can't infer the parameter type. Always use `<script>` with `<if test='param != null'>` for nullable conditions.

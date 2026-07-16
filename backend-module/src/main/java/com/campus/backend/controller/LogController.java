@@ -1,6 +1,7 @@
 package com.campus.backend.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.campus.backend.entity.AICallLog;
 import com.campus.backend.entity.OperationLog;
 import com.campus.backend.service.LogService;
 import com.campus.backend.util.SecurityHelper;
@@ -37,6 +38,17 @@ public class LogController {
         SecurityHelper.requireAdmin(request);
         IPage<OperationLog> result = logService.pageList(page, size, username, operation,
                 targetType, resultStatus, startDate, endDate);
+        return ApiResponse.success(PageResult.of(
+                result.getRecords(), result.getTotal(), page, size));
+    }
+
+    @GetMapping("/ai-calls")
+    public ApiResponse<PageResult<AICallLog>> pageAiCalls(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
+        SecurityHelper.requireAdmin(request);
+        IPage<AICallLog> result = logService.pageAiCalls(page, size);
         return ApiResponse.success(PageResult.of(
                 result.getRecords(), result.getTotal(), page, size));
     }

@@ -34,6 +34,12 @@ public class CourseController {
         return ApiResponse.success();
     }
 
+    @PatchMapping("/{id}/status")
+    public ApiResponse<Void> toggleStatus(@PathVariable Long id, @RequestParam Integer status) {
+        courseService.toggleStatus(id, status);
+        return ApiResponse.success();
+    }
+
     @GetMapping
     public ApiResponse<PageResult<Course>> pageList(
             @RequestParam(defaultValue = "1") int page,

@@ -12,7 +12,7 @@ public class AiProperties {
     private String deepseekApiKey = "";
     private String deepseekBaseUrl = "https://api.deepseek.com";
     private String deepseekModel = "deepseek-chat";
-    private int dailyLimit = 50;
+    private int dailyLimit = 200;
     private int timeoutConnect = 5000;
     private int timeoutRead = 30000;
     private int maxRetries = 2;

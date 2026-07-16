@@ -53,7 +53,7 @@ public class GenericTaskController {
 
         TaskHandler handler = handlerMap.get(type);
         if (handler == null) {
-            return ApiResponse.error(ErrorCode.BAD_REQUEST.getCode(), "Unknown task type: " + type);
+            return ApiResponse.error(ErrorCode.BAD_REQUEST.getCode(), "未知任务类型: " + type);
         }
 
         String fileUrl = null;
@@ -84,7 +84,7 @@ public class GenericTaskController {
     public ApiResponse<Map<String, Object>> getProgress(@PathVariable Long taskId) {
         TaskRecord record = taskService.getProgress(taskId);
         if (record == null) {
-            return ApiResponse.error(ErrorCode.NOT_FOUND.getCode(), "Task not found");
+            return ApiResponse.error(ErrorCode.NOT_FOUND.getCode(), "任务不存在");
         }
         Map<String, Object> result = new HashMap<>();
         result.put("status", record.getStatus());
@@ -98,7 +98,7 @@ public class GenericTaskController {
     public ApiResponse<Object> getResult(@PathVariable Long taskId) {
         TaskRecord record = taskService.getResult(taskId);
         if (record == null) {
-            return ApiResponse.error(ErrorCode.NOT_FOUND.getCode(), "Task not found");
+            return ApiResponse.error(ErrorCode.NOT_FOUND.getCode(), "任务不存在");
         }
         if (!"COMPLETED".equals(record.getStatus())) {
             Map<String, Object> info = new HashMap<>();
