@@ -43,21 +43,22 @@ public class AiServiceFactory {
     private AiResult executeWithRetry(AiRequest request) {
         AiResult lastResult = null;
         int maxRetries = aiProperties.getMaxRetries();
+        String activeProvider = aiProperties.getProvider();
 
         for (int i = 0; i <= maxRetries; i++) {
             try {
-                AiService primary = providerMap.get("deepseek");
+                AiService primary = providerMap.get(activeProvider);
                 if (primary != null) {
                     AiResult result = primary.call(request);
                     if (result.isSuccess()) {
                         return result;
                     }
                     lastResult = result;
-                    log.warn("DeepSeek attempt {} failed: {}", i + 1, result.getErrorMessage());
+                    log.warn("{} attempt {} failed: {}", activeProvider, i + 1, result.getErrorMessage());
                 }
             } catch (Exception e) {
                 lastResult = AiResult.error(e.getMessage(), 0);
-                log.warn("DeepSeek attempt {} exception: {}", i + 1, e.getMessage());
+                log.warn("{} attempt {} exception: {}", activeProvider, i + 1, e.getMessage());
             }
 
             if (i < maxRetries) {

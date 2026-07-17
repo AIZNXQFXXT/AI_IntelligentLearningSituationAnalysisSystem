@@ -21,6 +21,10 @@ public class AiResult {
 
     public static AiResult success(String content, int tokensInput, int tokensOutput, long durationMs) {
         double cost = (tokensInput * 0.0000005 + tokensOutput * 0.000002);
+        return success(content, tokensInput, tokensOutput, durationMs, cost);
+    }
+
+    public static AiResult success(String content, int tokensInput, int tokensOutput, long durationMs, double cost) {
         return AiResult.builder()
                 .success(true).content(content)
                 .tokensInput(tokensInput).tokensOutput(tokensOutput)

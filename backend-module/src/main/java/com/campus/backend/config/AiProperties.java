@@ -12,6 +12,9 @@ public class AiProperties {
     private String deepseekApiKey = "";
     private String deepseekBaseUrl = "https://api.deepseek.com";
     private String deepseekModel = "deepseek-chat";
+    private String glmApiKey = "";
+    private String glmBaseUrl = "https://open.bigmodel.cn/api/paas/v4";
+    private String glmModel = "glm-4v-flash";
     private int dailyLimit = 200;
     private int timeoutConnect = 5000;
     private int timeoutRead = 30000;
