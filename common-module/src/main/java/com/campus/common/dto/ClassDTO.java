@@ -18,5 +18,5 @@ public class ClassDTO {
     private String className;
 
     private Long headTeacherId;
-    private String headTeacherNo;      // 班主任工号，与 headTeacherId 二选一
+    private String teacherNo;          // 班主任工号，与 headTeacherId 二选一
 }
