@@ -29,11 +29,11 @@ mvn test -pl backend-module -Dtest=UserControllerTest -DfailIfNoTests=false
 mvn test -pl backend-module -am -Dtest=SystemControllerTest,SystemServiceImplTest -DfailIfNoTests=false
 ```
 
-> **CRITICAL**: Adding/editing VO/DTO classes in `common-module` requires installing the JAR:
+> **CRITICAL**: Adding/editing any class in `common-module` (DTOs, VOs, enums) requires installing the JAR:
 > ```bash
 > mvn install -DskipTests -pl common-module -am
 > ```
-> Without this, `spring-boot:run -pl backend-module` fails with `ClassNotFoundException`.
+> Without this, `spring-boot:run -pl backend-module` may not pick up new fields — no error, fields silently stay null.
 > Tests with `-pl backend-module` resolve common-module from `target/classes` — re-compilation suffices.
 
 Default admin: `admin / 123456`
@@ -45,7 +45,11 @@ API docs in `API-DOCUMENT.md` (root) and `javafx-frontend/API-DOCUMENT.md`.
 
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
 - **Excel**: EasyExcel 4.0.3 for both import (reading) and export (writing). Export row models in `common-module/.../dto/report/` with `@ExcelProperty`
-- **Entity → DTO**: manual `*Converter` per domain, no MapStruct
+- **Entity → DTO**: manual `*Converter` per domain, no MapStruct. Converters map ID fields only; any identifier-based resolution (studentNo→studentId, teacherNo→teacherId, className→classId, courseName→courseId) is done in the service layer before calling the converter.
+- **Identifier lookup mappers** (all `@Select` with `is_deleted = 0`):
+  `StudentMapper.selectByStudentNo(String)`, `TeacherMapper.selectByTeacherNo(String)`,
+  `ClassMapper.selectByClassNameAndGrade(String, String)`, `ClassMapper.selectByClassName(String)`,
+  `CourseMapper.selectByName(String)`
 - **Validation groups**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs (not `@Valid`)
 - **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
 - **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` on `/api/**`. Interceptor sets `request.setAttribute("userId", ...)` and `request.setAttribute("role", ...)`. Login: `username` + `password`. Whitelisted: `/api/auth/login`, `/api/auth/refresh`.
@@ -192,6 +196,7 @@ All in `MyController`. Uses `SecurityHelper.requireAnyRole(request, "STUDENT")`.
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code.
 - **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier`. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController` / `CommentController`).
+- **BusinessException returns HTTP 200**: `GlobalExceptionHandler.handleBusiness()` uses `@ResponseStatus(HttpStatus.OK)` — all business errors (404, 403, 409, etc.) return HTTP 200 with the error code in the JSON body, not the corresponding HTTP status. Don't rely on HTTP status to detect business errors.
 - **`.gitignore` traps**: `*.yml` (application config not tracked), `.xlsx` (import templates not tracked), `test/` (test files not committed), `docs/` (documentation not committed), `.log` (not `*.log` — `mvn_test.log` is tracked).
 - **application config**: `application.yml`, `application-dev.yml`, `application-prod.yml` all exist on disk but are gitignored. With `spring.profiles.active=dev` (or `prod`), the dev/prod overrides merge with defaults in `application.yml`.
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
