@@ -11,3 +11,5 @@ logs/
 test/
 docs/
 .opencode/
+.env
+!application.yml
