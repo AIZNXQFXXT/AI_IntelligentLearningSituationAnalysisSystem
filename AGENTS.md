@@ -39,6 +39,8 @@ mvn test -pl backend-module -am -Dtest=SystemControllerTest,SystemServiceImplTes
 Default admin: `admin / 123456`
 Active profile defaults to `application.yml`; `-Dspring.profiles.active=dev` merges with `application-dev.yml`.
 
+API docs in `API-DOCUMENT.md` (root) and `javafx-frontend/API-DOCUMENT.md`.
+
 ## Architecture
 
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
@@ -118,7 +120,9 @@ MockMvcBuilders.standaloneSetup(controller)
     .build();
 ```
 
-Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/`). Existing tests: `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AcademicStatsControllerTest`, `AcademicStatsServiceImplTest`, `GenericTaskControllerTest`, `AsyncConfigTest`.
+Test files exist on disk but **are NOT tracked by git** (`.gitignore` has `test/`). Existing tests (in `backend-module/src/test/`): `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `AcademicStatsControllerTest`, `GenericTaskControllerTest`, `AcademicStatsServiceImplTest`, `StudentServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`, `WebMvcConfigTest`, `ApiRateLimitInterceptorTest`, `ErrorCodeTest`, `GenerateTestExcel`.
+
+Windows users can run tests via `run_tests.bat` (hardcoded paths).
 
 ## Async Import Pipeline
 
@@ -160,7 +164,9 @@ For small-to-medium data, `ReportController` streams `.xlsx` directly to `HttpSe
 
 **Pattern**: EasyExcel `write()` on the HTTP response output stream, no temp file, no async. Content-Disposition as `attachment; filename*=UTF-8''{encoded}`.
 
-**Export DTOs** in `common-module/.../dto/report/` annotated with `@ExcelProperty`.
+Additionally, `ClassController` has `GET /api/classes/export/excel` that exports class list via `ClassRow`.
+
+**Export DTOs** in `common-module/.../dto/report/` annotated with `@ExcelProperty`: `ScoreTableRow`, `CommentRow`, `RiskRow`, `ClassRow`.
 
 **Async extension stub**: `ExportTaskHandler` registered as type `EXPORT` in `GenericTaskController` — currently returns "not implemented yet". Accepted via `POST /api/tasks?type=EXPORT&reportType=...`.
 
@@ -186,7 +192,7 @@ All in `MyController`. Uses `SecurityHelper.requireAnyRole(request, "STUDENT")`.
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code.
 - **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier`. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController` / `CommentController`).
-- **`.gitignore` traps**: `*.yml` (application config not tracked), `.xlsx` (import templates not tracked), `test/` (test files not committed), `docs/` (documentation not committed), `*.log`.
+- **`.gitignore` traps**: `*.yml` (application config not tracked), `.xlsx` (import templates not tracked), `test/` (test files not committed), `docs/` (documentation not committed), `.log` (not `*.log` — `mvn_test.log` is tracked).
 - **application config**: `application.yml`, `application-dev.yml`, `application-prod.yml` all exist on disk but are gitignored. With `spring.profiles.active=dev` (or `prod`), the dev/prod overrides merge with defaults in `application.yml`.
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
 - **JAVA_HOME**: On Linux, `mvn spring-boot:run` fails without it. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
