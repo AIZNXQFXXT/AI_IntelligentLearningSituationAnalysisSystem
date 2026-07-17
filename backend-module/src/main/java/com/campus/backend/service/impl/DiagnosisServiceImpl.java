@@ -42,6 +42,11 @@ public class DiagnosisServiceImpl implements DiagnosisService {
 
     @Override
     public DiagnosisVO diagnose(AIDiagnosisDTO dto, Long teacherId) {
+        if (dto.getStudentNo() != null) {
+            Student s = studentMapper.selectByStudentNo(dto.getStudentNo());
+            if (s == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "学号不存在");
+            dto.setStudentId(s.getId());
+        }
         Student student = studentMapper.selectById(dto.getStudentId());
         if (student == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND);

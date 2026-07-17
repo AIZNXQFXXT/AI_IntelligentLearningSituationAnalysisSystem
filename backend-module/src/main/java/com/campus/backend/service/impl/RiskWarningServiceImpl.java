@@ -20,8 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,6 +31,7 @@ public class RiskWarningServiceImpl implements RiskWarningService {
     private final RiskWarningMapper riskWarningMapper;
     private final ScoreMapper scoreMapper;
     private final StudentMapper studentMapper;
+    private final ExamMapper examMapper;
     private final AiServiceFactory aiServiceFactory;
     private final RiskWarningConverter converter;
 
@@ -47,8 +47,15 @@ public class RiskWarningServiceImpl implements RiskWarningService {
 
             if (scores.isEmpty()) continue;
 
-            String riskIndicators = buildRiskIndicators(scores);
-            String initialRiskLevel = evaluateInitialRisk(scores);
+            Map<Long, String> examSemesterMap = examMapper.selectList(null).stream()
+                    .collect(Collectors.toMap(Exam::getId, Exam::getSemester));
+
+            double avgScore = calculateAvgScore(scores, examSemesterMap, semester);
+            boolean belowThreshold = avgScore < 60.0;
+            List<String> decliningCourses = checkConsecutiveDecline(scores, examSemesterMap);
+
+            String riskIndicators = buildRiskIndicators(scores, decliningCourses, avgScore);
+            String initialRiskLevel = evaluateExpandedRisk(scores, belowThreshold, !decliningCourses.isEmpty());
 
             if ("NONE".equals(initialRiskLevel)) continue;
 
@@ -144,20 +151,59 @@ public class RiskWarningServiceImpl implements RiskWarningService {
         riskWarningMapper.updateById(warning);
     }
 
-    private String buildRiskIndicators(List<Score> scores) {
+    private String buildRiskIndicators(List<Score> scores, List<String> decliningCourses, double avgScore) {
         long failCount = scores.stream().filter(s -> s.getFinalScore() != null && (s.getFinalScore().compareTo(BigDecimal.valueOf(60)) < 0)).count();
         long absentCount = scores.stream().filter(s -> s.getIsAbsent() != null && s.getIsAbsent() == 1).count();
         long cheatCount = scores.stream().filter(s -> s.getIsCheat() != null && s.getIsCheat() == 1).count();
 
-        return String.format("不及格科目数:%d 缺考次数:%d 作弊次数:%d", failCount, absentCount, cheatCount);
+        return String.format("不及格科目数:%d 缺考次数:%d 作弊次数:%d 连续下滑科目数:%d 学期平均分:%.1f",
+                failCount, absentCount, cheatCount, decliningCourses.size(), avgScore);
     }
 
-    private String evaluateInitialRisk(List<Score> scores) {
+    private String evaluateExpandedRisk(List<Score> scores, boolean belowThreshold, boolean hasDecline) {
         long failCount = scores.stream().filter(s -> s.getFinalScore() != null && (s.getFinalScore().compareTo(BigDecimal.valueOf(60)) < 0)).count();
         long absentCount = scores.stream().filter(s -> s.getIsAbsent() != null && s.getIsAbsent() == 1).count();
 
-        if (failCount >= 3 || absentCount >= 2) return "HIGH";
-        if (failCount >= 1 || absentCount >= 1) return "MEDIUM";
+        int level = 0;
+        if (failCount >= 3 || absentCount >= 2) level = 2;
+        else if (failCount >= 1 || absentCount >= 1) level = 1;
+
+        if (belowThreshold) level = Math.min(level + 1, 2);
+        if (hasDecline) level = Math.min(level + 1, 2);
+
+        if (level >= 2) return "HIGH";
+        if (level == 1) return "MEDIUM";
         return "NONE";
+    }
+
+    private double calculateAvgScore(List<Score> scores, Map<Long, String> examSemesterMap, String currentSemester) {
+        return scores.stream()
+                .filter(s -> currentSemester.equals(examSemesterMap.get(s.getExamId())))
+                .filter(s -> s.getFinalScore() != null)
+                .mapToDouble(s -> s.getFinalScore().doubleValue())
+                .average()
+                .orElse(0.0);
+    }
+
+    private List<String> checkConsecutiveDecline(List<Score> scores, Map<Long, String> examSemesterMap) {
+        return scores.stream()
+                .filter(s -> s.getFinalScore() != null)
+                .collect(Collectors.groupingBy(Score::getCourseId))
+                .values().stream()
+                .filter(list -> list.size() >= 3)
+                .map(list -> {
+                    List<Score> sorted = list.stream()
+                            .sorted(Comparator.comparing(s -> examSemesterMap.getOrDefault(s.getExamId(), "")))
+                            .toList();
+                    int size = sorted.size();
+                    BigDecimal s1 = sorted.get(size - 3).getFinalScore();
+                    BigDecimal s2 = sorted.get(size - 2).getFinalScore();
+                    BigDecimal s3 = sorted.get(size - 1).getFinalScore();
+                    return (s1.compareTo(s2) > 0 && s2.compareTo(s3) > 0)
+                            ? String.valueOf(sorted.get(size - 1).getCourseId())
+                            : null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

@@ -13,4 +13,7 @@ public interface StudentMapper extends BaseMapper<Student> {
 
     @Select("SELECT * FROM student WHERE user_id = #{userId} AND is_deleted = 0")
     Student selectByUserId(@Param("userId") Long userId);
+
+    @Select("SELECT * FROM student WHERE student_no = #{studentNo} AND is_deleted = 0")
+    Student selectByStudentNo(@Param("studentNo") String studentNo);
 }

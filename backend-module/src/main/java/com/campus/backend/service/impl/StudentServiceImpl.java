@@ -48,6 +48,12 @@ public class StudentServiceImpl implements StudentService {
         if (count > 0) {
             throw new BusinessException(ErrorCode.STUDENT_NO_EXISTS);
         }
+        // 解析 className+grade → classId
+        if (dto.getClassName() != null) {
+            ClassInfo c = classMapper.selectByClassNameAndGrade(dto.getClassName(), dto.getGrade());
+            if (c == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "班级不存在");
+            dto.setClassId(c.getId());
+        }
         // 创建 sys_user
         User user = new User();
         user.setUsername(dto.getUsername() != null ? dto.getUsername() : dto.getStudentNo());

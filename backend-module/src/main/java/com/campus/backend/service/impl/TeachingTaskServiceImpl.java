@@ -4,10 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.TeachingTaskConverter;
+import com.campus.backend.entity.ClassInfo;
+import com.campus.backend.entity.Course;
+import com.campus.backend.entity.Teacher;
 import com.campus.backend.entity.TeachingTask;
+import com.campus.backend.mapper.ClassMapper;
+import com.campus.backend.mapper.CourseMapper;
+import com.campus.backend.mapper.TeacherMapper;
 import com.campus.backend.mapper.TeachingTaskMapper;
 import com.campus.backend.service.TeachingTaskService;
 import com.campus.common.dto.TeachingTaskDTO;
+import com.campus.common.enums.ErrorCode;
+import com.campus.common.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +28,28 @@ import java.util.List;
 public class TeachingTaskServiceImpl implements TeachingTaskService {
     private final TeachingTaskMapper teachingTaskMapper;
     private final TeachingTaskConverter teachingTaskConverter;
+    private final TeacherMapper teacherMapper;
+    private final ClassMapper classMapper;
+    private final CourseMapper courseMapper;
 
     @Override
     @Transactional
     public TeachingTask create(TeachingTaskDTO dto) {
+        if (dto.getTeacherNo() != null) {
+            Teacher t = teacherMapper.selectByTeacherNo(dto.getTeacherNo());
+            if (t == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "教师工号不存在");
+            dto.setTeacherId(t.getId());
+        }
+        if (dto.getClassName() != null) {
+            ClassInfo c = classMapper.selectByClassName(dto.getClassName());
+            if (c == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "班级不存在");
+            dto.setClassId(c.getId());
+        }
+        if (dto.getCourseName() != null) {
+            Course c = courseMapper.selectByName(dto.getCourseName());
+            if (c == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "课程不存在");
+            dto.setCourseId(c.getId());
+        }
         TeachingTask entity = teachingTaskConverter.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
         teachingTaskMapper.insert(entity);

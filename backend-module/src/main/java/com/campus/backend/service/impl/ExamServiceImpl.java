@@ -4,10 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.ExamConverter;
+import com.campus.backend.entity.ClassInfo;
 import com.campus.backend.entity.Exam;
+import com.campus.backend.mapper.ClassMapper;
 import com.campus.backend.mapper.ExamMapper;
 import com.campus.backend.service.ExamService;
 import com.campus.common.dto.ExamDTO;
+import com.campus.common.enums.ErrorCode;
+import com.campus.common.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +24,16 @@ import java.time.LocalDateTime;
 public class ExamServiceImpl implements ExamService {
     private final ExamMapper examMapper;
     private final ExamConverter examConverter;
+    private final ClassMapper classMapper;
 
     @Override
     @Transactional
     public Exam create(ExamDTO dto) {
+        if (dto.getClassName() != null) {
+            ClassInfo c = classMapper.selectByClassNameAndGrade(dto.getClassName(), dto.getGrade());
+            if (c == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "班级不存在");
+            dto.setClassId(c.getId());
+        }
         Exam entity = examConverter.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
         examMapper.insert(entity);

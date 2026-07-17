@@ -15,6 +15,8 @@ public class StudentDTO {
     private String gender;
     @NotNull(groups = Create.class)
     private Long classId;
+    private String className;          // 班级名，与 classId 二选一
+    private String grade;              // 配合 className 定位班级
     private String enrollYear;
     private Integer status;
     private String phone;

@@ -37,6 +37,11 @@ public class ClassServiceImpl implements ClassService {
     @Override
     @Transactional
     public ClassInfo create(ClassDTO dto) {
+        if (dto.getHeadTeacherNo() != null) {
+            Teacher t = teacherMapper.selectByTeacherNo(dto.getHeadTeacherNo());
+            if (t == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "教师工号不存在");
+            dto.setHeadTeacherId(t.getId());
+        }
         ClassInfo entity = classConverter.toEntity(dto);
         entity.setStudentCount(0);
         entity.setCreatedAt(LocalDateTime.now());

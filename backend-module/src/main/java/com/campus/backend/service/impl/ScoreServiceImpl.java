@@ -5,10 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.ScoreConverter;
+import com.campus.backend.entity.Course;
 import com.campus.backend.entity.Score;
 import com.campus.backend.entity.ScoreCorrection;
+import com.campus.backend.entity.Student;
+import com.campus.backend.mapper.CourseMapper;
 import com.campus.backend.mapper.ScoreCorrectionMapper;
 import com.campus.backend.mapper.ScoreMapper;
+import com.campus.backend.mapper.StudentMapper;
 import com.campus.backend.service.ScoreService;
 import com.campus.common.dto.ScoreDTO;
 import com.campus.common.enums.ErrorCode;
@@ -29,10 +33,24 @@ public class ScoreServiceImpl implements ScoreService {
     private final ScoreMapper scoreMapper;
     private final ScoreCorrectionMapper correctionMapper;
     private final ScoreConverter converter;
+    private final StudentMapper studentMapper;
+    private final CourseMapper courseMapper;
 
     @Override
     @Transactional
     public Score create(ScoreDTO dto, Long enteredBy) {
+        // 解析 studentNo → studentId
+        if (dto.getStudentNo() != null) {
+            Student s = studentMapper.selectByStudentNo(dto.getStudentNo());
+            if (s == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "学号不存在");
+            dto.setStudentId(s.getId());
+        }
+        // 解析 courseName → courseId
+        if (dto.getCourseName() != null) {
+            Course c = courseMapper.selectByName(dto.getCourseName());
+            if (c == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "课程不存在");
+            dto.setCourseId(c.getId());
+        }
         // 校验重复成绩
         Long count = scoreMapper.selectCount(new LambdaQueryWrapper<Score>()
                 .eq(Score::getStudentId, dto.getStudentId())

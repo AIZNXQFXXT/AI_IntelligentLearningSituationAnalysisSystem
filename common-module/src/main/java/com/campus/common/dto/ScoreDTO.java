@@ -10,10 +10,12 @@ public class ScoreDTO {
     private Long id;
     @NotNull(groups = Create.class)
     private Long studentId;
+    private String studentNo;          // 学号，与 studentId 二选一
     @NotNull(groups = Create.class)
     private Long examId;
     @NotNull(groups = Create.class)
     private Long courseId;
+    private String courseName;         // 课程名，与 courseId 二选一
     private BigDecimal regularScore;
     private BigDecimal examScore;
     @NotNull(groups = Create.class)
