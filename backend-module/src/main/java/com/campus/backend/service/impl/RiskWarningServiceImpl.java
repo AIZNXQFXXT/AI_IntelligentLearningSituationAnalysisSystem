@@ -63,7 +63,7 @@ public class RiskWarningServiceImpl implements RiskWarningService {
 
             AiRequest request = AiRequest.builder()
                     .prompt(prompt)
-                    .model("deepseek-chat")
+                    .model(aiServiceFactory.getActiveModel())
                     .callerId(teacherId)
                     .functionName("risk_analysis")
                     .promptTemplate("RISK_ANALYSIS_PROMPT")

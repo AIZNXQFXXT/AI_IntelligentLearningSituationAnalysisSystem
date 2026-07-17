@@ -33,6 +33,10 @@ public class AiServiceFactory {
         log.info("AI providers registered: {}", providerMap.keySet());
     }
 
+    public String getActiveModel() {
+        return aiProperties.getActiveModel();
+    }
+
     public AiResult execute(AiRequest request) {
         if (!rateLimiter.allowRequest(request.getCallerId())) {
             throw new BusinessException(429, "AI 每日调用次数已达上限（" + aiProperties.getDailyLimit() + "次），请明天再试");

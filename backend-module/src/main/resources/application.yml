@@ -40,7 +40,7 @@ jwt:
 
 campus:
   ai:
-    provider: mock  # 可切换值: deepseek / glm4 / mock
+    provider: glm4  # 可切换值: deepseek / glm4 / mock
     deepseek-api-key: ${DEEPSEEK_API_KEY:your-key-here}
     deepseek-base-url: https://api.deepseek.com
     deepseek-model: deepseek-chat

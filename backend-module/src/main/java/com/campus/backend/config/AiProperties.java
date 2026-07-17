@@ -19,4 +19,8 @@ public class AiProperties {
     private int timeoutConnect = 5000;
     private int timeoutRead = 30000;
     private int maxRetries = 2;
+
+    public String getActiveModel() {
+        return "glm4".equals(provider) ? glmModel : deepseekModel;
+    }
 }

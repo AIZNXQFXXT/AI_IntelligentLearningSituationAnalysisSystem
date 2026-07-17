@@ -73,9 +73,11 @@ public class DiagnosisServiceImpl implements DiagnosisService {
                 student.getName(), grade, className, scoresText
         );
 
+        String activeModel = aiServiceFactory.getActiveModel();
+
         AiRequest request = AiRequest.builder()
                 .prompt(prompt)
-                .model("deepseek-chat")
+                .model(activeModel)
                 .callerId(teacherId)
                 .functionName("diagnosis")
                 .promptTemplate("DIAGNOSIS_PROMPT")
@@ -102,7 +104,7 @@ public class DiagnosisServiceImpl implements DiagnosisService {
         record.setTokensUsed(aiResult.getTokensTotal());
         record.setCost(java.math.BigDecimal.valueOf(aiResult.getEstimatedCost()));
         record.setDurationMs((int) aiResult.getDurationMs());
-        record.setAiModel("deepseek-chat");
+        record.setAiModel(activeModel);
         record.setPromptTemplate("DIAGNOSIS_PROMPT");
 
         try {

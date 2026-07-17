@@ -89,7 +89,7 @@ public class SuggestionServiceImpl implements SuggestionService {
 
         AiRequest request = AiRequest.builder()
                 .prompt(prompt)
-                .model("deepseek-chat")
+                .model(aiServiceFactory.getActiveModel())
                 .callerId(callerId)
                 .functionName("suggestion")
                 .promptTemplate("SUGGESTION_PROMPT")

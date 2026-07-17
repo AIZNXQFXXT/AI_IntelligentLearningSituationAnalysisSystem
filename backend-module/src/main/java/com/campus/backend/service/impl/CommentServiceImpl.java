@@ -63,7 +63,7 @@ public class CommentServiceImpl implements CommentService {
 
         AiRequest request = AiRequest.builder()
                 .prompt(prompt)
-                .model("deepseek-chat")
+                .model(aiServiceFactory.getActiveModel())
                 .callerId(teacherId)
                 .functionName("comment")
                 .promptTemplate("COMMENT_PROMPT")
