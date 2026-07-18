@@ -46,8 +46,8 @@ API docs in `API-DOCUMENT.md` (root) and `javafx-frontend/API-DOCUMENT.md`.
 - **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
 - **Excel**: EasyExcel 4.0.3 for both import (reading) and export (writing). Export row models in `common-module/.../dto/report/` with `@ExcelProperty`
 - **Entity → DTO**: manual `*Converter` per domain, no MapStruct. Converters map ID fields only; any identifier-based resolution (studentNo→studentId, teacherNo→teacherId, className→classId, courseName→courseId) is done in the service layer before calling the converter.
-- **Identifier lookup mappers** (all `@Select` with `is_deleted = 0`):
-  `StudentMapper.selectByStudentNo(String)`, `TeacherMapper.selectByTeacherNo(String)`,
+- **Identifier lookup mappers**: most use `@Select` with `is_deleted = 0`. For soft-delete recovery, each has `*IncludeDeleted` variants that omit the filter (e.g. `selectByStudentNoIncludeDeleted`, `selectByTeacherNoIncludeDeleted`, `selectByNameIncludeDeleted`, `selectByUsernameIncludeDeleted`).
+  Standard lookups: `StudentMapper.selectByStudentNo(String)`, `TeacherMapper.selectByTeacherNo(String)`,
   `ClassMapper.selectByClassNameAndGrade(String, String)`, `ClassMapper.selectByClassName(String)`,
   `CourseMapper.selectByName(String)`
 - **Validation groups**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs (not `@Valid`)
@@ -84,8 +84,9 @@ public ApiResponse<XxxVO> list(@RequestParam(...) ..., HttpServletRequest reques
 | Component | File | Purpose |
 |---|---|---|
 | `AiService` (interface) | `ai/AiService.java` | `AiResult call(AiRequest)` |
-| `DeepSeekProvider` | `ai/DeepSeekProvider.java` | Active by default (`campus.ai.provider=deepseek`) |
-| `LocalMockProvider` | `ai/LocalMockProvider.java` | Opt-in only (`campus.ai.provider=mock`). NOT a transparent fallback — never active unless explicitly set |
+| `DeepSeekProvider` | `ai/DeepSeekProvider.java` | Code-default (`matchIfMissing=true`). yml sets `campus.ai.provider=glm4` currently |
+| `GLM4Provider` | `ai/GLM4Provider.java` | Active when `campus.ai.provider=glm4` (current yml default) |
+| `LocalMockProvider` | `ai/LocalMockProvider.java` | Opt-in only (`campus.ai.provider=mock`). Never active unless explicitly set |
 | `AiServiceFactory` | `ai/AiServiceFactory.java` | Retry with exponential backoff; throws `AI_SERVICE_ERROR` if all attempts fail |
 | `AiRateLimiter` | `ai/AiRateLimiter.java` | Redis daily quota (50/day default) |
 | `AiCallLogAspect` | `aop/AiCallLogAspect.java` | AOP logs every AI call to `ai_call_log` |
@@ -192,13 +193,41 @@ All in `MyController`. Uses `SecurityHelper.requireAnyRole(request, "STUDENT")`.
 | `GET /api/my/comments` | `semester?`, `page?`, `size?` | `CommentService.listByStudent()` — by studentId + optional semester |
 | `GET /api/my/warnings` | `page?`, `size?` | `RiskWarningService.listByStudent()` — by studentId |
 
+## Soft-Delete Recovery (create-with-recovery)
+
+Recovery is embedded in `create()` methods. Pattern: look up by unique key **without** `is_deleted=0` filter, recover if found, insert if not:
+
+```java
+ExistingEntity existing = mapper.findByKeyIncludeDeleted(key);
+if (existing != null) {
+    existing.setIsDeleted(0);
+    existing.setUpdatedAt(LocalDateTime.now());
+    mapper.recoverByKey(key);
+    // Student/Teacher also recover the associated User if soft-deleted
+    return existing;
+}
+// else: create new normally
+```
+
+Implemented entities (with unique key → recover method):
+
+| Entity | Key | Mapper recover method |
+|--------|-----|-----------------------|
+| `ClassInfo` | `className` | `recoverByClassName` |
+| `Course` | `name` | `recoverByName` |
+| `User` | `username` | `recoverByUsername` |
+| `Student` | `studentNo` | `recoverByStudentNo` (+ recovers `User` by `userId`) |
+| `Teacher` | `teacherNo` | `recoverByTeacherNo` (+ recovers `User` by `userId`) |
+
+Each `*IncludeDeleted` mapper method uses raw `LIMIT 1` (no `is_deleted` condition). Each `recoverBy*` sets `is_deleted = 0` + `updated_at = NOW()`.
+
 ## Known Pitfalls
 
 - **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code.
 - **`@AllArgsConstructor` + `@Qualifier`**: Lombok doesn't copy `@Qualifier`. Write a manual constructor (see `TaskController` / `TeacherController` / `StudentController` / `CommentController`).
 - **BusinessException returns HTTP 200**: `GlobalExceptionHandler.handleBusiness()` uses `@ResponseStatus(HttpStatus.OK)` — all business errors (404, 403, 409, etc.) return HTTP 200 with the error code in the JSON body, not the corresponding HTTP status. Don't rely on HTTP status to detect business errors.
 - **`.gitignore` traps**: `*.yml` (application config not tracked), `.xlsx` (import templates not tracked), `test/` (test files not committed), `docs/` (documentation not committed), `.log` (not `*.log` — `mvn_test.log` is tracked).
-- **application config**: `application.yml`, `application-dev.yml`, `application-prod.yml` all exist on disk but are gitignored. With `spring.profiles.active=dev` (or `prod`), the dev/prod overrides merge with defaults in `application.yml`.
+- **application config**: `application.yml` IS tracked (`!application.yml` in `.gitignore` exempts it from `*.yml`). `application-dev.yml`, `application-prod.yml` exist on disk but are gitignored. With `spring.profiles.active=dev` (or `prod`), the dev/prod overrides merge with defaults in `application.yml`.
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
 - **JAVA_HOME**: On Linux, `mvn spring-boot:run` fails without it. Use `export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))` (JDK 17).
 - **`Map<String, Integer>` for status**: `PUT /{id}/status` endpoints accept `?status=1` query param, not JSON body.
