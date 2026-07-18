@@ -25,6 +25,13 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public Course create(CourseDTO dto) {
+        Course existing = courseMapper.selectByNameIncludeDeleted(dto.getName());
+        if (existing != null) {
+            existing.setIsDeleted(0);
+            existing.setUpdatedAt(LocalDateTime.now());
+            courseMapper.recoverByName(dto.getName());
+            return existing;
+        }
         Course entity = courseConverter.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
         courseMapper.insert(entity);

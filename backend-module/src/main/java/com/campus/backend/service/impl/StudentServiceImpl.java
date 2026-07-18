@@ -42,18 +42,40 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public Student create(StudentDTO dto) {
-        // 校验学号唯一
-        Long count = studentMapper.selectCount(
-                new LambdaQueryWrapper<Student>().eq(Student::getStudentNo, dto.getStudentNo()));
-        if (count > 0) {
-            throw new BusinessException(ErrorCode.STUDENT_NO_EXISTS);
-        }
         // 解析 className+grade → classId
         if (dto.getClassName() != null) {
             ClassInfo c = classMapper.selectByClassNameAndGrade(dto.getClassName(), dto.getGrade());
             if (c == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "班级不存在");
             dto.setClassId(c.getId());
         }
+
+        // 检查是否有软删除的学生记录（含已删除）
+        Student existing = studentMapper.selectByStudentNoIncludeDeleted(dto.getStudentNo());
+        if (existing != null) {
+            // 恢复 student 记录
+            existing.setIsDeleted(0);
+            existing.setName(dto.getName());
+            existing.setGender(dto.getGender());
+            existing.setClassId(dto.getClassId());
+            existing.setEnrollYear(dto.getEnrollYear());
+            existing.setPhone(dto.getPhone());
+            existing.setGuardianPhone(dto.getGuardianPhone());
+            existing.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+            existing.setUpdatedAt(LocalDateTime.now());
+            studentMapper.recoverByStudentNo(dto.getStudentNo());
+
+            // 恢复关联的 User（如果也处于软删除状态）
+            User user = userMapper.selectById(existing.getUserId());
+            if (user != null && user.getIsDeleted() == 1) {
+                user.setIsDeleted(0);
+                user.setPassword(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : "123456"));
+                user.setStatus(1);
+                user.setUpdatedAt(LocalDateTime.now());
+                userMapper.recoverById(user.getId());
+            }
+            return existing;
+        }
+
         // 创建 sys_user
         User user = new User();
         user.setUsername(dto.getUsername() != null ? dto.getUsername() : dto.getStudentNo());

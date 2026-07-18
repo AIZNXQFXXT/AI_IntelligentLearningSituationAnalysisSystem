@@ -36,10 +36,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User create(UserDTO dto) {
-        Long count = userMapper.selectCount(
-                new LambdaQueryWrapper<User>().eq(User::getUsername, dto.getUsername()));
-        if (count > 0) {
-            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
+        User existing = userMapper.selectByUsernameIncludeDeleted(dto.getUsername());
+        if (existing != null) {
+            existing.setIsDeleted(0);
+            existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+            existing.setRole(dto.getRole());
+            existing.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+            existing.setUpdatedAt(LocalDateTime.now());
+            userMapper.recoverByUsername(dto.getUsername());
+            return existing;
         }
         User user = new User();
         user.setUsername(dto.getUsername());

@@ -42,10 +42,19 @@ public class ClassServiceImpl implements ClassService {
             if (t == null) throw new BusinessException(ErrorCode.NOT_FOUND.getCode(), "教师工号不存在");
             dto.setHeadTeacherId(t.getId());
         }
-        ClassInfo entity = classConverter.toEntity(dto);
-        entity.setStudentCount(0);
-        entity.setCreatedAt(LocalDateTime.now());
-        classMapper.insert(entity);
+        String className = dto.getClassName();
+        ClassInfo entity = classMapper.selectByClassName(className);
+        if (entity != null) {
+            entity.setIsDeleted(0);
+            entity.setUpdatedAt(LocalDateTime.now());
+            classMapper.updateByClassName(entity.getClassName());
+        } else {
+            entity = classConverter.toEntity(dto);
+            entity.setStudentCount(0);
+            entity.setCreatedAt(LocalDateTime.now());
+            classMapper.insert(entity);
+        }
+
         return entity;
     }
 

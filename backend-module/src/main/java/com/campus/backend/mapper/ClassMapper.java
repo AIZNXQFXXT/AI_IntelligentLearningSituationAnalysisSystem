@@ -5,7 +5,9 @@ import com.campus.backend.entity.ClassInfo;
 import com.campus.common.vo.ClassExportVO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ClassMapper extends BaseMapper<ClassInfo> {
@@ -21,6 +23,9 @@ public interface ClassMapper extends BaseMapper<ClassInfo> {
     @Select("SELECT * FROM class_info WHERE class_name = #{className} AND grade = #{grade} AND is_deleted = 0")
     ClassInfo selectByClassNameAndGrade(@Param("className") String className, @Param("grade") String grade);
 
-    @Select("SELECT * FROM class_info WHERE class_name = #{className} AND is_deleted = 0 LIMIT 1")
+    @Select("SELECT * FROM class_info WHERE class_name = #{className} LIMIT 1")
     ClassInfo selectByClassName(@Param("className") String className);
+
+    @Update("UPDATE class_info SET is_deleted = 0 WHERE class_name = #{className}")
+    int updateByClassName(@Param("className") String className);
 }

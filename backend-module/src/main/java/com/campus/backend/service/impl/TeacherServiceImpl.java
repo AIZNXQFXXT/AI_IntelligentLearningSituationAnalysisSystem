@@ -29,6 +29,32 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public Teacher create(TeacherDTO dto) {
+        // 检查是否有软删除的教师记录（含已删除）
+        Teacher existing = teacherMapper.selectByTeacherNoIncludeDeleted(dto.getTeacherNo());
+        if (existing != null) {
+            // 恢复 teacher 记录
+            existing.setIsDeleted(0);
+            existing.setName(dto.getName());
+            existing.setTitle(dto.getTitle());
+            existing.setSubject(dto.getSubject());
+            existing.setEducation(dto.getEducation());
+            existing.setDepartment(dto.getDepartment());
+            existing.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+            existing.setUpdatedAt(LocalDateTime.now());
+            teacherMapper.recoverByTeacherNo(dto.getTeacherNo());
+
+            // 恢复关联的 User（如果也处于软删除状态）
+            User user = userMapper.selectById(existing.getUserId());
+            if (user != null && user.getIsDeleted() == 1) {
+                user.setIsDeleted(0);
+                user.setPassword(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : "123456"));
+                user.setStatus(1);
+                user.setUpdatedAt(LocalDateTime.now());
+                userMapper.recoverById(user.getId());
+            }
+            return existing;
+        }
+
         // 1. 创建 sys_user（登录账号）
         User user = new User();
         user.setUsername(dto.getUsername() != null ? dto.getUsername() : dto.getTeacherNo());
