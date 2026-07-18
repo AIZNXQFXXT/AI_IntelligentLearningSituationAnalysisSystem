@@ -5,8 +5,10 @@ import com.campus.backend.async.TeacherImportTask;
 import com.campus.backend.entity.Student;
 import com.campus.backend.entity.TaskRecord;
 import com.campus.backend.entity.Teacher;
+import com.campus.backend.mapper.UserMapper;
 import com.campus.backend.service.TeacherService;
 import com.campus.backend.service.TaskService;
+import com.campus.backend.service.UserService;
 import com.campus.common.dto.TeacherDTO;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
@@ -30,12 +32,14 @@ public class TeacherController {
     private final TeacherService teacherService;
     private final TaskService taskService;
     private final ThreadPoolTaskExecutor importExecutor;
+    private final UserService userService;
 
     public TeacherController(TeacherService teacherService, TaskService taskService,
-                             @Qualifier("importExecutor") ThreadPoolTaskExecutor importExecutor) {
+                             @Qualifier("importExecutor") ThreadPoolTaskExecutor importExecutor, UserMapper userMapper, UserService userService) {
         this.teacherService = teacherService;
         this.taskService = taskService;
         this.importExecutor = importExecutor;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -51,7 +55,10 @@ public class TeacherController {
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
+        Teacher teacher = teacherService.findById(id);
+        Long userId = teacher.getUserId();
         teacherService.delete(id);
+        userService.delete(userId);
         return ApiResponse.success();
     }
 

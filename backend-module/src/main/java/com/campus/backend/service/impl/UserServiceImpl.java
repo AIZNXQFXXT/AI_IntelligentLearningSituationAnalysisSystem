@@ -75,4 +75,15 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(user);
     }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.deleteById(user);
+    }
 }

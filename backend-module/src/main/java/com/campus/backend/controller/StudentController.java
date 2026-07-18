@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.campus.backend.async.StudentImportTask;
 import com.campus.backend.entity.Student;
 import com.campus.backend.entity.TaskRecord;
+import com.campus.backend.entity.User;
 import com.campus.backend.mapper.ClassMapper;
+import com.campus.backend.mapper.UserMapper;
 import com.campus.backend.service.StudentService;
 import com.campus.backend.service.TaskService;
+import com.campus.backend.service.UserService;
 import com.campus.common.dto.StudentDTO;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.PageResult;
@@ -30,14 +33,16 @@ public class StudentController {
     private final TaskService taskService;
     private final ThreadPoolTaskExecutor importExecutor;
     private final ClassMapper classMapper;
+    private final UserService userService;
 
     public StudentController(StudentService studentService, TaskService taskService,
                              @Qualifier("importExecutor") ThreadPoolTaskExecutor importExecutor,
-                             ClassMapper classMapper) {
+                             ClassMapper classMapper, UserMapper userMapper, UserService userService) {
         this.studentService = studentService;
         this.taskService = taskService;
         this.importExecutor = importExecutor;
         this.classMapper = classMapper;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -53,7 +58,10 @@ public class StudentController {
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
+        Student student = studentService.findById(id);
+        Long userId = student.getUserId();
         studentService.delete(id);
+        userService.delete(userId);
         return ApiResponse.success();
     }
 

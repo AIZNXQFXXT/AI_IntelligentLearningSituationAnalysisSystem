@@ -9,4 +9,5 @@ public interface UserService {
     User create(UserDTO dto);
     void updateStatus(Long id, Integer status);
     void resetPassword(Long id);
+    void delete(Long id);
 }
