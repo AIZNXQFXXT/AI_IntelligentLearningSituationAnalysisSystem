@@ -13,3 +13,5 @@ docs/
 .opencode/
 .env
 !application.yml
+.txt
+.bat
