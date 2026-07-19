@@ -7,10 +7,12 @@ import com.campus.backend.ai.AiResult;
 import com.campus.backend.ai.AiServiceFactory;
 import com.campus.backend.converter.DiagnosisConverter;
 import com.campus.backend.entity.AIDiagnosisRecord;
+import com.campus.backend.entity.AISuggestion;
 import com.campus.backend.entity.ClassInfo;
 import com.campus.backend.entity.Score;
 import com.campus.backend.entity.Student;
 import com.campus.backend.mapper.AIDiagnosisRecordMapper;
+import com.campus.backend.mapper.AISuggestionMapper;
 import com.campus.backend.mapper.ClassMapper;
 import com.campus.backend.mapper.ScoreMapper;
 import com.campus.backend.mapper.StudentMapper;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 public class DiagnosisServiceImpl implements DiagnosisService {
 
     private final AIDiagnosisRecordMapper diagnosisMapper;
+    private final AISuggestionMapper suggestionMapper;
     private final ScoreMapper scoreMapper;
     private final StudentMapper studentMapper;
     private final ClassMapper classMapper;
@@ -97,10 +100,7 @@ public class DiagnosisServiceImpl implements DiagnosisService {
                     "AI 诊断生成失败：" + aiResult.getErrorMessage());
         }
 
-        String cleanedContent = aiResult.getContent()
-                .replaceAll("^```json\\s*", "")
-                .replaceAll("```$", "")
-                .trim();
+        String cleanedContent = com.campus.backend.ai.AiUtils.extractJsonContent(aiResult.getContent());
 
         AIDiagnosisRecord record = new AIDiagnosisRecord();
         record.setStudentId(dto.getStudentId());
@@ -112,17 +112,31 @@ public class DiagnosisServiceImpl implements DiagnosisService {
         record.setAiModel(activeModel);
         record.setPromptTemplate("DIAGNOSIS_PROMPT");
 
+        com.fasterxml.jackson.databind.JsonNode json;
         try {
-            com.fasterxml.jackson.databind.JsonNode json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(cleanedContent);
+            json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(cleanedContent);
             if (json.has("strengths")) record.setStrengths(json.get("strengths").toString());
             if (json.has("weaknesses")) record.setWeaknesses(json.get("weaknesses").toString());
             if (json.has("trend")) record.setTrendAnalysis(json.get("trend").asText());
             if (json.has("riskLevel")) record.setRiskLevel(json.get("riskLevel").asText());
-        } catch (Exception e) {
-            log.warn("Failed to parse AI diagnosis JSON", e);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("AI 诊断返回非法 JSON，原始内容：{}", cleanedContent, e);
+            throw new BusinessException(ErrorCode.AI_SERVICE_ERROR.getCode(),
+                    "AI 诊断返回格式异常，请重试或联系管理员");
         }
 
         diagnosisMapper.insert(record);
+
+        if (json != null && json.has("suggestions") && json.get("suggestions").isArray()) {
+            AISuggestion suggestion = new AISuggestion();
+            suggestion.setStudentId(record.getStudentId());
+            suggestion.setSemester(record.getSemester());
+            suggestion.setDiagnosisId(record.getId());
+            suggestion.setContent(json.get("suggestions").toString());
+            suggestion.setTokensUsed(aiResult.getTokensTotal());
+            suggestionMapper.insert(suggestion);
+        }
+
         return converter.toVO(record);
     }
 

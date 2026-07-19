@@ -83,10 +83,7 @@ public class CommentServiceImpl implements CommentService {
                     "AI 评语生成失败：" + aiResult.getErrorMessage());
         }
 
-        String cleanedContent = aiResult.getContent()
-                .replaceAll("^```json\\s*", "")
-                .replaceAll("```$", "")
-                .trim();
+        String cleanedContent = com.campus.backend.ai.AiUtils.extractJsonContent(aiResult.getContent());
 
         AIComment comment = new AIComment();
         comment.setStudentId(dto.getStudentId());

@@ -104,10 +104,7 @@ public class SuggestionServiceImpl implements SuggestionService {
                     "AI 学习建议生成失败：" + aiResult.getErrorMessage());
         }
 
-        String cleanedContent = aiResult.getContent()
-                .replaceAll("^```json\\s*", "")
-                .replaceAll("```$", "")
-                .trim();
+        String cleanedContent = com.campus.backend.ai.AiUtils.extractJsonContent(aiResult.getContent());
 
         AISuggestion entity = new AISuggestion();
         entity.setStudentId(studentId);

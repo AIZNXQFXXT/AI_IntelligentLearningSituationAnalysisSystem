@@ -48,6 +48,14 @@ public class SuggestionConverter {
 
         try {
             JsonNode json = objectMapper.readTree(entity.getContent());
+            if (json.isArray()) {
+                List<String> list = new ArrayList<>();
+                for (JsonNode item : json) {
+                    list.add(item.asText());
+                }
+                vo.setShortTerm(list);
+                return vo;
+            }
             if (json.has("shortTerm")) {
                 List<String> list = new ArrayList<>();
                 for (JsonNode item : json.get("shortTerm")) {

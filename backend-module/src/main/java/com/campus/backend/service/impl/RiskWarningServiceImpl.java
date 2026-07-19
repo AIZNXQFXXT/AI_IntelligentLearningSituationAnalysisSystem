@@ -83,11 +83,12 @@ public class RiskWarningServiceImpl implements RiskWarningService {
             RiskWarning warning = new RiskWarning();
             warning.setStudentId(student.getId());
             warning.setSemester(semester);
-            warning.setAiAnalysis(aiResult.getContent());
+            String cleanedContent = com.campus.backend.ai.AiUtils.extractJsonContent(aiResult.getContent());
+            warning.setAiAnalysis(cleanedContent);
             warning.setHandleStatus("UNHANDLED");
 
             try {
-                var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(aiResult.getContent());
+                var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(cleanedContent);
                 warning.setRiskLevel(json.has("riskLevel") ? json.get("riskLevel").asText() : initialRiskLevel);
                 warning.setRiskReason(json.has("riskReason") ? json.get("riskReason").asText() : "");
             } catch (Exception e) {

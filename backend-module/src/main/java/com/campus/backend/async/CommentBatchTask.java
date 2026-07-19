@@ -105,10 +105,7 @@ public class CommentBatchTask implements Runnable {
                         continue;
                     }
 
-                    String cleanedContent = aiResult.getContent()
-                            .replaceAll("^```json\\s*", "")
-                            .replaceAll("```$", "")
-                            .trim();
+                    String cleanedContent = com.campus.backend.ai.AiUtils.extractJsonContent(aiResult.getContent());
 
                     AIComment comment = new AIComment();
                     comment.setStudentId(student.getId());
