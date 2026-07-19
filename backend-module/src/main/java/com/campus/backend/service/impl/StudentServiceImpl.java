@@ -65,13 +65,21 @@ public class StudentServiceImpl implements StudentService {
             studentMapper.recoverByStudentNo(dto.getStudentNo());
 
             // 恢复关联的 User（如果也处于软删除状态）
-            User user = userMapper.selectById(existing.getUserId());
+            String username = dto.getUsername() != null ? dto.getUsername() : dto.getStudentNo();
+            User user = userMapper.selectByUsernameIncludeDeleted(username);
             if (user != null && user.getIsDeleted() == 1) {
                 user.setIsDeleted(0);
                 user.setPassword(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : "123456"));
                 user.setStatus(1);
                 user.setUpdatedAt(LocalDateTime.now());
                 userMapper.recoverById(user.getId());
+            }
+            Long classId = existing.getClassId(); // 获取学生所属的班级ID
+            if (classId != null) {
+                classMapper.update(null, new LambdaUpdateWrapper<ClassInfo>()
+                        .eq(ClassInfo::getId, classId)
+                        // 直接写 SQL 片段，让数据库自己 +1，防止并发问题
+                        .setSql("student_count = student_count + 1"));
             }
             return existing;
         }
@@ -113,6 +121,14 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public void delete(Long id) {
+        Student entity = studentMapper.selectById(id);
+        Long classId = entity.getClassId(); // 获取学生所属的班级ID
+        if (classId != null) {
+            classMapper.update(null, new LambdaUpdateWrapper<ClassInfo>()
+                    .eq(ClassInfo::getId, classId)
+                    // 直接写 SQL 片段，让数据库自己 -1，防止并发问题
+                    .setSql("student_count = student_count - 1"));
+        }
         studentMapper.deleteById(id);
     }
 

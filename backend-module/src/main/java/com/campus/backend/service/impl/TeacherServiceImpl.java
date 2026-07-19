@@ -44,7 +44,8 @@ public class TeacherServiceImpl implements TeacherService {
             teacherMapper.recoverByTeacherNo(dto.getTeacherNo());
 
             // 恢复关联的 User（如果也处于软删除状态）
-            User user = userMapper.selectById(existing.getUserId());
+            String username = dto.getUsername() != null ? dto.getUsername() : dto.getTeacherNo();
+            User user = userMapper.selectByUsernameIncludeDeleted(username);
             if (user != null && user.getIsDeleted() == 1) {
                 user.setIsDeleted(0);
                 user.setPassword(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : "123456"));
