@@ -52,6 +52,9 @@ public class StudentServiceImpl implements StudentService {
         // 检查是否有软删除的学生记录（含已删除）
         Student existing = studentMapper.selectByStudentNoIncludeDeleted(dto.getStudentNo());
         if (existing != null) {
+            if (existing.getIsDeleted() == 0) {
+                throw new BusinessException(ErrorCode.CONFLICT.getCode(), "学号已存在");
+            }
             // 恢复 student 记录
             existing.setIsDeleted(0);
             existing.setName(dto.getName());

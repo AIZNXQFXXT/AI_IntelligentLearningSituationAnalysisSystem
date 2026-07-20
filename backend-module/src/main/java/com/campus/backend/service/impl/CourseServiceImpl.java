@@ -8,6 +8,8 @@ import com.campus.backend.entity.Course;
 import com.campus.backend.mapper.CourseMapper;
 import com.campus.backend.service.CourseService;
 import com.campus.common.dto.CourseDTO;
+import com.campus.common.enums.ErrorCode;
+import com.campus.common.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,9 @@ public class CourseServiceImpl implements CourseService {
     public Course create(CourseDTO dto) {
         Course existing = courseMapper.selectByNameIncludeDeleted(dto.getName());
         if (existing != null) {
+            if (existing.getIsDeleted() == 0) {
+                throw new BusinessException(ErrorCode.CONFLICT.getCode(), "课程名称已存在");
+            }
             existing.setIsDeleted(0);
             existing.setUpdatedAt(LocalDateTime.now());
             courseMapper.recoverByName(dto.getName());

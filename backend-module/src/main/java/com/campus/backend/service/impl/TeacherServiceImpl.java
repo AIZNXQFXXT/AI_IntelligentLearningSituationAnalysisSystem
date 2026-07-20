@@ -11,6 +11,8 @@ import com.campus.backend.mapper.UserMapper;
 import com.campus.backend.security.PasswordEncoder;
 import com.campus.backend.service.TeacherService;
 import com.campus.common.dto.TeacherDTO;
+import com.campus.common.enums.ErrorCode;
+import com.campus.common.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,9 @@ public class TeacherServiceImpl implements TeacherService {
         // 检查是否有软删除的教师记录（含已删除）
         Teacher existing = teacherMapper.selectByTeacherNoIncludeDeleted(dto.getTeacherNo());
         if (existing != null) {
+            if (existing.getIsDeleted() == 0) {
+                throw new BusinessException(ErrorCode.CONFLICT.getCode(), "工号已存在");
+            }
             // 恢复 teacher 记录
             existing.setIsDeleted(0);
             existing.setName(dto.getName());

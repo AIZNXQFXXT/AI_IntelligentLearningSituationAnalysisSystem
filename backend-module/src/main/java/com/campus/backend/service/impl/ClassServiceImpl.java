@@ -45,6 +45,9 @@ public class ClassServiceImpl implements ClassService {
         String className = dto.getClassName();
         ClassInfo entity = classMapper.selectByClassName(className);
         if (entity != null) {
+            if (entity.getIsDeleted() == 0) {
+                throw new BusinessException(ErrorCode.CONFLICT.getCode(), "班级名称已存在");
+            }
             entity.setIsDeleted(0);
             entity.setUpdatedAt(LocalDateTime.now());
             classMapper.updateByClassName(entity.getClassName());
