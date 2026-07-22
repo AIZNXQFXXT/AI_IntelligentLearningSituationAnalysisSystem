@@ -1,9 +1,9 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.service.SemesterService;
-import com.aicampus.service.StatsService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
+import com.campus.client.service.SemesterService;
+import com.campus.client.service.StatsService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.*;

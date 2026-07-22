@@ -1,4 +1,4 @@
-package com.aicampus.util;
+package com.campus.client.util;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

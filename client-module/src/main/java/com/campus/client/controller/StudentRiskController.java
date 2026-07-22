@@ -1,10 +1,10 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.RiskWarning;
-import com.aicampus.service.RiskWarningService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
-import com.aicampus.util.TableUtils;
+import com.campus.client.model.RiskWarning;
+import com.campus.client.service.RiskWarningService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
+import com.campus.client.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;

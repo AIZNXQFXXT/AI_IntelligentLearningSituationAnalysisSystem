@@ -1,14 +1,14 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.ClassInfo;
-import com.aicampus.model.Course;
-import com.aicampus.model.ScoreDistribution;
-import com.aicampus.model.SchoolStats;
-import com.aicampus.service.ClassService;
-import com.aicampus.service.CourseService;
-import com.aicampus.service.StatsService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
+import com.campus.client.model.ClassInfo;
+import com.campus.client.model.Course;
+import com.campus.client.model.ScoreDistribution;
+import com.campus.client.model.SchoolStats;
+import com.campus.client.service.ClassService;
+import com.campus.client.service.CourseService;
+import com.campus.client.service.StatsService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

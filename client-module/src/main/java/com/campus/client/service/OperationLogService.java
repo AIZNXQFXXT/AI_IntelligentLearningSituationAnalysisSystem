@@ -1,8 +1,8 @@
-package com.aicampus.service;
+package com.campus.client.service;
 
-import com.aicampus.model.ApiResponse;
-import com.aicampus.model.OperationLog;
-import com.aicampus.model.PageResult;
+import com.campus.client.model.ApiResponse;
+import com.campus.client.model.OperationLog;
+import com.campus.client.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 public class OperationLogService {

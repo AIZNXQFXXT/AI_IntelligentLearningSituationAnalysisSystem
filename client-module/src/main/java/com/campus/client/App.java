@@ -1,6 +1,6 @@
-package com.aicampus;
+package com.campus.client;
 
-import com.aicampus.session.UserSession;
+import com.campus.client.session.UserSession;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

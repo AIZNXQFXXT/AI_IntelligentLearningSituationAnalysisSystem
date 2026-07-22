@@ -1,8 +1,8 @@
-package com.aicampus.session;
+package com.campus.client.session;
 
-import com.aicampus.model.LoginResult;
-import com.aicampus.service.ApiClient;
-import com.aicampus.util.AuthStorage;
+import com.campus.client.model.LoginResult;
+import com.campus.client.service.ApiClient;
+import com.campus.client.util.AuthStorage;
 
 import java.util.Map;
 

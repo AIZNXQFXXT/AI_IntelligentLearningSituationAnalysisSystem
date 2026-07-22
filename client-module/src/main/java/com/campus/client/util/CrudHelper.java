@@ -1,4 +1,4 @@
-package com.aicampus.util;
+package com.campus.client.util;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;

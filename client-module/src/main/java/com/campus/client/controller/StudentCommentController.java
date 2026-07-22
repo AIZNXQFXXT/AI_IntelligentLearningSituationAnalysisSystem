@@ -1,9 +1,9 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.AiComment;
-import com.aicampus.service.CommentService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
+import com.campus.client.model.AiComment;
+import com.campus.client.service.CommentService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;

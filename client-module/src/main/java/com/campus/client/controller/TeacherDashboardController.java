@@ -1,9 +1,9 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.SchoolOverviewVO;
-import com.aicampus.service.StatsService;
-import com.aicampus.session.UserSession;
-import com.aicampus.util.AppExecutors;
+import com.campus.client.model.SchoolOverviewVO;
+import com.campus.client.service.StatsService;
+import com.campus.client.session.UserSession;
+import com.campus.client.util.AppExecutors;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

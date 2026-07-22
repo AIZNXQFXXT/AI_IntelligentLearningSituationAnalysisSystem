@@ -1,9 +1,9 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.*;
-import com.aicampus.service.*;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
+import com.campus.client.model.*;
+import com.campus.client.service.*;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

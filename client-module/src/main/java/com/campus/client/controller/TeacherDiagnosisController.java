@@ -1,14 +1,14 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.AiDiagnosis;
-import com.aicampus.model.DiagnosisReport;
-import com.aicampus.model.Student;
-import com.aicampus.service.DiagnosisService;
-import com.aicampus.service.SemesterService;
-import com.aicampus.service.StudentService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
-import com.aicampus.util.JsonFormatter;
+import com.campus.client.model.AiDiagnosis;
+import com.campus.client.model.DiagnosisReport;
+import com.campus.client.model.Student;
+import com.campus.client.service.DiagnosisService;
+import com.campus.client.service.SemesterService;
+import com.campus.client.service.StudentService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
+import com.campus.client.util.JsonFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;

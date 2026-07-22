@@ -1,12 +1,12 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.Course;
-import com.aicampus.model.Score;
-import com.aicampus.service.CourseService;
-import com.aicampus.service.ScoreService;
-import com.aicampus.service.SemesterService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
+import com.campus.client.model.Course;
+import com.campus.client.model.Score;
+import com.campus.client.service.CourseService;
+import com.campus.client.service.ScoreService;
+import com.campus.client.service.SemesterService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

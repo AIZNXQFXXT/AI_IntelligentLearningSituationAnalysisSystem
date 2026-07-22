@@ -1,10 +1,10 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.ApiResponse;
-import com.aicampus.model.ClassInfo;
-import com.aicampus.service.ApiClient;
-import com.aicampus.service.ClassService;
-import com.aicampus.util.AppExecutors;
+import com.campus.client.model.ApiResponse;
+import com.campus.client.model.ClassInfo;
+import com.campus.client.service.ApiClient;
+import com.campus.client.service.ClassService;
+import com.campus.client.util.AppExecutors;
 import com.fasterxml.jackson.core.type.TypeReference;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

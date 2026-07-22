@@ -1,18 +1,18 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.model.ClassInfo;
-import com.aicampus.model.PageResult;
-import com.aicampus.model.Teacher;
-import com.aicampus.service.ClassService;
-import com.aicampus.service.TeacherService;
-import com.aicampus.util.AppExecutors;
-import com.aicampus.util.CrudHelper;
+import com.campus.client.model.ClassInfo;
+import com.campus.client.model.PageResult;
+import com.campus.client.model.Teacher;
+import com.campus.client.service.ClassService;
+import com.campus.client.service.TeacherService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import com.aicampus.util.TableUtils;
+import com.campus.client.util.TableUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;

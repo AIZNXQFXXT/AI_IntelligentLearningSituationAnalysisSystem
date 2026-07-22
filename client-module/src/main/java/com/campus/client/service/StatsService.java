@@ -1,10 +1,10 @@
-package com.aicampus.service;
+package com.campus.client.service;
 
-import com.aicampus.model.ApiResponse;
-import com.aicampus.model.ScoreDistribution;
-import com.aicampus.model.SchoolOverview;
-import com.aicampus.model.SchoolOverviewVO;
-import com.aicampus.model.SchoolStats;
+import com.campus.client.model.ApiResponse;
+import com.campus.client.model.ScoreDistribution;
+import com.campus.client.model.SchoolOverview;
+import com.campus.client.model.SchoolOverviewVO;
+import com.campus.client.model.SchoolStats;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;

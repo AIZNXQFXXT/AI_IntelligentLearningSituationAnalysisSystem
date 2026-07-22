@@ -1,7 +1,7 @@
-package com.aicampus.service;
+package com.campus.client.service;
 
-import com.aicampus.model.Exam;
-import com.aicampus.model.PageResult;
+import com.campus.client.model.Exam;
+import com.campus.client.model.PageResult;
 
 import java.util.Comparator;
 import java.util.List;

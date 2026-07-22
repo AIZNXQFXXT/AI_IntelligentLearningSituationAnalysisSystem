@@ -1,7 +1,7 @@
-package com.aicampus.controller;
+package com.campus.client.controller;
 
-import com.aicampus.session.UserSession;
-import com.aicampus.util.ViewLoader;
+import com.campus.client.session.UserSession;
+import com.campus.client.util.ViewLoader;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
