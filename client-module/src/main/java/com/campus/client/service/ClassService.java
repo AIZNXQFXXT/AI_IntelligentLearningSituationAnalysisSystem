@@ -21,8 +21,8 @@ public class ClassService {
         return ApiClient.get("/classes/list", new TypeReference<ApiResponse<List<ClassInfo>>>() {});
     }
 
-    public static List<ClassInfo> getMyClasses() throws Exception {
-        return ApiClient.get("/classes/my", new TypeReference<ApiResponse<List<ClassInfo>>>() {});
+    public static PageResult<ClassInfo> getMyClasses() throws Exception {
+        return ApiClient.get("/classes/my", new TypeReference<ApiResponse<PageResult<ClassInfo>>>() {});
     }
 
     public static Void create(ClassInfo cls) throws Exception {

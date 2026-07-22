@@ -6,6 +6,7 @@ import com.campus.client.service.ClassService;
 import com.campus.client.service.CommentService;
 import com.campus.client.service.SemesterService;
 import com.campus.client.util.AppExecutors;
+import com.campus.client.util.ClientLogger;
 import com.campus.client.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -93,8 +94,9 @@ public class TeacherCommentController {
         Task<List<ClassInfo>> task = new Task<>() {
             @Override protected List<ClassInfo> call() throws Exception {
                 try {
-                    return ClassService.getMyClasses();
+                    return ClassService.getMyClasses().getRecords();
                 } catch (Exception e) {
+                    ClientLogger.warning("[loadClasses] getMyClasses failed: " + e.getMessage());
                     return ClassService.getAll();
                 }
             }
@@ -103,7 +105,12 @@ public class TeacherCommentController {
             classCombo.setItems(FXCollections.observableArrayList(task.getValue()));
             classCombo.getSelectionModel().selectFirst();
         });
-        task.setOnFailed(e -> CrudHelper.showError("加载班级列表失败"));
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            ClientLogger.severe("[loadClasses] 加载班级列表失败: "
+                    + (ex != null ? ex.getClass().getSimpleName() + ": " + ex.getMessage() : "unknown"));
+            CrudHelper.showError("加载班级列表失败");
+        });
         AppExecutors.submit(task::run);
     }
 
