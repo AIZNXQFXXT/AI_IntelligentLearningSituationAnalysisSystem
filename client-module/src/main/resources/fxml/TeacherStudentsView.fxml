@@ -8,9 +8,13 @@
       fx:controller="com.campus.client.controller.TeacherStudentsController"
       spacing="0" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" styleClass="crud-card">
 
-    <Label text="本班学生" styleClass="crud-card-header"/>
+    <Label fx:id="titleLabel" text="本班学生" styleClass="crud-card-header"/>
 
     <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <HBox styleClass="crud-toolbar" spacing="10" alignment="CENTER_LEFT">
+            <Label text="班级:" styleClass="filter-label"/>
+            <ComboBox fx:id="classComboBox" prefWidth="220"/>
+        </HBox>
         <TableView fx:id="table" VBox.vgrow="ALWAYS">
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>

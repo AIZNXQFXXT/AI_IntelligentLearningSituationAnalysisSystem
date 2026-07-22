@@ -160,9 +160,18 @@ public class StudentServiceImpl implements StudentService {
             Teacher teacher = teacherMapper.selectOne(
                     new LambdaQueryWrapper<Teacher>().eq(Teacher::getUserId, userId));
             if (teacher != null) {
-                List<TeachingTask> tasks = teachingTaskMapper.selectList(
-                        new LambdaQueryWrapper<TeachingTask>().eq(TeachingTask::getTeacherId, teacher.getId()));
-                List<Long> classIds = tasks.stream().map(TeachingTask::getClassId).distinct().toList();
+                // 教学任务所带班级
+                List<Long> taskClassIds = teachingTaskMapper.selectList(
+                        new LambdaQueryWrapper<TeachingTask>().eq(TeachingTask::getTeacherId, teacher.getId()))
+                        .stream().map(TeachingTask::getClassId).distinct().toList();
+                // 班主任所带班级
+                List<Long> headClassIds = classMapper.selectList(
+                        new LambdaQueryWrapper<ClassInfo>().eq(ClassInfo::getHeadTeacherId, teacher.getId()))
+                        .stream().map(ClassInfo::getId).distinct().toList();
+                // 并集去重
+                java.util.Set<Long> classIds = new java.util.LinkedHashSet<>();
+                classIds.addAll(taskClassIds);
+                classIds.addAll(headClassIds);
                 if (!classIds.isEmpty()) {
                     wrapper.in(Student::getClassId, classIds);
                 }

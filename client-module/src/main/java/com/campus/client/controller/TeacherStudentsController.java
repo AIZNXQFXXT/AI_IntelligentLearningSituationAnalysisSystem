@@ -1,6 +1,7 @@
 package com.campus.client.controller;
 
 import com.campus.client.model.ClassInfo;
+import com.campus.client.model.PageResult;
 import com.campus.client.model.Student;
 import com.campus.client.service.ClassService;
 import com.campus.client.service.StudentService;
@@ -15,11 +16,15 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
 
+import java.util.Collections;
 import java.util.List;
 
 public class TeacherStudentsController {
 
+    @FXML private Label titleLabel;
+    @FXML private ComboBox<ClassInfo> classComboBox;
     @FXML private TableView<Student> table;
     @FXML private TableColumn<Student, String> colStudentNo;
     @FXML private TableColumn<Student, String> colName;
@@ -30,7 +35,6 @@ public class TeacherStudentsController {
     @FXML private TableColumn<Student, Void> colAction;
 
     private final ObservableList<Student> tableData = FXCollections.observableArrayList();
-    private List<ClassInfo> classList;
 
     @FXML
     public void initialize() {
@@ -70,34 +74,72 @@ public class TeacherStudentsController {
         });
 
         table.setItems(tableData);
-        Task<List<ClassInfo>> loadClasses = new Task<>() {
-            @Override protected List<ClassInfo> call() throws Exception { return ClassService.getAll(); }
+
+        // ComboBox 显示: 复用 ClassInfo.toString() = "grade className"
+        classComboBox.setConverter(new StringConverter<>() {
+            @Override public String toString(ClassInfo c) { return c == null ? "" : c.toString(); }
+            @Override public ClassInfo fromString(String s) { return null; }
+        });
+        // 用 valueProperty 监听而非 setOnAction: 程序化 selectFirst() 与用户选择都可靠触发
+        classComboBox.valueProperty().addListener((obs, old, newVal) -> loadData());
+
+        loadMyClasses();
+    }
+
+    /** 加载本班班级列表 (班主任 ∪ 教学任务), 默认选中第一个 */
+    private void loadMyClasses() {
+        Task<PageResult<ClassInfo>> loadClasses = new Task<>() {
+            @Override protected PageResult<ClassInfo> call() throws Exception {
+                return ClassService.getMyClasses();
+            }
         };
-        loadClasses.setOnSucceeded(ev -> classList = loadClasses.getValue());
+        loadClasses.setOnSucceeded(ev -> {
+            PageResult<ClassInfo> pr = loadClasses.getValue();
+            List<ClassInfo> list = pr != null && pr.getRecords() != null
+                    ? pr.getRecords() : Collections.emptyList();
+            classComboBox.getItems().setAll(list);
+            if (!list.isEmpty()) {
+                // selectFirst 会触发 valueProperty 监听 → loadData()
+                classComboBox.getSelectionModel().selectFirst();
+            } else {
+                titleLabel.setText("本班学生 · 暂无所带班级");
+                tableData.clear();
+            }
+        });
+        loadClasses.setOnFailed(ev -> {
+            titleLabel.setText("本班学生 · 加载失败");
+            CrudHelper.showError("班级加载失败");
+        });
         AppExecutors.submit(loadClasses::run);
-        loadData();
     }
 
     private void loadData() {
+        ClassInfo selected = classComboBox.getValue();
+        if (selected == null) {
+            tableData.clear();
+            return;
+        }
+        // 动态标题
+        titleLabel.setText("本班学生 · " + selected.toString());
+
+        final Integer classId = selected.getId();
         Task<List<Student>> task = new Task<>() {
             @Override
             protected List<Student> call() throws Exception {
-                return StudentService.getPage(1, 200).getRecords();
+                return StudentService.getPage(1, 200, null, classId).getRecords();
             }
         };
         task.setOnSucceeded(e -> {
             tableData.clear();
             List<Student> records = task.getValue();
-            if (classList != null) {
+            // 已按 classId 过滤, 直接用选中班级名填充, 不再做 classList 异步匹配
+            String cn = selected.getClassName();
+            if (records != null) {
                 for (Student s : records) {
-                    if (s.getClassName() == null && s.getClassId() != 0) {
-                        for (ClassInfo c : classList) {
-                            if (c.getId() == s.getClassId()) { s.setClassName(c.getClassName()); break; }
-                        }
-                    }
+                    s.setClassName(cn);
                 }
+                tableData.addAll(records);
             }
-            tableData.addAll(records);
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
