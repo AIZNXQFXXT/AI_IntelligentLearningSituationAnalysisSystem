@@ -24,7 +24,18 @@ if errorlevel 1 (
 )
 
 set "PROFILE=%SPRING_PROFILES_ACTIVE%"
-if "%PROFILE%"=="" set "PROFILE=dev"
+if "%PROFILE%"=="" (
+    echo.
+    echo Please select environment:
+    echo   1^) dev  (development, default)
+    echo   2^) prod (production)
+    set /p "choice=Enter [1/2] (default 1): "
+    if "!choice!"=="2" (
+        set "PROFILE=prod"
+    ) else (
+        set "PROFILE=dev"
+    )
+)
 echo [OK] Environment OK  (profile: %PROFILE%)
 
 echo.

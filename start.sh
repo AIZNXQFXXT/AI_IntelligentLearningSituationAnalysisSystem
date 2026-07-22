@@ -3,7 +3,20 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_PID=""
-PROFILE="${SPRING_PROFILES_ACTIVE:-dev}"
+
+# 选择运行环境:优先用环境变量 SPRING_PROFILES_ACTIVE,否则交互式选择
+if [ -n "${SPRING_PROFILES_ACTIVE:-}" ]; then
+    PROFILE="$SPRING_PROFILES_ACTIVE"
+else
+    echo "请选择运行环境:"
+    echo "  1) dev  (开发环境,默认)"
+    echo "  2) prod (生产环境)"
+    read -p "请输入 [1/2] (默认 1): " choice || choice=""
+    case "${choice:-}" in
+        2) PROFILE="prod" ;;
+        *) PROFILE="dev" ;;
+    esac
+fi
 
 cleanup() {
     echo ""
