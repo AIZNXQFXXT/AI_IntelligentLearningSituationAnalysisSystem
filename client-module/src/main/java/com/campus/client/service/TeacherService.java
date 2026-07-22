@@ -1,8 +1,8 @@
-package com.campus.client.service;
+package com.aicampus.service;
 
-import com.campus.client.model.ApiResponse;
-import com.campus.client.model.PageResult;
-import com.campus.client.model.Teacher;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.model.PageResult;
+import com.aicampus.model.Teacher;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.File;

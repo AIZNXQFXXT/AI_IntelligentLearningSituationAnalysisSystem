@@ -1,11 +1,11 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.ClassInfo;
-import com.campus.client.model.Student;
-import com.campus.client.service.ClassService;
-import com.campus.client.service.StudentService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.ClassInfo;
+import com.aicampus.model.Student;
+import com.aicampus.service.ClassService;
+import com.aicampus.service.StudentService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;

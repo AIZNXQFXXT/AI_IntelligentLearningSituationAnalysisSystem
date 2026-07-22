@@ -1,8 +1,8 @@
-package com.campus.client.service;
+package com.aicampus.service;
 
-import com.campus.client.model.AiDiagnosis;
-import com.campus.client.model.ApiResponse;
-import com.campus.client.model.PageResult;
+import com.aicampus.model.AiDiagnosis;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 public class DiagnosisService {

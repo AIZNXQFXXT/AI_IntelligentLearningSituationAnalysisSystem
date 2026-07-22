@@ -1,10 +1,10 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.OperationLog;
-import com.campus.client.model.PageResult;
-import com.campus.client.service.OperationLogService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.OperationLog;
+import com.aicampus.model.PageResult;
+import com.aicampus.service.OperationLogService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;

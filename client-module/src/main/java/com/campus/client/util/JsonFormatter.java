@@ -1,7 +1,7 @@
-package com.campus.client.util;
+package com.aicampus.util;
 
-import com.campus.client.model.DiagnosisReport;
-import com.campus.client.service.ApiClient;
+import com.aicampus.model.DiagnosisReport;
+import com.aicampus.service.ApiClient;
 
 import java.util.List;
 import java.util.Map;

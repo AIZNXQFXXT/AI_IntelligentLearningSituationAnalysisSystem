@@ -1,10 +1,10 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.LoginResult;
-import com.campus.client.service.AuthService;
-import com.campus.client.session.UserSession;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.ViewLoader;
+import com.aicampus.model.LoginResult;
+import com.aicampus.service.AuthService;
+import com.aicampus.session.UserSession;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.ViewLoader;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

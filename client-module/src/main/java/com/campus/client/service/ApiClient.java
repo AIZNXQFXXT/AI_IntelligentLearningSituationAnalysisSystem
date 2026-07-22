@@ -1,9 +1,9 @@
-package com.campus.client.service;
+package com.aicampus.service;
 
-import com.campus.client.model.ApiResponse;
-import com.campus.client.session.UserSession;
-import com.campus.client.util.CrudHelper;
-import com.campus.client.util.ViewLoader;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.session.UserSession;
+import com.aicampus.util.CrudHelper;
+import com.aicampus.util.ViewLoader;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

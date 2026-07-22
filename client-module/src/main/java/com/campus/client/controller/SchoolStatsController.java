@@ -1,14 +1,11 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.ClassInfo;
-import com.campus.common.dto.CourseDTO;
-import com.campus.common.vo.SchoolOverviewVO;
-import com.campus.common.vo.ScoreDistributionVO;
-import com.campus.client.service.ClassService;
-import com.campus.client.service.CourseService;
-import com.campus.client.service.StatsService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.*;
+import com.aicampus.service.ClassService;
+import com.aicampus.service.CourseService;
+import com.aicampus.service.StatsService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
@@ -33,7 +30,7 @@ public class SchoolStatsController {
     @FXML private NumberAxis yAxis;
 
     private List<ClassInfo> classList;
-    private List<CourseDTO> courseList;
+    private List<Course> courseList;
 
     @FXML
     public void initialize() {
@@ -73,7 +70,7 @@ public class SchoolStatsController {
         };
         task.setOnSucceeded(e -> {
             for (ClassInfo c : classList) classFilter.getItems().add(c.getId() + " - " + c.getClassName());
-            for (CourseDTO c : courseList) courseFilter.getItems().add(c.getId() + " - " + c.getName());
+            for (Course c : courseList) courseFilter.getItems().add(c.getId() + " - " + c.getName());
         });
         AppExecutors.submit(task::run);
     }
@@ -84,22 +81,22 @@ public class SchoolStatsController {
         if (classIdx < 0 || courseIdx < 0 || classList == null || courseList == null) return;
 
         int classId = classList.get(classIdx).getId();
-        int courseId = courseList.get(courseIdx).getId().intValue();
+        int courseId = courseList.get(courseIdx).getId();
 
-        Task<List<ScoreDistributionVO>> task = new Task<>() {
+        Task<List<ScoreDistribution>> task = new Task<>() {
             @Override
-            protected List<ScoreDistributionVO> call() throws Exception {
+            protected List<ScoreDistribution> call() throws Exception {
                 return StatsService.getScoreDistribution(classId, courseId);
             }
         };
         task.setOnSucceeded(e -> {
             chart.getData().clear();
-            List<ScoreDistributionVO> list = task.getValue();
+            List<ScoreDistribution> list = task.getValue();
             if (list == null || list.isEmpty()) return;
             XYChart.Series<String, Number> series = new XYChart.Series<>();
-            for (ScoreDistributionVO d : list) {
-                if (d.getRangeLabel() == null) continue;
-                series.getData().add(new XYChart.Data<>(d.getRangeLabel(), d.getCount()));
+            for (ScoreDistribution d : list) {
+                if (d.getRange() == null) continue;
+                series.getData().add(new XYChart.Data<>(d.getRange(), d.getCount()));
             }
             chart.getData().add(series);
         });

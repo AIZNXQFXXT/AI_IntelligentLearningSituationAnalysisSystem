@@ -1,12 +1,12 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.common.dto.CourseDTO;
-import com.campus.client.model.Score;
-import com.campus.client.service.CourseService;
-import com.campus.client.service.ScoreService;
-import com.campus.client.service.SemesterService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.Course;
+import com.aicampus.model.Score;
+import com.aicampus.service.CourseService;
+import com.aicampus.service.ScoreService;
+import com.aicampus.service.SemesterService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -103,8 +103,8 @@ public class StudentScoresController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                for (CourseDTO c : CourseService.getAll())
-                    courseMap.put(c.getId().intValue(), c.getName());
+                for (Course c : CourseService.getAll())
+                    courseMap.put(c.getId(), c.getName());
                 return null;
             }
         };

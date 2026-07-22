@@ -1,9 +1,9 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.SysConfig;
-import com.campus.client.service.ConfigService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.SysConfig;
+import com.aicampus.service.ConfigService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;

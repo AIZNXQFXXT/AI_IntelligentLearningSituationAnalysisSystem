@@ -1,14 +1,14 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.ClassInfo;
-import com.campus.common.dto.CourseDTO;
-import com.campus.common.vo.ClassStatsVO;
-import com.campus.common.vo.ScoreDistributionVO;
-import com.campus.client.service.ClassService;
-import com.campus.client.service.CourseService;
-import com.campus.client.service.StatsService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.ClassInfo;
+import com.aicampus.model.Course;
+import com.aicampus.model.ScoreDistribution;
+import com.aicampus.model.SchoolStats;
+import com.aicampus.service.ClassService;
+import com.aicampus.service.CourseService;
+import com.aicampus.service.StatsService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class ClassStatsController {
 
     @FXML private ComboBox<ClassInfo> classCombo;
-    @FXML private ComboBox<CourseDTO> courseCombo;
+    @FXML private ComboBox<Course> courseCombo;
     @FXML private Label avgScore, maxScore, minScore, passRate, excellentRate, studentCount;
 
     @FXML private BarChart<String, Number> distributionChart;
@@ -53,8 +53,8 @@ public class ClassStatsController {
     }
 
     private void loadCourses() {
-        Task<List<CourseDTO>> task = new Task<>() {
-            @Override protected List<CourseDTO> call() throws Exception { return CourseService.getAll(); }
+        Task<List<Course>> task = new Task<>() {
+            @Override protected List<Course> call() throws Exception { return CourseService.getAll(); }
         };
         task.setOnSucceeded(e -> courseCombo.setItems(FXCollections.observableArrayList(task.getValue())));
         task.setOnFailed(e -> CrudHelper.showError("加载课程列表失败\n" + task.getException().getMessage()));
@@ -64,57 +64,57 @@ public class ClassStatsController {
     @FXML
     private void handleLoadStats() {
         ClassInfo cls = classCombo.getValue();
-        CourseDTO course = courseCombo.getValue();
+        Course course = courseCombo.getValue();
         if (cls == null || course == null) {
             CrudHelper.showAlert("请选择班级和课程");
             return;
         }
 
-        loadClassStats(cls.getId(), course.getId().intValue());
-        loadDistribution(cls.getId(), course.getId().intValue());
-        loadTrend(cls.getId(), course.getId().intValue());
+        loadClassStats(cls.getId(), course.getId());
+        loadDistribution(cls.getId(), course.getId());
+        loadTrend(cls.getId(), course.getId());
     }
 
     private void loadClassStats(int classId, int courseId) {
-        Task<ClassStatsVO> task = new Task<>() {
-            @Override protected ClassStatsVO call() throws Exception {
+        Task<SchoolStats> task = new Task<>() {
+            @Override protected SchoolStats call() throws Exception {
                 return StatsService.getClassStats(classId, courseId);
             }
         };
         task.setOnSucceeded(e -> {
-            ClassStatsVO s = task.getValue();
+            SchoolStats s = task.getValue();
             avgScore.setText(String.format("%.1f", s.getAvgScore()));
             maxScore.setText(String.format("%.1f", s.getMaxScore()));
             minScore.setText(String.format("%.1f", s.getMinScore()));
-            if (s.getTotalStudents() == 0) {
+            if (s.getStudentCount() == 0) {
                 passRate.setText("0.0%");
                 excellentRate.setText("0.0%");
             } else {
                 passRate.setText(String.format("%.1f%%", s.getPassRate()));
-                double excRate = (double) s.getExcellentCount() / s.getTotalStudents() * 100;
+                double excRate = (double) s.getExcellentCount() / s.getStudentCount() * 100;
                 excellentRate.setText(String.format("%.1f%%", excRate));
             }
-            studentCount.setText(String.valueOf(s.getTotalStudents()));
+            studentCount.setText(String.valueOf(s.getStudentCount()));
         });
         task.setOnFailed(e -> CrudHelper.showError("加载班级统计失败\n" + task.getException().getMessage()));
         AppExecutors.submit(task::run);
     }
 
     private void loadDistribution(int classId, int courseId) {
-        Task<List<ScoreDistributionVO>> task = new Task<>() {
-            @Override protected List<ScoreDistributionVO> call() throws Exception {
+        Task<List<ScoreDistribution>> task = new Task<>() {
+            @Override protected List<ScoreDistribution> call() throws Exception {
                 return StatsService.getScoreDistribution(classId, courseId);
             }
         };
         task.setOnSucceeded(e -> {
             distributionChart.getData().clear();
-            List<ScoreDistributionVO> list = task.getValue();
+            List<ScoreDistribution> list = task.getValue();
             if (list == null || list.isEmpty()) return;
             XYChart.Series<String, Number> series = new XYChart.Series<>();
             series.setName("人数");
-            for (ScoreDistributionVO item : list) {
-                if (item.getRangeLabel() == null) continue;
-                series.getData().add(new XYChart.Data<>(item.getRangeLabel(), item.getCount()));
+            for (ScoreDistribution item : list) {
+                if (item.getRange() == null) continue;
+                series.getData().add(new XYChart.Data<>(item.getRange(), item.getCount()));
             }
             distributionChart.getData().add(series);
         });

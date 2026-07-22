@@ -1,13 +1,13 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.PageResult;
-import com.campus.client.model.RiskWarning;
-import com.campus.client.model.Score;
-import com.campus.client.service.RiskWarningService;
-import com.campus.client.service.ScoreService;
-import com.campus.client.session.UserSession;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.PageResult;
+import com.aicampus.model.RiskWarning;
+import com.aicampus.model.Score;
+import com.aicampus.service.RiskWarningService;
+import com.aicampus.service.ScoreService;
+import com.aicampus.session.UserSession;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

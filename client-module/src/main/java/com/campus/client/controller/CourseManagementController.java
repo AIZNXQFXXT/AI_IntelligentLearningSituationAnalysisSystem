@@ -1,17 +1,17 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.common.dto.CourseDTO;
-import com.campus.client.model.PageResult;
-import com.campus.client.service.CourseService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.Course;
+import com.aicampus.model.PageResult;
+import com.aicampus.service.CourseService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import com.campus.client.util.TableUtils;
+import com.aicampus.util.TableUtils;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
@@ -23,16 +23,16 @@ public class CourseManagementController {
 
     @FXML private ComboBox<String> typeFilter;
     @FXML private TextField keywordField;
-    @FXML private TableView<CourseDTO> table;
-    @FXML private TableColumn<CourseDTO, String> colName;
-    @FXML private TableColumn<CourseDTO, String> colType;
-    @FXML private TableColumn<CourseDTO, Double> colCredit;
-    @FXML private TableColumn<CourseDTO, String> colDescription;
-    @FXML private TableColumn<CourseDTO, String> colStatus;
-    @FXML private TableColumn<CourseDTO, Void> colActions;
+    @FXML private TableView<Course> table;
+    @FXML private TableColumn<Course, String> colName;
+    @FXML private TableColumn<Course, String> colType;
+    @FXML private TableColumn<Course, Double> colCredit;
+    @FXML private TableColumn<Course, String> colDescription;
+    @FXML private TableColumn<Course, String> colStatus;
+    @FXML private TableColumn<Course, Void> colActions;
     @FXML private Pagination pagination;
 
-    private final ObservableList<CourseDTO> tableData = FXCollections.observableArrayList();
+    private final ObservableList<Course> tableData = FXCollections.observableArrayList();
     private int currentPage = 1;
     private int pageSize = 20;
     private int totalItems = 0;
@@ -47,7 +47,7 @@ public class CourseManagementController {
         colType.setCellValueFactory(cellData -> new SimpleStringProperty(mapCourseType(cellData.getValue().getType())));
         colCredit.setCellValueFactory(new PropertyValueFactory<>("credit"));
         colDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
-        colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(Integer.valueOf(1).equals(cellData.getValue().getStatus()) ? "启用" : "停用"));
+        colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus() == 1 ? "启用" : "停用"));
 
         TableUtils.setupActionColumn(colActions, this::handleEdit, this::handleDelete);
 
@@ -85,14 +85,14 @@ public class CourseManagementController {
     }
 
     private void loadData() {
-        Task<PageResult<CourseDTO>> task = new Task<>() {
+        Task<PageResult<Course>> task = new Task<>() {
             @Override
-            protected PageResult<CourseDTO> call() throws Exception {
+            protected PageResult<Course> call() throws Exception {
                 return CourseService.getPage(currentPage, pageSize, keywordField.getText(), getSelectedType());
             }
         };
         task.setOnSucceeded(e -> {
-            PageResult<CourseDTO> result = task.getValue();
+            PageResult<Course> result = task.getValue();
             tableData.clear(); tableData.addAll(result.getRecords());
             totalItems = result.getTotal(); updatePagination();
         });
@@ -122,7 +122,7 @@ public class CourseManagementController {
     @FXML
     private void handleCreate() { showFormDialog("新增课程", null); }
 
-    private void handleEdit(CourseDTO item) { showFormDialog("编辑课程", item); }
+    private void handleEdit(Course item) { showFormDialog("编辑课程", item); }
 
     @FXML
     private void handleBatchImport() {
@@ -144,8 +144,8 @@ public class CourseManagementController {
         }
     }
 
-    private void showFormDialog(String title, CourseDTO existing) {
-        Dialog<CourseDTO> dialog = new Dialog<>();
+    private void showFormDialog(String title, Course existing) {
+        Dialog<Course> dialog = new Dialog<>();
         dialog.setTitle(title);
         TextField nameField = new TextField();
         ComboBox<String> typeBox = new ComboBox<>();
@@ -159,7 +159,7 @@ public class CourseManagementController {
             typeBox.setValue(mapCourseType(existing.getType()));
             creditField.setText(String.valueOf(existing.getCredit()));
             descArea.setText(existing.getDescription());
-            statusCheck.setSelected(Integer.valueOf(1).equals(existing.getStatus()));
+            statusCheck.setSelected(existing.getStatus() == 1);
         } else { statusCheck.setSelected(true); }
 
         GridPane grid = new GridPane();
@@ -179,7 +179,7 @@ public class CourseManagementController {
                 if (nameField.getText().isEmpty() || typeBox.getValue() == null || creditField.getText().isEmpty()) {
                     CrudHelper.showError("请填写必填项"); return null;
                 }
-                CourseDTO c = existing != null ? existing : new CourseDTO();
+                Course c = existing != null ? existing : new Course();
                 c.setName(nameField.getText());
                 c.setType(mapToApiType(typeBox.getValue()));
                 c.setCredit(Double.parseDouble(creditField.getText()));
@@ -194,7 +194,7 @@ public class CourseManagementController {
             Task<Void> saveTask = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    if (existing != null) CourseService.update(existing.getId().intValue(), result);
+                    if (existing != null) CourseService.update(existing.getId(), result);
                     else CourseService.create(result);
                     return null;
                 }
@@ -208,11 +208,11 @@ public class CourseManagementController {
         });
     }
 
-    private void handleDelete(CourseDTO item) {
+    private void handleDelete(Course item) {
         CrudHelper.confirmDelete(selected -> {
             Task<Void> task = new Task<>() {
                 @Override
-                protected Void call() throws Exception { CourseService.delete(selected.getId().intValue()); return null; }
+                protected Void call() throws Exception { CourseService.delete(selected.getId()); return null; }
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("删除失败"));

@@ -1,16 +1,16 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.RiskWarning;
-import com.campus.client.service.RiskWarningService;
-import com.campus.client.service.SemesterService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.RiskWarning;
+import com.aicampus.service.RiskWarningService;
+import com.aicampus.service.SemesterService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import com.campus.client.util.TableUtils;
+import com.aicampus.util.TableUtils;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;

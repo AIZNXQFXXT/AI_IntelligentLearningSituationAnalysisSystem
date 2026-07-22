@@ -1,8 +1,8 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.ApiResponse;
-import com.campus.client.service.ApiClient;
-import com.campus.client.util.AppExecutors;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.service.ApiClient;
+import com.aicampus.util.AppExecutors;
 import com.fasterxml.jackson.core.type.TypeReference;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

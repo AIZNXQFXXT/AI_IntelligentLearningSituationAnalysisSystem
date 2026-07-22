@@ -1,11 +1,11 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.ApiResponse;
-import com.campus.client.model.Student;
-import com.campus.client.service.ApiClient;
-import com.campus.client.service.StudentService;
-import com.campus.client.session.UserSession;
-import com.campus.client.util.AppExecutors;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.model.Student;
+import com.aicampus.service.ApiClient;
+import com.aicampus.service.StudentService;
+import com.aicampus.session.UserSession;
+import com.aicampus.util.AppExecutors;
 import com.fasterxml.jackson.core.type.TypeReference;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

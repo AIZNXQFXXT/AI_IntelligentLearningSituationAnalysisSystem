@@ -1,6 +1,6 @@
-package com.campus.client.util;
+package com.aicampus.util;
 
-import com.campus.client.controller.WebViewContainerController;
+import com.aicampus.controller.WebViewContainerController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -8,7 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-import com.campus.client.App;
+import com.aicampus.App;
 
 import java.io.IOException;
 import java.net.URL;

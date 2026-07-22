@@ -1,7 +1,7 @@
-package com.campus.client.service;
+package com.aicampus.service;
 
-import com.campus.client.model.ApiResponse;
-import com.campus.client.model.SysConfig;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.model.SysConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;

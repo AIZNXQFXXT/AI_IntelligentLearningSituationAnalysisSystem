@@ -1,17 +1,9 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.Score;
-import com.campus.client.model.ClassInfo;
-import com.campus.client.service.ScoreService;
-import com.campus.client.service.ClassService;
-import com.campus.client.service.CourseService;
-import com.campus.client.service.ExamService;
-import com.campus.client.service.StudentService;
-import com.campus.common.dto.CourseDTO;
-import com.campus.common.dto.ExamDTO;
-import com.campus.client.model.Student;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.*;
+import com.aicampus.service.*;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,8 +20,8 @@ import java.util.Map;
 
 public class ScoreEntryController {
 
-    @FXML private ComboBox<ExamDTO> examCombo;
-    @FXML private ComboBox<CourseDTO> courseCombo;
+    @FXML private ComboBox<Exam> examCombo;
+    @FXML private ComboBox<Course> courseCombo;
     @FXML private ComboBox<ClassInfo> classCombo;
     @FXML private Button loadBtn;
     @FXML private TableView<StudentScoreEntry> table;
@@ -161,8 +153,8 @@ public class ScoreEntryController {
     }
 
     private void loadExams() {
-        Task<List<ExamDTO>> task = new Task<>() {
-            @Override protected List<ExamDTO> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
+        Task<List<Exam>> task = new Task<>() {
+            @Override protected List<Exam> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
         };
         task.setOnSucceeded(e -> examCombo.setItems(FXCollections.observableArrayList(task.getValue())));
         task.setOnFailed(e -> CrudHelper.showError("加载考试列表失败"));
@@ -170,8 +162,8 @@ public class ScoreEntryController {
     }
 
     private void loadCourses() {
-        Task<List<CourseDTO>> task = new Task<>() {
-            @Override protected List<CourseDTO> call() throws Exception { return CourseService.getAll(); }
+        Task<List<Course>> task = new Task<>() {
+            @Override protected List<Course> call() throws Exception { return CourseService.getAll(); }
         };
         task.setOnSucceeded(e -> courseCombo.setItems(FXCollections.observableArrayList(task.getValue())));
         task.setOnFailed(e -> CrudHelper.showError("加载课程列表失败"));
@@ -189,8 +181,8 @@ public class ScoreEntryController {
 
     @FXML
     private void handleLoadStudents() {
-        ExamDTO exam = examCombo.getValue();
-        CourseDTO course = courseCombo.getValue();
+        Exam exam = examCombo.getValue();
+        Course course = courseCombo.getValue();
         ClassInfo selectedClass = classCombo.getValue();
         if (selectedClass == null || exam == null || course == null) {
             CrudHelper.showAlert("请选择考试、课程和班级");
@@ -200,7 +192,7 @@ public class ScoreEntryController {
         Task<List<StudentScoreEntry>> task = new Task<>() {
             @Override protected List<StudentScoreEntry> call() throws Exception {
                 List<Student> students = StudentService.getPage(1, 200, null, selectedClass.getId()).getRecords();
-                List<Score> existingScores = ScoreService.getScoresByExamAndCourse(exam.getId().intValue(), course.getId().intValue());
+                List<Score> existingScores = ScoreService.getScoresByExamAndCourse(exam.getId(), course.getId());
                 Map<Integer, Score> scoreMap = new HashMap<>();
                 for (Score s : existingScores) scoreMap.put(s.getStudentId(), s);
 
@@ -237,8 +229,8 @@ public class ScoreEntryController {
     }
 
     private void handleSubmit(StudentScoreEntry entry) {
-        ExamDTO exam = examCombo.getValue();
-        CourseDTO course = courseCombo.getValue();
+        Exam exam = examCombo.getValue();
+        Course course = courseCombo.getValue();
         if (exam == null || course == null) {
             CrudHelper.showAlert("请先选择考试和课程");
             return;
@@ -249,7 +241,7 @@ public class ScoreEntryController {
             double finalScore = Double.parseDouble(entry.getFinalField().getText());
             Task<Score> task = new Task<>() {
                 @Override protected Score call() throws Exception {
-                    return ScoreService.createScore(entry.getStudent().getId(), exam.getId().intValue(), course.getId().intValue(), regular, examScore, finalScore);
+                    return ScoreService.createScore(entry.getStudent().getId(), exam.getId(), course.getId(), regular, examScore, finalScore);
                 }
             };
             task.setOnSucceeded(e -> {

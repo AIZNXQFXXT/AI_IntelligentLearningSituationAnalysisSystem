@@ -1,4 +1,4 @@
-package com.campus.client.model;
+package com.aicampus.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

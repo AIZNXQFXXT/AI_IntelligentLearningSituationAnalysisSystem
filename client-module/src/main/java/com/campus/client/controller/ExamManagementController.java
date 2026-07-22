@@ -1,12 +1,12 @@
-package com.campus.client.controller;
+package com.aicampus.controller;
 
-import com.campus.client.model.ClassInfo;
-import com.campus.common.dto.ExamDTO;
-import com.campus.client.model.PageResult;
-import com.campus.client.service.ClassService;
-import com.campus.client.service.ExamService;
-import com.campus.client.util.AppExecutors;
-import com.campus.client.util.CrudHelper;
+import com.aicampus.model.ClassInfo;
+import com.aicampus.model.Exam;
+import com.aicampus.model.PageResult;
+import com.aicampus.service.ClassService;
+import com.aicampus.service.ExamService;
+import com.aicampus.util.AppExecutors;
+import com.aicampus.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,17 +26,17 @@ import java.util.Map;
 public class ExamManagementController {
 
     @FXML private TextField semesterField;
-    @FXML private TableView<ExamDTO> table;
-    @FXML private TableColumn<ExamDTO, String> colName;
-    @FXML private TableColumn<ExamDTO, String> colType;
-    @FXML private TableColumn<ExamDTO, String> colSemester;
-    @FXML private TableColumn<ExamDTO, String> colClassId;
-    @FXML private TableColumn<ExamDTO, String> colExamDate;
-    @FXML private TableColumn<ExamDTO, String> colArchived;
-    @FXML private TableColumn<ExamDTO, Void> colActions;
+    @FXML private TableView<Exam> table;
+    @FXML private TableColumn<Exam, String> colName;
+    @FXML private TableColumn<Exam, String> colType;
+    @FXML private TableColumn<Exam, String> colSemester;
+    @FXML private TableColumn<Exam, String> colClassId;
+    @FXML private TableColumn<Exam, String> colExamDate;
+    @FXML private TableColumn<Exam, String> colArchived;
+    @FXML private TableColumn<Exam, Void> colActions;
     @FXML private Pagination pagination;
 
-    private final ObservableList<ExamDTO> tableData = FXCollections.observableArrayList();
+    private final ObservableList<Exam> tableData = FXCollections.observableArrayList();
     private final Map<Integer, String> classMap = new HashMap<>();
     private int currentPage = 1;
     private int pageSize = 20;
@@ -48,9 +48,9 @@ public class ExamManagementController {
         colType.setCellValueFactory(cellData -> new SimpleStringProperty(mapExamType(cellData.getValue().getType())));
         colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
         colClassId.setCellValueFactory(data ->
-                new SimpleStringProperty(classMap.getOrDefault(data.getValue().getClassId().intValue(), "未知")));
+                new SimpleStringProperty(classMap.getOrDefault(data.getValue().getClassId(), "未知")));
         colExamDate.setCellValueFactory(new PropertyValueFactory<>("examDate"));
-        colArchived.setCellValueFactory(cellData -> new SimpleStringProperty(Integer.valueOf(1).equals(cellData.getValue().getIsArchived()) ? "已归档" : "未归档"));
+        colArchived.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIsArchived() ? "已归档" : "未归档"));
 
         colActions.setCellFactory(param -> new TableCell<>() {
             {
@@ -66,10 +66,10 @@ public class ExamManagementController {
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
-                ExamDTO exam = getTableView().getItems().get(getIndex());
+                Exam exam = getTableView().getItems().get(getIndex());
                 if (getGraphic() instanceof HBox && ((HBox) getGraphic()).getChildren().get(1) instanceof Button) {
                     Button ab = (Button) ((HBox) getGraphic()).getChildren().get(1);
-                    ab.setVisible(!Integer.valueOf(1).equals(exam.getIsArchived())); ab.setManaged(!Integer.valueOf(1).equals(exam.getIsArchived()));
+                    ab.setVisible(!exam.getIsArchived()); ab.setManaged(!exam.getIsArchived());
                 }
             }
         });
@@ -118,14 +118,14 @@ public class ExamManagementController {
     }
 
     private void loadData() {
-        Task<PageResult<ExamDTO>> task = new Task<>() {
+        Task<PageResult<Exam>> task = new Task<>() {
             @Override
-            protected PageResult<ExamDTO> call() throws Exception {
+            protected PageResult<Exam> call() throws Exception {
                 return ExamService.getPage(currentPage, pageSize, semesterField.getText());
             }
         };
         task.setOnSucceeded(e -> {
-            PageResult<ExamDTO> result = task.getValue();
+            PageResult<Exam> result = task.getValue();
             tableData.clear(); tableData.addAll(result.getRecords());
             totalItems = result.getTotal(); updatePagination();
         });
@@ -155,10 +155,10 @@ public class ExamManagementController {
     @FXML
     private void handleCreate() { showFormDialog("新增考试", null); }
 
-    private void handleEdit(ExamDTO item) { showFormDialog("编辑考试", item); }
+    private void handleEdit(Exam item) { showFormDialog("编辑考试", item); }
 
-    private void showFormDialog(String title, ExamDTO existing) {
-        Dialog<ExamDTO> dialog = new Dialog<>();
+    private void showFormDialog(String title, Exam existing) {
+        Dialog<Exam> dialog = new Dialog<>();
         dialog.setTitle(title);
         TextField nameField = new TextField();
         ComboBox<String> typeBox = new ComboBox<>();
@@ -189,8 +189,8 @@ public class ExamManagementController {
             nameField.setText(existing.getName());
             typeBox.setValue(mapExamType(existing.getType()));
             semesterFieldLocal.setText(existing.getSemester());
-            if (existing.getExamDate() != null) {
-                examDatePicker.setValue(existing.getExamDate());
+            if (existing.getExamDate() != null && !existing.getExamDate().isEmpty()) {
+                examDatePicker.setValue(java.time.LocalDate.parse(existing.getExamDate()));
             }
         }
 
@@ -211,13 +211,13 @@ public class ExamManagementController {
                 if (nameField.getText().isEmpty() || typeBox.getValue() == null || semesterFieldLocal.getText().isEmpty()) {
                     CrudHelper.showError("请填写必填项"); return null;
                 }
-                ExamDTO e = existing != null ? existing : new ExamDTO();
+                Exam e = existing != null ? existing : new Exam();
                 e.setName(nameField.getText());
                 e.setType(mapExamTypeReverse(typeBox.getValue()));
                 e.setSemester(semesterFieldLocal.getText());
                 String classVal = classBox.getValue();
-                if (classVal != null) e.setClassId(Long.parseLong(classVal.split(" - ")[0]));
-                e.setExamDate(examDatePicker.getValue());
+                if (classVal != null) e.setClassId(Integer.parseInt(classVal.split(" - ")[0]));
+                e.setExamDate(examDatePicker.getValue() != null ? examDatePicker.getValue().toString() : "");
                 return e;
             }
             return null;
@@ -227,7 +227,7 @@ public class ExamManagementController {
             Task<Void> saveTask = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    if (existing != null) ExamService.update(existing.getId().intValue(), result);
+                    if (existing != null) ExamService.update(existing.getId(), result);
                     else ExamService.create(result);
                     return null;
                 }
@@ -238,11 +238,11 @@ public class ExamManagementController {
         });
     }
 
-    private void handleArchive(ExamDTO item) {
+    private void handleArchive(Exam item) {
         CrudHelper.confirmDelete(selected -> {
             Task<Void> task = new Task<>() {
                 @Override
-                protected Void call() throws Exception { ExamService.archive(selected.getId().intValue()); return null; }
+                protected Void call() throws Exception { ExamService.archive(selected.getId()); return null; }
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("归档成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("归档失败"));
@@ -250,11 +250,11 @@ public class ExamManagementController {
         }, item);
     }
 
-    private void handleDelete(ExamDTO item) {
+    private void handleDelete(Exam item) {
         CrudHelper.confirmDelete(selected -> {
             Task<Void> task = new Task<>() {
                 @Override
-                protected Void call() throws Exception { ExamService.delete(selected.getId().intValue()); return null; }
+                protected Void call() throws Exception { ExamService.delete(selected.getId()); return null; }
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("删除失败"));

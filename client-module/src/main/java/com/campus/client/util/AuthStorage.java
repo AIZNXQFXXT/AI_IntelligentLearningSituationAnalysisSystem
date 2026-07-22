@@ -1,4 +1,4 @@
-package com.campus.client.util;
+package com.aicampus.util;
 
 import java.util.prefs.Preferences;
 

@@ -1,7 +1,7 @@
-package com.campus.client.service;
+package com.aicampus.service;
 
-import com.campus.client.model.ApiResponse;
-import com.campus.client.model.LoginResult;
+import com.aicampus.model.ApiResponse;
+import com.aicampus.model.LoginResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.Map;
