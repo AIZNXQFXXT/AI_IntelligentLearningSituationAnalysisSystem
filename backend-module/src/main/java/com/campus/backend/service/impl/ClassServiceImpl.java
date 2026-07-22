@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -106,16 +108,26 @@ public class ClassServiceImpl implements ClassService {
         if (teacher == null) {
             return new Page<>(page, size);
         }
-        List<Long> classIds = teachingTaskMapper.selectList(
+        // 教学任务所带班级
+        List<Long> taskClassIds = teachingTaskMapper.selectList(
                 new LambdaQueryWrapper<TeachingTask>()
                         .eq(TeachingTask::getTeacherId, teacher.getId()))
                 .stream().map(TeachingTask::getClassId).distinct().collect(Collectors.toList());
-        if (classIds.isEmpty()) {
+        // 班主任所带班级
+        List<Long> headClassIds = classMapper.selectList(
+                new LambdaQueryWrapper<ClassInfo>()
+                        .eq(ClassInfo::getHeadTeacherId, teacher.getId()))
+                .stream().map(ClassInfo::getId).distinct().collect(Collectors.toList());
+        // 并集去重
+        Set<Long> classIdSet = new LinkedHashSet<>();
+        classIdSet.addAll(taskClassIds);
+        classIdSet.addAll(headClassIds);
+        if (classIdSet.isEmpty()) {
             return new Page<>(page, size);
         }
         Page<ClassInfo> p = new Page<>(page, size);
         LambdaQueryWrapper<ClassInfo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(ClassInfo::getId, classIds);
+        wrapper.in(ClassInfo::getId, classIdSet);
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.and(w -> w.like(ClassInfo::getClassName, keyword)
                     .or().like(ClassInfo::getGrade, keyword));
