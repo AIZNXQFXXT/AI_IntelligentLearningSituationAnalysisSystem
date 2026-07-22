@@ -1,36 +1,42 @@
 package com.campus.client.service;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.ApiResponse;
 import com.campus.client.model.PageResult;
 import com.campus.client.model.RiskWarning;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RiskWarningService {
-
-    private final ApiService api = new ApiService();
-
-    public ApiResult<PageResult<RiskWarning>> getRiskWarnings(int page, int size, Integer handled) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        if (handled != null) params.put("handled", String.valueOf(handled));
-        String json = api.get("/api/risk-warnings", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<RiskWarning>>>() {});
+    public static PageResult<RiskWarning> getRiskWarningPage(int page, int size, String handleStatus) throws Exception {
+        StringBuilder params = new StringBuilder("/risk-warnings?page=" + page + "&size=" + size);
+        if (handleStatus != null) {
+            params.append("&handleStatus=").append(ApiClient.encodeParam(handleStatus));
+        }
+        return ApiClient.get(params.toString(), new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
     }
 
-    public ApiResult<Void> handleWarning(Long id, String result) throws IOException {
-        Map<String, String> body = new HashMap<>();
-        body.put("handleResult", result);
-        String json = api.put("/api/risk-warnings/" + id + "/handle", body);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static PageResult<RiskWarning> getPage(int page, int size, String semester, String riskLevel, String handleStatus) throws Exception {
+        StringBuilder params = new StringBuilder("/risk-warnings?page=" + page + "&size=" + size);
+        if (semester != null) params.append("&semester=").append(ApiClient.encodeParam(semester));
+        if (riskLevel != null) params.append("&riskLevel=").append(ApiClient.encodeParam(riskLevel));
+        if (handleStatus != null) params.append("&handleStatus=").append(ApiClient.encodeParam(handleStatus));
+        return ApiClient.get(params.toString(), new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
     }
 
-    public ApiResult<java.util.List<RiskWarning>> getMyWarnings() throws IOException {
-        String json = api.get("/api/my/warnings", null);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<java.util.List<RiskWarning>>>() {});
+    public static void handle(int id, String remark) throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("handleStatus", "HANDLED");
+        body.put("handleRemark", remark);
+        ApiClient.put("/risk-warnings/" + id + "/handle", body, new TypeReference<ApiResponse<Void>>() {});
+    }
+
+    public static List<RiskWarning> getMyWarnings() throws Exception {
+        PageResult<RiskWarning> result = ApiClient.get("/my/warnings",
+                new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
+        return result != null ? result.getRecords() : List.of();
     }
 }

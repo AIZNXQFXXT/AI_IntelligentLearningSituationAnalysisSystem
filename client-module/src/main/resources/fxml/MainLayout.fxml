@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campus.client.controller.MainLayoutController"
+            prefWidth="1200" prefHeight="800">
+
+    <!-- Left Sidebar -->
+    <left>
+        <VBox styleClass="sidebar" prefWidth="220">
+            <!-- Logo -->
+            <VBox styleClass="sidebar-logo" alignment="CENTER">
+                <Label text="AI学情分析" styleClass="sidebar-logo-label"/>
+            </VBox>
+            <!-- Menu items will be added dynamically -->
+            <VBox fx:id="menuContainer" VBox.vgrow="ALWAYS" styleClass="sidebar-menu-container">
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- Content Area -->
+    <center>
+        <VBox HBox.hgrow="ALWAYS">
+            <!-- Header -->
+            <VBox styleClass="header" prefHeight="60" alignment="CENTER_LEFT">
+                <padding><Insets left="20" right="20"/></padding>
+                <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                    <Label fx:id="pageTitle" text="控制台" styleClass="header-title" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="usernameLabel" styleClass="header-username"/>
+                    <Button fx:id="logoutBtn" text="退出" onAction="#handleLogout"
+                            styleClass="btn-danger"/>
+                </HBox>
+            </VBox>
+            <!-- Content Center -->
+            <BorderPane fx:id="contentArea" VBox.vgrow="ALWAYS" styleClass="content-area"/>
+        </VBox>
+    </center>
+</BorderPane>

@@ -68,11 +68,16 @@ Headers: `Authorization: Bearer {accessToken}`
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/users` | 列表分页，?role=ADMIN/TEACHER/STUDENT |
-| POST | `/api/users` | 创建 `{"username","password","role","status"}` |
+| POST | `/api/users` | 创建 |
 | PUT | `/api/users/{id}/status` | 启用/禁用 `?status=1` |
 | PUT | `/api/users/{id}/password` | 重置密码 |
 
 **User 实体：** id, username, role, avatar, phone, status
+
+**创建 Body：**
+```json
+{"username":"teacher01","password":"123456","role":"TEACHER"}
+```
 
 ---
 
@@ -91,10 +96,13 @@ Headers: `Authorization: Bearer {accessToken}`
 
 **Student 实体：** id, userId, studentNo, name, gender, classId, enrollYear, status, phone, guardianPhone
 
-**创建/修改 Body：**
+**创建 Body：**
 ```json
 {"studentNo":"2024001","name":"张三","gender":"男","classId":1,"enrollYear":"2024","phone":"13800138000","guardianPhone":"13900139000","username":"zs","password":"123456"}
 ```
+> 标识符二选一：classId 或 className+grade
+
+**修改 Body：** 同创建，字段均为可选
 
 ---
 
@@ -117,6 +125,8 @@ Headers: `Authorization: Bearer {accessToken}`
 {"teacherNo":"T001","name":"李老师","title":"副教授","subject":"计算机","education":"硕士","department":"信息学院","username":"t01","password":"123456"}
 ```
 
+**修改 Body：** 同创建，字段均为可选
+
 ---
 
 ## 5. 课程管理 — `/api/courses`
@@ -133,7 +143,12 @@ Headers: `Authorization: Bearer {accessToken}`
 
 **Course 实体：** id, name, type, credit, description, status
 
-**创建 Body：** `{"name":"高等数学","type":"必修","credit":4.0,"description":"..."}`
+**创建 Body：**
+```json
+{"name":"高等数学","type":"必修","credit":4.0,"description":"高等数学上册"}
+```
+
+**修改 Body：** 同创建，字段均为可选
 
 ---
 
@@ -151,7 +166,13 @@ Headers: `Authorization: Bearer {accessToken}`
 
 **ClassInfo 实体：** id, grade, className, headTeacherId, studentCount
 
-**创建 Body：** `{"grade":"2024","className":"计算机一班","headTeacherId":1}`
+**创建 Body：**
+```json
+{"grade":"2024","className":"计算机一班","headTeacherId":1}
+```
+> 标识符二选一：headTeacherId 或 teacherNo
+
+**修改 Body：** 同创建，字段均为可选
 
 ---
 
@@ -166,12 +187,15 @@ Headers: `Authorization: Bearer {accessToken}`
 | PATCH | `/api/exams/{id}/archive` | 归档/取消归档 |
 | GET | `/api/exams/export/excel` | 导出（stub） |
 
-**Exam 实体：** id, name, type, semester, classId, examDate, isArchived
+**Exam 实体：** id, name, type（MOCK/MIDTERM/FINAL/RETEST）, semester, classId, examDate, isArchived
 
 **创建 Body：**
 ```json
-{"name":"期中考试","type":"期中","semester":"2024-2025-1","classId":1,"examDate":"2024-11-15"}
+{"name":"期中考试","type":"MIDTERM","semester":"2024-2025-1","classId":1,"examDate":"2024-11-15"}
 ```
+> 标识符二选一：classId 或 className+grade
+
+**修改 Body：** 同创建，字段均为可选
 
 ---
 
@@ -192,6 +216,13 @@ Headers: `Authorization: Bearer {accessToken}`
 ```json
 {"studentId":1,"examId":1,"courseId":1,"regularScore":30.0,"examScore":65.0,"finalScore":85.5,"isAbsent":0,"isCheat":0}
 ```
+> 标识符二选一：studentId 或 studentNo，courseId 或 courseName
+
+**修改 Body：**
+```json
+{"finalScore":90.0,"reason":"期末成绩更新"}
+```
+> 修改时 `reason` 必传，其余字段均为可选
 
 **ScoreArchiveVO（归档概览返回）：** id, studentId, studentName, studentNo, examId, examName, courseId, courseName, classId, className, regularScore, examScore, finalScore, rankClass, rankGrade, isAbsent, isCheat, auditStatus, semester, createdAt, updatedAt
 
@@ -211,7 +242,13 @@ Headers: `Authorization: Bearer {accessToken}`
 
 **TeachingTask 实体：** id, teacherId, classId, courseId, semester
 
-**创建 Body：** `{"teacherId":1,"classId":1,"courseId":1,"semester":"2024-2025-1"}`
+**创建 Body：**
+```json
+{"teacherId":1,"classId":1,"courseId":1,"semester":"2024-2025-1"}
+```
+> 标识符二选一：teacherId 或 teacherNo，classId 或 className，courseId 或 courseName
+
+**修改 Body：** 同创建，字段均为可选
 
 ---
 
@@ -367,12 +404,27 @@ Headers: `Authorization: Bearer {accessToken}`
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/system/configs` | 配置列表，?key |
-| PUT | `/api/system/configs` | 批量保存 `[{"configKey":"...","configValue":"...","description":"..."}]` |
+| PUT | `/api/system/configs` | 批量保存 |
 | GET | `/api/system/dicts` | 字典列表，?typeCode, status |
 | POST | `/api/system/dicts` | 创建字典项 |
 | PUT | `/api/system/dicts/{id}` | 修改字典项 |
 
 **SysConfig：** id, configKey, configValue, description
+
+**批量保存 Body：**
+```json
+[{"configKey":"SCORE_PASS_RATE","configValue":"60","description":"及格线"}]
+```
+
+**创建字典项 Body：**
+```json
+{"typeCode":"SCORE_LEVEL","itemCode":"A","itemValue":"优秀","sortOrder":1}
+```
+
+**修改字典项 Body：**
+```json
+{"typeCode":"SCORE_LEVEL","itemCode":"A","itemValue":"优秀(90-100)","sortOrder":1,"status":1}
+```
 
 **SysDict：** id, typeCode, itemCode, itemValue, sortOrder, status
 

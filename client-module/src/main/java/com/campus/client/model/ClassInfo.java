@@ -1,30 +1,40 @@
 package com.campus.client.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ClassInfo {
-
-    private Long id;
-    private String className;
+    @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int id;
+    @JsonProperty("grade")
     private String grade;
-    private Long teacherId;
-    private String teacherName;
-    private Integer studentCount;
-    private String createTime;
+    @JsonProperty("className")
+    private String className;
+    @JsonProperty("headTeacherId")
+    private int headTeacherId;
+    @JsonProperty("studentCount")
+    private int studentCount;
+    @JsonProperty("createdAt")
+    private String createdAt;
+    @JsonProperty("updatedAt")
+    private String updatedAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getClassName() { return className; }
-    public void setClassName(String className) { this.className = className; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
     public String getGrade() { return grade; }
     public void setGrade(String grade) { this.grade = grade; }
-    public Long getTeacherId() { return teacherId; }
-    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
-    public String getTeacherName() { return teacherName; }
-    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
-    public Integer getStudentCount() { return studentCount; }
-    public void setStudentCount(Integer studentCount) { this.studentCount = studentCount; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
+    public String getClassName() { return className; }
+    public void setClassName(String className) { this.className = className; }
+    public int getHeadTeacherId() { return headTeacherId; }
+    public void setHeadTeacherId(int headTeacherId) { this.headTeacherId = headTeacherId; }
+    public int getStudentCount() { return studentCount; }
+    public void setStudentCount(int studentCount) { this.studentCount = studentCount; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+
+    @Override
+    public String toString() { return grade + " " + className; }
 }

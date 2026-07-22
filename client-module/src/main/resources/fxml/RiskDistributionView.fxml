@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.RiskDistributionController"
+      spacing="20" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" styleClass="crud-card">
+
+    <Label text="风险学生分布" styleClass="crud-card-header"/>
+
+    <VBox styleClass="crud-card-body" spacing="20">
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="年级:"/>
+            <ComboBox fx:id="gradeFilter" prefWidth="200" promptText="选择年级"/>
+
+            <Button text="查询" styleClass="btn-primary btn-sm" onAction="#handleQuery"/>
+        </HBox>
+
+        <!-- Stats Cards -->
+        <HBox spacing="20">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="高风险"/>
+                <Label fx:id="valueHighRisk" styleClass="stat-card-value" text="--" style="-fx-text-fill: #f56c6c;"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="中风险"/>
+                <Label fx:id="valueMediumRisk" styleClass="stat-card-value" text="--" style="-fx-text-fill: #e6a23c;"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="低风险"/>
+                <Label fx:id="valueLowRisk" styleClass="stat-card-value" text="--" style="-fx-text-fill: #67c23a;"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="风险学生总数"/>
+                <Label fx:id="valueTotalRisk" styleClass="stat-card-value" text="--"/>
+            </VBox>
+        </HBox>
+
+        <!-- Pie Chart + Bar Chart -->
+        <HBox spacing="20">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label text="风险等级分布" styleClass="section-title"/>
+                <PieChart fx:id="pieChart" prefHeight="300" animated="false"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label text="按年级统计" styleClass="section-title"/>
+                <BarChart fx:id="barChart" prefHeight="300" animated="false">
+                    <xAxis>
+                        <CategoryAxis fx:id="xAxis" label="" autoRanging="true"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis fx:id="yAxis" label="人数" autoRanging="true"/>
+                    </yAxis>
+                </BarChart>
+            </VBox>
+        </HBox>
+
+        <!-- Data Table -->
+        <VBox spacing="8">
+            <Label text="风险学生列表" styleClass="section-title"/>
+            <TableView fx:id="dataTable" VBox.vgrow="ALWAYS">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+                <columns>
+                    <TableColumn fx:id="colName" text="分组名称" prefWidth="150"/>
+                    <TableColumn fx:id="colHighCount" text="高风险" prefWidth="80"/>
+                    <TableColumn fx:id="colMediumCount" text="中风险" prefWidth="80"/>
+                    <TableColumn fx:id="colLowCount" text="低风险" prefWidth="80"/>
+                    <TableColumn fx:id="colTotal" text="合计" prefWidth="80"/>
+                </columns>
+            </TableView>
+            <Label fx:id="noDataLabel" text="暂无数据" visible="false" styleClass="empty-state-label"/>
+        </VBox>
+    </VBox>
+</VBox>

@@ -1,40 +1,42 @@
 package com.campus.client.service;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.ApiResponse;
 import com.campus.client.model.Course;
 import com.campus.client.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
+import java.util.List;
 
 public class CourseService {
-
-    private final ApiService api = new ApiService();
-
-    public ApiResult<PageResult<Course>> getCourses(int page, int size) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        String json = api.get("/api/courses", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<Course>>>() {});
+    public static PageResult<Course> getPage(int page, int size, String keyword, String type) throws Exception {
+        String path = "/courses?page=" + page + "&size=" + size;
+        if (keyword != null && !keyword.isEmpty()) {
+            path += "&keyword=" + ApiClient.encodeParam(keyword);
+        }
+        if (type != null && !type.isEmpty()) {
+            path += "&type=" + ApiClient.encodeParam(type);
+        }
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<Course>>>() {});
     }
 
-    public ApiResult<Void> createCourse(Course course) throws IOException {
-        String json = api.post("/api/courses", course);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static List<Course> getAll() throws Exception {
+        return ApiClient.get("/courses/list", new TypeReference<ApiResponse<List<Course>>>() {});
     }
 
-    public ApiResult<Void> updateCourse(Long id, Course course) throws IOException {
-        String json = api.put("/api/courses/" + id, course);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static Void create(Course course) throws Exception {
+        return ApiClient.post("/courses", course, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public ApiResult<Void> updateCourseStatus(Long id, Integer status) throws IOException {
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", status);
-        String json = api.patch("/api/courses/" + id + "/status", body);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static Void update(int id, Course course) throws Exception {
+        return ApiClient.put("/courses/" + id, course, new TypeReference<ApiResponse<Void>>() {});
+    }
+
+    public static Void delete(int id) throws Exception {
+        return ApiClient.delete("/courses/" + id, new TypeReference<ApiResponse<Void>>() {});
+    }
+
+    public static Void batchImport(File file) throws Exception {
+        return ApiClient.uploadFile("/courses/batch", file, new TypeReference<ApiResponse<Void>>() {});
     }
 }

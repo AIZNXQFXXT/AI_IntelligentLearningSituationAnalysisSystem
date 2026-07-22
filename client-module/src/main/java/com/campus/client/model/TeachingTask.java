@@ -1,36 +1,33 @@
 package com.campus.client.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class TeachingTask {
-
-    private Long id;
-    private Long teacherId;
-    private String teacherName;
-    private Long courseId;
-    private String courseName;
-    private Long classId;
-    private String className;
+    @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int id;
+    @JsonProperty("teacherId")
+    private int teacherId;
+    @JsonProperty("classId")
+    private int classId;
+    @JsonProperty("courseId")
+    private int courseId;
+    @JsonProperty("semester")
     private String semester;
-    private String createTime;
+    @JsonProperty("createdAt")
+    private String createdAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getTeacherId() { return teacherId; }
-    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
-    public String getTeacherName() { return teacherName; }
-    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
-    public Long getCourseId() { return courseId; }
-    public void setCourseId(Long courseId) { this.courseId = courseId; }
-    public String getCourseName() { return courseName; }
-    public void setCourseName(String courseName) { this.courseName = courseName; }
-    public Long getClassId() { return classId; }
-    public void setClassId(Long classId) { this.classId = classId; }
-    public String getClassName() { return className; }
-    public void setClassName(String className) { this.className = className; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public int getTeacherId() { return teacherId; }
+    public void setTeacherId(int teacherId) { this.teacherId = teacherId; }
+    public int getClassId() { return classId; }
+    public void setClassId(int classId) { this.classId = classId; }
+    public int getCourseId() { return courseId; }
+    public void setCourseId(int courseId) { this.courseId = courseId; }
     public String getSemester() { return semester; }
     public void setSemester(String semester) { this.semester = semester; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }

@@ -1,48 +1,49 @@
 package com.campus.client.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Score {
+    @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int id;
+    @JsonProperty("studentId")
+    private int studentId;
+    @JsonProperty("examId")
+    private int examId;
+    @JsonProperty("courseId")
+    private int courseId;
+    @JsonProperty("regularScore")
+    private double regularScore;
+    @JsonProperty("examScore")
+    private double examScore;
+    @JsonProperty("finalScore")
+    private double finalScore;
+    @JsonProperty("rankClass")
+    private int rankClass;
+    @JsonProperty("rankGrade")
+    private int rankGrade;
+    @JsonProperty("auditStatus")
+    private String auditStatus;
 
-    private Long id;
-    private Long studentId;
-    private String studentNo;
-    private String studentName;
-    private Long examId;
-    private String examName;
-    private Long courseId;
-    private String courseName;
-    private Double score;
-    private Double rank;
-    private Integer status;
-    private String createTime;
-    private String updateTime;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getStudentId() { return studentId; }
-    public void setStudentId(Long studentId) { this.studentId = studentId; }
-    public String getStudentNo() { return studentNo; }
-    public void setStudentNo(String studentNo) { this.studentNo = studentNo; }
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
-    public Long getExamId() { return examId; }
-    public void setExamId(Long examId) { this.examId = examId; }
-    public String getExamName() { return examName; }
-    public void setExamName(String examName) { this.examName = examName; }
-    public Long getCourseId() { return courseId; }
-    public void setCourseId(Long courseId) { this.courseId = courseId; }
-    public String getCourseName() { return courseName; }
-    public void setCourseName(String courseName) { this.courseName = courseName; }
-    public Double getScore() { return score; }
-    public void setScore(Double score) { this.score = score; }
-    public Double getRank() { return rank; }
-    public void setRank(Double rank) { this.rank = rank; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
-    public String getUpdateTime() { return updateTime; }
-    public void setUpdateTime(String updateTime) { this.updateTime = updateTime; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public int getStudentId() { return studentId; }
+    public void setStudentId(int studentId) { this.studentId = studentId; }
+    public int getExamId() { return examId; }
+    public void setExamId(int examId) { this.examId = examId; }
+    public int getCourseId() { return courseId; }
+    public void setCourseId(int courseId) { this.courseId = courseId; }
+    public double getRegularScore() { return regularScore; }
+    public void setRegularScore(double regularScore) { this.regularScore = regularScore; }
+    public double getExamScore() { return examScore; }
+    public void setExamScore(double examScore) { this.examScore = examScore; }
+    public double getFinalScore() { return finalScore; }
+    public void setFinalScore(double finalScore) { this.finalScore = finalScore; }
+    public int getRankClass() { return rankClass; }
+    public void setRankClass(int rankClass) { this.rankClass = rankClass; }
+    public int getRankGrade() { return rankGrade; }
+    public void setRankGrade(int rankGrade) { this.rankGrade = rankGrade; }
+    public String getAuditStatus() { return auditStatus; }
+    public void setAuditStatus(String auditStatus) { this.auditStatus = auditStatus; }
 }

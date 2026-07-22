@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.TeacherProfileController"
+      spacing="20" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+
+    <Label text="个人中心" styleClass="page-title"/>
+
+    <VBox styleClass="stat-card" spacing="16" maxWidth="800">
+        <Label text="修改密码" styleClass="section-title"/>
+        <HBox spacing="20" alignment="CENTER_LEFT">
+            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                <Label text="旧密码:" styleClass="stat-card-title"/>
+                <PasswordField fx:id="oldPassword" promptText="请输入旧密码" prefHeight="36"/>
+            </VBox>
+            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                <Label text="新密码:" styleClass="stat-card-title"/>
+                <PasswordField fx:id="newPassword" promptText="请输入新密码" prefHeight="36"/>
+            </VBox>
+            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                <Label text="确认密码:" styleClass="stat-card-title"/>
+                <PasswordField fx:id="confirmPassword" promptText="请再次输入新密码" prefHeight="36"/>
+            </VBox>
+            <VBox spacing="8">
+                <Label text=" "/>
+                <Button text="修改密码" styleClass="btn-warning" onAction="#handleChangePassword" prefHeight="36"/>
+            </VBox>
+        </HBox>
+        <Label fx:id="passwordResultLabel" visible="false" managed="false"/>
+    </VBox>
+</VBox>

@@ -1,117 +1,134 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.ApiResult;
-import com.campus.client.model.PageResult;
 import com.campus.client.model.RiskWarning;
 import com.campus.client.service.RiskWarningService;
-import com.campus.client.util.AlertHelper;
+import com.campus.client.service.SemesterService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
+import com.campus.client.util.TableUtils;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
 
-import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.Arrays;
+import java.util.List;
 
-public class TeacherRiskController implements Initializable {
+public class TeacherRiskController {
 
-    @FXML private ComboBox<String> handledFilter;
-    @FXML private TableView<RiskWarning> warningTable;
-    @FXML private TableColumn<RiskWarning, Long> colId;
-    @FXML private TableColumn<RiskWarning, String> colStudentName;
-    @FXML private TableColumn<RiskWarning, String> colClassName;
-    @FXML private TableColumn<RiskWarning, String> colWarningType;
-    @FXML private TableColumn<RiskWarning, String> colLevel;
-    @FXML private TableColumn<RiskWarning, String> colContent;
-    @FXML private TableColumn<RiskWarning, String> colHandled;
-    @FXML private TableColumn<RiskWarning, String> colCreateTime;
-    @FXML private TableColumn<RiskWarning, Void> colActions;
-    @FXML private Label pageInfo;
+    @FXML private TableView<RiskWarning> table;
+    @FXML private TableColumn<RiskWarning, String> colStudentId;
+    @FXML private TableColumn<RiskWarning, String> colSemester;
+    @FXML private TableColumn<RiskWarning, String> colRiskLevel;
+    @FXML private TableColumn<RiskWarning, String> colReason;
+    @FXML private TableColumn<RiskWarning, String> colStatus;
+    @FXML private TableColumn<RiskWarning, Void> colAction;
+    @FXML private ComboBox<String> semesterCombo;
+    @FXML private ComboBox<String> riskLevelCombo;
+    @FXML private ComboBox<String> statusCombo;
 
-    private final RiskWarningService warningService = new RiskWarningService();
-    private int currentPage = 0;
-    private int totalPages = 1;
-    private final ObservableList<RiskWarning> warningData = FXCollections.observableArrayList();
+    private final ObservableList<RiskWarning> tableData = FXCollections.observableArrayList();
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        handledFilter.setItems(FXCollections.observableArrayList("全部", "未处理", "已处理"));
-        handledFilter.getSelectionModel().selectFirst();
-        setupTable();
+    @FXML
+    public void initialize() {
+        loadSemesters();
+        riskLevelCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "HIGH", "MEDIUM", "LOW")));
+        riskLevelCombo.getSelectionModel().selectFirst();
+        statusCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "UNHANDLED", "HANDLED")));
+        statusCombo.getSelectionModel().selectFirst();
+
+        colStudentId.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().getStudentName() + " (" + data.getValue().getStudentNo() + ")"));
+        colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
+        colRiskLevel.setCellValueFactory(new PropertyValueFactory<>("riskLevel"));
+        colReason.setCellValueFactory(new PropertyValueFactory<>("riskReason"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("handleStatus"));
+
+        TableUtils.setupRiskLevelCell(colRiskLevel);
+        TableUtils.setupStatusCell(colStatus);
+
+        colAction.setCellFactory(param -> new TableCell<>() {
+            private final Button btn = new Button("处理");
+            {
+                btn.getStyleClass().addAll("btn-primary", "btn-sm");
+                btn.setOnAction(e -> handleProcess(getTableView().getItems().get(getIndex())));
+                HBox box = new HBox(btn); box.setAlignment(Pos.CENTER); setGraphic(box);
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btn.getParent());
+            }
+        });
+
+        table.setItems(tableData);
         loadData();
     }
 
-    private void setupTable() {
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colStudentName.setCellValueFactory(new PropertyValueFactory<>("studentName"));
-        colClassName.setCellValueFactory(new PropertyValueFactory<>("className"));
-        colWarningType.setCellValueFactory(new PropertyValueFactory<>("warningType"));
-        colLevel.setCellValueFactory(new PropertyValueFactory<>("level"));
-        colContent.setCellValueFactory(new PropertyValueFactory<>("content"));
-        colHandled.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getHandled() != null && cellData.getValue().getHandled() == 1 ? "已处理" : "未处理"));
-        colCreateTime.setCellValueFactory(new PropertyValueFactory<>("createTime"));
-        colActions.setCellFactory(col -> new TableCell<>() {
-            {
-                Button handleBtn = new Button("处理");
-                handleBtn.setStyle("-fx-background-color: #2E7D32; -fx-text-fill: white; -fx-background-radius: 4; -fx-padding: 2 8;");
-                handleBtn.setOnAction(e -> handleProcess(getTableView().getItems().get(getIndex())));
-                setGraphic(handleBtn);
-            }
-            @Override protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : getGraphic());
-            }
-        });
-        warningTable.setItems(warningData);
-    }
-
     @FXML
-    private void handleSearch() { currentPage = 0; loadData(); }
-
-    private void handleProcess(RiskWarning warning) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("处理预警");
-        dialog.setHeaderText("输入处理结果");
-        dialog.setContentText("处理结果:");
-        dialog.showAndWait().ifPresent(result -> {
-            Task<Void> t = new Task<>() {
-                @Override protected Void call() throws Exception { warningService.handleWarning(warning.getId(), result); return null; }
-            };
-            t.setOnSucceeded(e -> { AlertHelper.showInfo("成功", "预警已处理"); loadData(); });
-            new Thread(t).start();
-        });
-    }
+    private void handleSearch() { loadData(); }
 
     private void loadData() {
-        String filter = handledFilter.getValue();
-        Integer handled;
-        if ("未处理".equals(filter)) handled = 0;
-        else if ("已处理".equals(filter)) handled = 1;
-        else {
-            handled = null;
-        }
+        String semester = semesterCombo.getValue();
+        String riskLevel = "全部".equals(riskLevelCombo.getValue()) ? null : riskLevelCombo.getValue();
+        String status = "全部".equals(statusCombo.getValue()) ? null : statusCombo.getValue();
 
-        Task<ApiResult<PageResult<RiskWarning>>> task = new Task<>() {
-            @Override protected ApiResult<PageResult<RiskWarning>> call() throws Exception {
-                return warningService.getRiskWarnings(currentPage, 15, handled);
+        Task<List<RiskWarning>> task = new Task<>() {
+            @Override protected List<RiskWarning> call() throws Exception {
+                return RiskWarningService.getPage(1, 50, semester, riskLevel, status).getRecords();
+            }
+        };
+        task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
+        });
+        AppExecutors.submit(task::run);
+    }
+
+    private void loadSemesters() {
+        Task<List<String>> task = new Task<>() {
+            @Override protected List<String> call() throws Exception {
+                return SemesterService.getAllSemesters();
             }
         };
         task.setOnSucceeded(e -> {
-            ApiResult<PageResult<RiskWarning>> result = task.getValue();
-            if (result.isSuccess() && result.getData() != null) {
-                warningData.setAll(result.getData().getContent());
-                totalPages = Math.max(1, result.getData().getTotalPages());
-                pageInfo.setText("第 " + (currentPage + 1) + " 页 / 共 " + totalPages + " 页");
-            }
+            semesterCombo.setItems(FXCollections.observableArrayList(task.getValue()));
+            semesterCombo.getSelectionModel().selectFirst();
         });
-        new Thread(task).start();
+        task.setOnFailed(e -> {
+            semesterCombo.setItems(FXCollections.observableArrayList("2025-1", "2024-2", "2024-1"));
+            semesterCombo.getSelectionModel().selectFirst();
+        });
+        AppExecutors.submit(task::run);
     }
 
-    @FXML private void handlePrevPage() { if (currentPage > 0) { currentPage--; loadData(); } }
-    @FXML private void handleNextPage() { if (currentPage < totalPages - 1) { currentPage++; loadData(); } }
+    private void handleProcess(RiskWarning w) {
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("处理预警");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextArea textArea = new TextArea();
+        textArea.setPromptText("请输入处理备注");
+        textArea.setPrefRowCount(4);
+        dialog.getDialogPane().setContent(textArea);
+
+        dialog.setResultConverter(bt -> bt == ButtonType.OK ? textArea.getText() : null);
+        dialog.showAndWait().ifPresent(remark -> {
+            Task<Void> task = new Task<>() {
+                @Override protected Void call() throws Exception {
+                    RiskWarningService.handle(w.getId(), remark);
+                    return null;
+                }
+            };
+            task.setOnSucceeded(e -> { CrudHelper.showAlert("处理成功"); loadData(); });
+            task.setOnFailed(e -> CrudHelper.showError("处理失败"));
+            AppExecutors.submit(task::run);
+        });
+    }
 }

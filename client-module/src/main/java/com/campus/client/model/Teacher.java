@@ -1,36 +1,49 @@
 package com.campus.client.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Teacher {
-
-    private Long id;
+    @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int id;
+    @JsonProperty("userId")
+    private int userId;
+    @JsonProperty("teacherNo")
     private String teacherNo;
+    @JsonProperty("name")
     private String name;
-    private String gender;
-    private String phone;
-    private String email;
+    @JsonProperty("title")
+    private String title;
+    @JsonProperty("subject")
+    private String subject;
+    @JsonProperty("education")
+    private String education;
+    @JsonProperty("department")
     private String department;
-    private Integer status;
-    private String createTime;
+    @JsonProperty("semester")
+    private String semester;
+    @JsonProperty("createdAt")
+    private String createdAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
     public String getTeacherNo() { return teacherNo; }
     public void setTeacherNo(String teacherNo) { this.teacherNo = teacherNo; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+    public String getEducation() { return education; }
+    public void setEducation(String education) { this.education = education; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }

@@ -1,39 +1,44 @@
 package com.campus.client.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Exam {
-
-    private Long id;
-    private String examName;
-    private Long courseId;
-    private String courseName;
-    private String examType;
+    @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int id;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("type")
+    private String type;
+    @JsonProperty("semester")
+    private String semester;
+    @JsonProperty("classId")
+    private int classId;
+    @JsonProperty("examDate")
     private String examDate;
-    private String startTime;
-    private String endTime;
-    private Integer status;
-    private String createTime;
+    @JsonProperty("isArchived")
+    private boolean isArchived;
+    @JsonProperty("createdAt")
+    private String createdAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getExamName() { return examName; }
-    public void setExamName(String examName) { this.examName = examName; }
-    public Long getCourseId() { return courseId; }
-    public void setCourseId(Long courseId) { this.courseId = courseId; }
-    public String getCourseName() { return courseName; }
-    public void setCourseName(String courseName) { this.courseName = courseName; }
-    public String getExamType() { return examType; }
-    public void setExamType(String examType) { this.examType = examType; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
+    public int getClassId() { return classId; }
+    public void setClassId(int classId) { this.classId = classId; }
     public String getExamDate() { return examDate; }
     public void setExamDate(String examDate) { this.examDate = examDate; }
-    public String getStartTime() { return startTime; }
-    public void setStartTime(String startTime) { this.startTime = startTime; }
-    public String getEndTime() { return endTime; }
-    public void setEndTime(String endTime) { this.endTime = endTime; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
+    public boolean getIsArchived() { return isArchived; }
+    public void setIsArchived(boolean isArchived) { this.isArchived = isArchived; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    @Override
+    public String toString() { return name; }
 }

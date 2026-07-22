@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.StudentAnalysisController"
+      spacing="15" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+      <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+
+    <Label text="成绩分析" styleClass="page-title"/>
+
+    <HBox spacing="15" VBox.vgrow="ALWAYS">
+        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="5">
+            <Label text="成绩趋势" styleClass="section-title"/>
+            <LineChart fx:id="trendChart" prefHeight="350" animated="false">
+                <xAxis>
+                    <CategoryAxis fx:id="trendXAxis" label="学期"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis fx:id="trendYAxis" label="平均分"/>
+                </yAxis>
+            </LineChart>
+        </VBox>
+        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="5">
+            <Label text="各课程成绩" styleClass="section-title"/>
+            <BarChart fx:id="radarChart" prefHeight="350" animated="false">
+                <xAxis>
+                    <CategoryAxis fx:id="radarXAxis" label="课程"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis fx:id="radarYAxis" label="分数" lowerBound="0" upperBound="100"/>
+                </yAxis>
+            </BarChart>
+        </VBox>
+    </HBox>
+</VBox>

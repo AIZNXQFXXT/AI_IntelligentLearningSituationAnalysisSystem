@@ -1,33 +1,40 @@
 package com.campus.client.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Course {
+    @JsonProperty("id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int id;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("type")
+    private String type;
+    @JsonProperty("credit")
+    private double credit;
+    @JsonProperty("description")
+    private String description;
+    @JsonProperty("status")
+    private int status;
+    @JsonProperty("createdAt")
+    private String createdAt;
 
-    private Long id;
-    private String courseName;
-    private String courseCode;
-    private String credit;
-    private Long teacherId;
-    private String teacherName;
-    private Integer status;
-    private String createTime;
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public double getCredit() { return credit; }
+    public void setCredit(double credit) { this.credit = credit; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getCourseName() { return courseName; }
-    public void setCourseName(String courseName) { this.courseName = courseName; }
-    public String getCourseCode() { return courseCode; }
-    public void setCourseCode(String courseCode) { this.courseCode = courseCode; }
-    public String getCredit() { return credit; }
-    public void setCredit(String credit) { this.credit = credit; }
-    public Long getTeacherId() { return teacherId; }
-    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
-    public String getTeacherName() { return teacherName; }
-    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
-    public String getCreateTime() { return createTime; }
-    public void setCreateTime(String createTime) { this.createTime = createTime; }
+    @Override
+    public String toString() { return name; }
 }

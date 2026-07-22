@@ -1,38 +1,32 @@
 package com.campus.client.service;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.ApiResponse;
 import com.campus.client.model.Exam;
 import com.campus.client.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 public class ExamService {
-
-    private final ApiService api = new ApiService();
-
-    public ApiResult<PageResult<Exam>> getExams(int page, int size) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        String json = api.get("/api/exams", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<Exam>>>() {});
+    public static PageResult<Exam> getPage(int page, int size, String semester) throws Exception {
+        String path = "/exams?page=" + page + "&size=" + size;
+        if (semester != null && !semester.isEmpty()) {
+            path += "&semester=" + semester;
+        }
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<Exam>>>() {});
     }
 
-    public ApiResult<Void> createExam(Exam exam) throws IOException {
-        String json = api.post("/api/exams", exam);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static Void create(Exam exam) throws Exception {
+        return ApiClient.post("/exams", exam, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public ApiResult<Void> updateExam(Long id, Exam exam) throws IOException {
-        String json = api.put("/api/exams/" + id, exam);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static Void update(int id, Exam exam) throws Exception {
+        return ApiClient.put("/exams/" + id, exam, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public ApiResult<Void> deleteExam(Long id) throws IOException {
-        String json = api.delete("/api/exams/" + id);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static Void delete(int id) throws Exception {
+        return ApiClient.delete("/exams/" + id, new TypeReference<ApiResponse<Void>>() {});
+    }
+
+    public static Void archive(int id) throws Exception {
+        return ApiClient.patch("/exams/" + id + "/archive", null, new TypeReference<ApiResponse<Void>>() {});
     }
 }

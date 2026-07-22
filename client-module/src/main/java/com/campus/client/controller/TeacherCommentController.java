@@ -1,102 +1,217 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.ApiResult;
-import com.campus.client.model.Comment;
-import com.campus.client.model.PageResult;
+import com.campus.client.model.AiComment;
+import com.campus.client.model.ClassInfo;
+import com.campus.client.service.ClassService;
 import com.campus.client.service.CommentService;
-import com.campus.client.util.AlertHelper;
+import com.campus.client.service.SemesterService;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 
-import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.List;
 
-public class TeacherCommentController implements Initializable {
+public class TeacherCommentController {
 
-    @FXML private TableView<Comment> commentTable;
-    @FXML private TableColumn<Comment, Long> colId;
-    @FXML private TableColumn<Comment, String> colStudentName;
-    @FXML private TableColumn<Comment, String> colCourseName;
-    @FXML private TableColumn<Comment, String> colContent;
-    @FXML private TableColumn<Comment, String> colType;
-    @FXML private TableColumn<Comment, String> colCreateTime;
-    @FXML private TableColumn<Comment, Void> colActions;
-    @FXML private Button prevBtn;
-    @FXML private Button nextBtn;
-    @FXML private Label pageInfo;
+    @FXML private TableView<AiComment> table;
+    @FXML private TableColumn<AiComment, String> colStudentName;
+    @FXML private TableColumn<AiComment, String> colClassName;
+    @FXML private TableColumn<AiComment, String> colSemester;
+    @FXML private TableColumn<AiComment, String> colContent;
+    @FXML private TableColumn<AiComment, Boolean> colEdited;
+    @FXML private TableColumn<AiComment, String> colCreatedAt;
+    @FXML private TableColumn<AiComment, Void> colAction;
+    @FXML private ComboBox<ClassInfo> classCombo;
+    @FXML private ComboBox<String> semesterCombo;
 
-    private final CommentService commentService = new CommentService();
-    private int currentPage = 0;
-    private int totalPages = 1;
-    private final ObservableList<Comment> commentData = FXCollections.observableArrayList();
+    private final ObservableList<AiComment> tableData = FXCollections.observableArrayList();
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        setupTable();
+    @FXML
+    public void initialize() {
+        semesterCombo.setOnAction(e -> loadData());
+        classCombo.getSelectionModel().selectedItemProperty()
+                .addListener((obs, old, val) -> loadData());
+        loadClasses();
+        loadSemesters();
+
+        colStudentName.setCellValueFactory(new PropertyValueFactory<>("studentName"));
+        colClassName.setCellValueFactory(new PropertyValueFactory<>("className"));
+        colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
+        colContent.setCellValueFactory(new PropertyValueFactory<>("content"));
+        colEdited.setCellValueFactory(new PropertyValueFactory<>("teacherEdited"));
+        colCreatedAt.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+
+        colContent.setCellFactory(param -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                Label label = new Label(item); label.setWrapText(true); setGraphic(label);
+            }
+        });
+
+        colEdited.setCellFactory(param -> new TableCell<>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                Label label = new Label(item ? "是" : "否");
+                label.getStyleClass().add(item ? "tag-warning" : "tag-info");
+                setGraphic(label);
+            }
+        });
+
+        colAction.setCellFactory(param -> new TableCell<>() {
+            private final Button editBtn = new Button("编辑");
+            private final Button versionBtn = new Button("版本");
+            {
+                editBtn.getStyleClass().addAll("btn-primary", "btn-sm");
+                versionBtn.getStyleClass().addAll("btn-info", "btn-sm");
+                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
+                versionBtn.setOnAction(e -> showVersions(getTableView().getItems().get(getIndex())));
+                HBox box = new HBox(5, editBtn, versionBtn); box.setAlignment(Pos.CENTER); setGraphic(box);
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : editBtn.getParent());
+            }
+        });
+
+        table.setItems(tableData);
         loadData();
     }
 
-    private void setupTable() {
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colStudentName.setCellValueFactory(new PropertyValueFactory<>("studentName"));
-        colCourseName.setCellValueFactory(new PropertyValueFactory<>("courseName"));
-        colContent.setCellValueFactory(new PropertyValueFactory<>("content"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        colCreateTime.setCellValueFactory(new PropertyValueFactory<>("createTime"));
-        colActions.setCellFactory(col -> new TableCell<>() {
-            {
-                Button editBtn = new Button("编辑");
-                editBtn.setStyle("-fx-background-color: #1E88E5; -fx-text-fill: white; -fx-background-radius: 4; -fx-padding: 2 8;");
-                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-                setGraphic(editBtn);
+    private void loadClasses() {
+        Task<List<ClassInfo>> task = new Task<>() {
+            @Override protected List<ClassInfo> call() throws Exception {
+                try {
+                    return ClassService.getMyClasses();
+                } catch (Exception e) {
+                    return ClassService.getAll();
+                }
             }
-            @Override protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : getGraphic());
-            }
+        };
+        task.setOnSucceeded(e -> {
+            classCombo.setItems(FXCollections.observableArrayList(task.getValue()));
+            classCombo.getSelectionModel().selectFirst();
         });
-        commentTable.setItems(commentData);
+        task.setOnFailed(e -> CrudHelper.showError("加载班级列表失败"));
+        AppExecutors.submit(task::run);
     }
 
-    @FXML
-    private void handleAdd() {
-        AlertHelper.showInfo("新增评语", "请填写评语信息后提交");
-    }
-
-    private void handleEdit(Comment comment) {
-        TextInputDialog dialog = new TextInputDialog(comment.getContent());
-        dialog.setTitle("编辑评语");
-        dialog.setContentText("评语内容:");
-        dialog.showAndWait().ifPresent(content -> {
-            comment.setContent(content);
-            Task<Void> t = new Task<>() {
-                @Override protected Void call() throws Exception { commentService.updateComment(comment.getId(), comment); return null; }
-            };
-            t.setOnSucceeded(e -> { AlertHelper.showInfo("成功", "已更新"); loadData(); });
-            new Thread(t).start();
+    private void loadSemesters() {
+        Task<List<String>> task = new Task<>() {
+            @Override protected List<String> call() throws Exception {
+                return SemesterService.getAllSemesters();
+            }
+        };
+        task.setOnSucceeded(e -> {
+            semesterCombo.setItems(FXCollections.observableArrayList(task.getValue()));
+            semesterCombo.getSelectionModel().selectFirst();
         });
+        task.setOnFailed(e -> {
+            semesterCombo.setItems(FXCollections.observableArrayList("2025-1", "2024-2", "2024-1"));
+            semesterCombo.getSelectionModel().selectFirst();
+        });
+        AppExecutors.submit(task::run);
     }
 
     private void loadData() {
-        Task<ApiResult<PageResult<Comment>>> task = new Task<>() {
-            @Override protected ApiResult<PageResult<Comment>> call() throws Exception { return commentService.getComments(currentPage, 15, null); }
-        };
-        task.setOnSucceeded(e -> {
-            ApiResult<PageResult<Comment>> result = task.getValue();
-            if (result.isSuccess() && result.getData() != null) {
-                commentData.setAll(result.getData().getContent());
-                totalPages = Math.max(1, result.getData().getTotalPages());
-                pageInfo.setText("第 " + (currentPage + 1) + " 页 / 共 " + totalPages + " 页");
+        ClassInfo cls = classCombo.getValue();
+        String semester = semesterCombo.getValue();
+        if (cls == null) return;
+        int classId = cls.getId();
+        Task<List<AiComment>> task = new Task<>() {
+            @Override protected List<AiComment> call() throws Exception {
+                return CommentService.getPage(1, 200, classId, semester).getRecords();
             }
+        };
+        task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
         });
-        new Thread(task).start();
+        AppExecutors.submit(task::run);
     }
 
-    @FXML private void handlePrevPage() { if (currentPage > 0) { currentPage--; loadData(); } }
-    @FXML private void handleNextPage() { if (currentPage < totalPages - 1) { currentPage++; loadData(); } }
+    @FXML
+    private void handleBatchGenerate() {
+        ClassInfo cls = classCombo.getValue();
+        String semester = semesterCombo.getValue();
+        if (semester == null) {
+            CrudHelper.showError("请先选择学期");
+            return;
+        }
+        if (cls == null) {
+            CrudHelper.showError("请先选择班级");
+            return;
+        }
+        int classId = cls.getId();
+        Task<Void> task = new Task<>() {
+            @Override protected Void call() throws Exception {
+                return CommentService.batchGenerate(classId, semester);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            CrudHelper.showAlert("批量生成已启动成功");
+            loadData();
+        });
+        task.setOnFailed(e -> CrudHelper.showError("批量生成失败"));
+        AppExecutors.submit(task::run);
+    }
+
+    private void handleEdit(AiComment c) {
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("编辑评语");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextArea textArea = new TextArea(c.getContent());
+        textArea.setPrefRowCount(6);
+        textArea.setWrapText(true);
+        dialog.getDialogPane().setContent(textArea);
+
+        dialog.setResultConverter(bt -> bt == ButtonType.OK ? textArea.getText() : null);
+        dialog.showAndWait().ifPresent(content -> {
+            Task<AiComment> task = new Task<>() {
+                @Override protected AiComment call() throws Exception {
+                    return CommentService.updateComment(c.getId(), content);
+                }
+            };
+            task.setOnSucceeded(e -> {
+                AiComment updated = task.getValue();
+                if (updated != null) {
+                    c.setContent(updated.getContent());
+                    c.setTeacherEdited(updated.isTeacherEdited());
+                }
+                table.refresh();
+                CrudHelper.showAlert("保存成功");
+            });
+            task.setOnFailed(e -> CrudHelper.showError("保存失败"));
+            AppExecutors.submit(task::run);
+        });
+    }
+
+    private void showVersions(AiComment c) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("版本历史");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+
+        javafx.scene.layout.VBox vbox = new javafx.scene.layout.VBox(10);
+        vbox.setPadding(new javafx.geometry.Insets(20));
+
+        Label current = new Label(String.format("当前版本 - %s\n%s", c.getCreatedAt(), c.getContent()));
+        current.setWrapText(true);
+        vbox.getChildren().add(current);
+
+        dialog.getDialogPane().setContent(vbox);
+        dialog.showAndWait();
+    }
 }

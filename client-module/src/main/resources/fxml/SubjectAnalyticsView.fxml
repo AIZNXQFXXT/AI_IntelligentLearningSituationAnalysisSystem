@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.SubjectAnalyticsController"
+      spacing="20" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" styleClass="crud-card">
+
+    <Label text="学科分析" styleClass="crud-card-header"/>
+
+    <VBox styleClass="crud-card-body" spacing="20">
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="年级:"/>
+            <ComboBox fx:id="gradeFilter" prefWidth="200" promptText="选择年级"/>
+            <Button text="查询" styleClass="btn-primary btn-sm" onAction="#handleQuery"/>
+        </HBox>
+
+        <!-- Stats Cards -->
+        <HBox spacing="20">
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="全校平均分"/>
+                <Label fx:id="valueAvgScore" styleClass="stat-card-value" text="--"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="全校及格率"/>
+                <Label fx:id="valuePassRate" styleClass="stat-card-value" text="--"/>
+            </VBox>
+            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                <Label styleClass="stat-card-title" text="课程总数"/>
+                <Label fx:id="valueCourseCount" styleClass="stat-card-value" text="--"/>
+            </VBox>
+        </HBox>
+
+        <!-- Bar Chart -->
+        <BarChart fx:id="chart" prefHeight="350" animated="false" VBox.vgrow="ALWAYS">
+            <xAxis>
+                <CategoryAxis fx:id="xAxis" label="课程" autoRanging="true"/>
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="yAxis" label="平均分" autoRanging="true"/>
+            </yAxis>
+        </BarChart>
+
+        <!-- Data Table -->
+        <VBox spacing="8">
+            <Label text="各学科成绩概览" styleClass="section-title"/>
+            <TableView fx:id="dataTable" VBox.vgrow="ALWAYS">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+                <columns>
+                    <TableColumn fx:id="colCourseName" text="课程" prefWidth="150"/>
+                    <TableColumn fx:id="colAvgScore" text="平均分" prefWidth="100"/>
+                    <TableColumn fx:id="colPassRate" text="及格率" prefWidth="100"/>
+                    <TableColumn fx:id="colExcellentRate" text="优秀率" prefWidth="100"/>
+                    <TableColumn fx:id="colStudentCount" text="参考人数" prefWidth="100"/>
+                </columns>
+            </TableView>
+            <Label fx:id="noDataLabel" text="暂无数据" visible="false" styleClass="empty-state-label"/>
+        </VBox>
+    </VBox>
+</VBox>

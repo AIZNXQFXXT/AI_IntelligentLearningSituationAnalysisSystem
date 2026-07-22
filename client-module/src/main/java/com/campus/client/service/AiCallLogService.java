@@ -1,0 +1,15 @@
+package com.campus.client.service;
+
+import com.campus.client.model.AiCallLog;
+import com.campus.client.model.ApiResponse;
+import com.campus.client.model.PageResult;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+public class AiCallLogService {
+    public static PageResult<AiCallLog> getPage(int page, int size, String functionName, Boolean success) throws Exception {
+        String path = "/logs/ai-calls?page=" + page + "&size=" + size;
+        if (functionName != null && !functionName.isEmpty()) path += "&functionName=" + functionName;
+        if (success != null) path += "&success=" + (success ? "1" : "0");
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<AiCallLog>>>() {});
+    }
+}

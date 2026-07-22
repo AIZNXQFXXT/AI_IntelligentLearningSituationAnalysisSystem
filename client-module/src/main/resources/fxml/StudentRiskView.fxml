@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.StudentRiskController"
+      spacing="0" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" styleClass="crud-card">
+
+    <Label text="我的预警" styleClass="crud-card-header"/>
+
+    <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <Label fx:id="emptyLabel" text="暂无预警信息" visible="false" managed="false"
+               styleClass="empty-state-label" VBox.vgrow="ALWAYS"
+               alignment="CENTER"/>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS">
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+            </columnResizePolicy>
+            <columns>
+                <TableColumn fx:id="colSemester" text="学期" prefWidth="120"/>
+                <TableColumn fx:id="colRiskLevel" text="风险等级" prefWidth="100"/>
+                <TableColumn fx:id="colReason" text="风险原因" prefWidth="300"/>
+                <TableColumn fx:id="colHandleStatus" text="处理状态" prefWidth="100"/>
+                <TableColumn fx:id="colRemark" text="处理备注" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

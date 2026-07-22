@@ -1,83 +1,57 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.SchoolOverview;
 import com.campus.client.service.StatsService;
-import com.campus.client.util.AlertHelper;
-import javafx.application.Platform;
+import com.campus.client.util.AppExecutors;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 
-import java.net.URL;
-import java.util.Map;
-import java.util.ResourceBundle;
+public class AdminDashboardController {
 
-public class AdminDashboardController implements Initializable {
-
-    @FXML private Label totalStudents;
-    @FXML private Label totalTeachers;
-    @FXML private Label totalClasses;
-    @FXML private Label totalCourses;
-    @FXML private Label highRiskCount;
-    @FXML private Label midRiskCount;
-    @FXML private Label pendingWarnings;
-    @FXML private Button refreshButton;
-
-    private final StatsService statsService = new StatsService();
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        loadData();
-    }
+    @FXML private Label valueClasses;
+    @FXML private Label valueTeachers;
+    @FXML private Label valueStudents;
+    @FXML private Label valueCourses;
 
     @FXML
-    private void handleRefresh() {
-        loadData();
+    public void initialize() {
+        loadOverview();
     }
 
-    private void loadData() {
-        refreshButton.setDisable(true);
-        Task<Void> task = new Task<>() {
+    private void loadOverview() {
+        Task<SchoolOverview> task = new Task<>() {
             @Override
-            protected Void call() throws Exception {
-                try {
-                    ApiResult<Map<String, Object>> overview = statsService.getSchoolOverview();
-                    if (overview.isSuccess() && overview.getData() != null) {
-                        Map<String, Object> data = overview.getData();
-                        Platform.runLater(() -> {
-                            setTextIfPresent(totalStudents, data, "totalStudents");
-                            setTextIfPresent(totalTeachers, data, "totalTeachers");
-                            setTextIfPresent(totalClasses, data, "totalClasses");
-                            setTextIfPresent(totalCourses, data, "totalCourses");
-                        });
-                    }
-                } catch (Exception e) {
-                }
-                try {
-                    ApiResult<Map<String, Object>> risk = statsService.getRiskSummary();
-                    if (risk.isSuccess() && risk.getData() != null) {
-                        Map<String, Object> data = risk.getData();
-                        Platform.runLater(() -> {
-                            setTextIfPresent(highRiskCount, data, "highRisk");
-                            setTextIfPresent(midRiskCount, data, "mediumRisk");
-                            setTextIfPresent(pendingWarnings, data, "pendingWarnings");
-                        });
-                    }
-                } catch (Exception e) {
-                }
-                return null;
+            protected SchoolOverview call() throws Exception {
+                return StatsService.getSchoolOverview();
             }
         };
-        task.setOnSucceeded(e -> refreshButton.setDisable(false));
-        task.setOnFailed(e -> refreshButton.setDisable(false));
-        new Thread(task).start();
+
+        task.setOnSucceeded(event -> {
+            SchoolOverview data = task.getValue();
+            if (data != null) {
+                valueClasses.setText(String.valueOf(data.getTotalClasses()));
+                valueTeachers.setText(String.valueOf(data.getTotalTeachers()));
+                valueStudents.setText(String.valueOf(data.getTotalStudents()));
+                valueCourses.setText(String.valueOf(data.getTotalCourses()));
+            }
+        });
+
+        task.setOnFailed(event -> {
+        });
+
+        AppExecutors.submit(task::run);
     }
 
-    private void setTextIfPresent(Label label, Map<String, Object> data, String key) {
-        if (data.containsKey(key) && data.get(key) != null) {
-            label.setText(String.valueOf(data.get(key)));
+    @FXML private void goToClasses() { navigateTo("/admin/classes"); }
+    @FXML private void goToTeachers() { navigateTo("/admin/teachers"); }
+    @FXML private void goToStudents() { navigateTo("/admin/students"); }
+    @FXML private void goToTeachingTasks() { navigateTo("/admin/teaching-tasks"); }
+
+    private void navigateTo(String route) {
+        MainLayoutController mainLayout = MainLayoutController.getInstance();
+        if (mainLayout != null) {
+            mainLayout.navigateTo(route);
         }
     }
 }

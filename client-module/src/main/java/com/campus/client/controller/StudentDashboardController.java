@@ -1,102 +1,123 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.*;
-import com.campus.client.service.*;
+import com.campus.client.model.PageResult;
+import com.campus.client.model.RiskWarning;
+import com.campus.client.model.Score;
+import com.campus.client.service.RiskWarningService;
+import com.campus.client.service.ScoreService;
+import com.campus.client.session.UserSession;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.CrudHelper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.VBox;
-import javafx.geometry.Insets;
+import javafx.scene.input.MouseEvent;
 
-import java.net.URL;
 import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
 
-public class StudentDashboardController implements Initializable {
+public class StudentDashboardController {
 
-    @FXML private Label courseCount;
-    @FXML private Label avgScore;
-    @FXML private Label warningCount;
-    @FXML private TableView<Score> recentScoreTable;
-    @FXML private TableColumn<Score, String> colCourseName;
-    @FXML private TableColumn<Score, String> colExamName;
-    @FXML private TableColumn<Score, Double> colScore;
-    @FXML private TableColumn<Score, Double> colRank;
-    @FXML private VBox suggestionList;
-    @FXML private VBox warningList;
+    @FXML private Label valueAvgScore;
+    @FXML private Label valueWarnings;
+    @FXML private Label valueUsername;
+    @FXML private TableView<Score> scoreTable;
+    @FXML private TableColumn<Score, Integer> colCourseId;
+    @FXML private TableColumn<Score, Double> colFinalScore;
+    @FXML private TableColumn<Score, Integer> colRankClass;
+    @FXML private TableColumn<Score, Integer> colRankGrade;
+    @FXML private TableView<RiskWarning> warningTable;
+    @FXML private TableColumn<RiskWarning, String> colSemester;
+    @FXML private TableColumn<RiskWarning, String> colRiskLevel;
+    @FXML private TableColumn<RiskWarning, String> colRiskReason;
+    @FXML private TableColumn<RiskWarning, String> colHandleStatus;
+    @FXML private Label noScoreLabel;
+    @FXML private Label noWarningLabel;
 
-    private final ScoreService scoreService = new ScoreService();
-    private final SuggestionService suggestionService = new SuggestionService();
-    private final RiskWarningService warningService = new RiskWarningService();
     private final ObservableList<Score> scoreData = FXCollections.observableArrayList();
+    private final ObservableList<RiskWarning> warningData = FXCollections.observableArrayList();
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        setupTable();
+    @FXML
+    public void initialize() {
+        valueUsername.setText(UserSession.getInstance().getUsername());
+
+        colCourseId.setCellValueFactory(new PropertyValueFactory<>("courseId"));
+        colFinalScore.setCellValueFactory(new PropertyValueFactory<>("finalScore"));
+        colRankClass.setCellValueFactory(new PropertyValueFactory<>("rankClass"));
+        colRankGrade.setCellValueFactory(new PropertyValueFactory<>("rankGrade"));
+        scoreTable.setItems(scoreData);
+
+        colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
+        colRiskLevel.setCellValueFactory(new PropertyValueFactory<>("riskLevel"));
+        colRiskReason.setCellValueFactory(new PropertyValueFactory<>("riskReason"));
+        colHandleStatus.setCellValueFactory(new PropertyValueFactory<>("handleStatus"));
+        warningTable.setItems(warningData);
+
         loadData();
-    }
-
-    private void setupTable() {
-        colCourseName.setCellValueFactory(new PropertyValueFactory<>("courseName"));
-        colExamName.setCellValueFactory(new PropertyValueFactory<>("examName"));
-        colScore.setCellValueFactory(new PropertyValueFactory<>("score"));
-        colRank.setCellValueFactory(new PropertyValueFactory<>("rank"));
-        recentScoreTable.setItems(scoreData);
     }
 
     private void loadData() {
         Task<Void> task = new Task<>() {
-            @Override protected Void call() throws Exception {
-                try {
-                    ApiResult<PageResult<Score>> scores = scoreService.getScores(0, 10, null, null);
-                    if (scores.isSuccess() && scores.getData() != null) {
-                        Platform.runLater(() -> {
-                            scoreData.setAll(scores.getData().getContent());
-                            courseCount.setText(String.valueOf(scores.getData().getTotalElements()));
-                        });
-                    }
-                } catch (Exception e) { }
+            @Override
+            protected Void call() throws Exception {
+                PageResult<Score> scoreRes = ScoreService.getMyScores(1, 5);
+                List<RiskWarning> warnings = RiskWarningService.getMyWarnings();
 
-                try {
-                    ApiResult<List<Suggestion>> suggestions = suggestionService.getMySuggestions();
-                    if (suggestions.isSuccess() && suggestions.getData() != null) {
-                        Platform.runLater(() -> {
-                            suggestionList.getChildren().clear();
-                            for (Suggestion s : suggestions.getData()) {
-                                Label lbl = new Label("- " + s.getContent());
-                                lbl.setWrapText(true);
-                                lbl.setPadding(new Insets(4));
-                                suggestionList.getChildren().add(lbl);
-                            }
-                        });
+                Platform.runLater(() -> {
+                    List<Score> scores = scoreRes.getRecords().size() > 5
+                            ? scoreRes.getRecords().subList(0, 5)
+                            : scoreRes.getRecords();
+                    scoreData.addAll(scores);
+                    if (scores.isEmpty()) {
+                        noScoreLabel.setVisible(true);
+                        noScoreLabel.setManaged(true);
+                        scoreTable.setVisible(false);
+                        scoreTable.setManaged(false);
+                    } else {
+                        double avg = scores.stream()
+                                .mapToDouble(Score::getFinalScore)
+                                .average().orElse(0);
+                        valueAvgScore.setText(String.format("%.1f", avg));
                     }
-                } catch (Exception e) { }
 
-                try {
-                    ApiResult<List<RiskWarning>> warnings = warningService.getMyWarnings();
-                    if (warnings.isSuccess() && warnings.getData() != null) {
-                        Platform.runLater(() -> {
-                            warningList.getChildren().clear();
-                            warningCount.setText(String.valueOf(warnings.getData().size()));
-                            for (RiskWarning w : warnings.getData()) {
-                                Label lbl = new Label("- [" + w.getLevel() + "] " + w.getContent());
-                                lbl.setWrapText(true);
-                                lbl.setPadding(new Insets(4));
-                                warningList.getChildren().add(lbl);
-                            }
-                        });
+                    List<RiskWarning> recentWarnings = warnings.size() > 5
+                            ? warnings.subList(0, 5)
+                            : warnings;
+                    warningData.addAll(recentWarnings);
+                    valueWarnings.setText(String.valueOf(warnings.size()));
+                    if (recentWarnings.isEmpty()) {
+                        noWarningLabel.setVisible(true);
+                        noWarningLabel.setManaged(true);
+                        warningTable.setVisible(false);
+                        warningTable.setManaged(false);
                     }
-                } catch (Exception e) { }
-
+                });
                 return null;
             }
         };
-        new Thread(task).start();
+
+        task.setOnFailed(event -> {
+            Throwable ex = task.getException();
+            CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载仪表盘数据失败");
+        });
+
+        AppExecutors.submit(task::run);
+    }
+
+    @FXML private void goToScores(MouseEvent e) { navigateTo("/student/scores"); }
+    @FXML private void goToAnalysis(MouseEvent e) { navigateTo("/student/analysis"); }
+    @FXML private void goToDiagnosis(MouseEvent e) { navigateTo("/student/diagnosis"); }
+    @FXML private void goToAdvice(MouseEvent e) { navigateTo("/student/advice"); }
+    @FXML private void goToComment(MouseEvent e) { navigateTo("/student/comment"); }
+    @FXML private void goToRisk(MouseEvent e) { navigateTo("/student/risk"); }
+
+    private void navigateTo(String route) {
+        MainLayoutController mainLayout = MainLayoutController.getInstance();
+        if (mainLayout != null) {
+            mainLayout.navigateTo(route);
+        }
     }
 }

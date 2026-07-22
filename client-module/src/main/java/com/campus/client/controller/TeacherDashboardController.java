@@ -1,104 +1,67 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.ApiResult;
-import com.campus.client.service.ReportService;
+import com.campus.client.model.SchoolOverviewVO;
 import com.campus.client.service.StatsService;
-import com.campus.client.util.AlertHelper;
+import com.campus.client.session.UserSession;
+import com.campus.client.util.AppExecutors;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.Label;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.net.URL;
 import java.util.Map;
-import java.util.ResourceBundle;
 
-public class TeacherDashboardController implements Initializable {
+public class TeacherDashboardController {
 
-    @FXML private Label myClassCount;
-    @FXML private Label myStudentCount;
-    @FXML private Label myPendingWarnings;
-    @FXML private TableView<Map<String, Object>> classOverviewTable;
-    @FXML private TableColumn<Map<String, Object>, String> colClassName;
-    @FXML private TableColumn<Map<String, Object>, String> colAvgScore;
-    @FXML private TableColumn<Map<String, Object>, String> colMaxScore;
-    @FXML private TableColumn<Map<String, Object>, String> colMinScore;
-    @FXML private TableColumn<Map<String, Object>, String> colPassRate;
+    @FXML private Label valueStudents;
+    @FXML private Label valueWarnings;
+    @FXML private Label valueUsername;
 
-    private final StatsService statsService = new StatsService();
-    private final ReportService reportService = new ReportService();
-    private final ObservableList<Map<String, Object>> overviewData = FXCollections.observableArrayList();
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        setupTable();
-        loadData();
+    @FXML
+    public void initialize() {
+        valueUsername.setText(UserSession.getInstance().getUsername());
+        loadStudentCount();
+        loadWarningCount();
     }
 
-    private void setupTable() {
-        colClassName.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                String.valueOf(cellData.getValue().getOrDefault("className", ""))));
-        colAvgScore.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                String.valueOf(cellData.getValue().getOrDefault("avgScore", ""))));
-        colMaxScore.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                String.valueOf(cellData.getValue().getOrDefault("maxScore", ""))));
-        colMinScore.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                String.valueOf(cellData.getValue().getOrDefault("minScore", ""))));
-        colPassRate.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                String.valueOf(cellData.getValue().getOrDefault("passRate", ""))));
-        classOverviewTable.setItems(overviewData);
-    }
-
-    private void loadData() {
-        Task<Void> task = new Task<>() {
-            @Override protected Void call() throws Exception {
-                try {
-                    ApiResult<Map<String, Object>> risk = statsService.getRiskSummary();
-                    if (risk.isSuccess() && risk.getData() != null) {
-                        Map<String, Object> data = risk.getData();
-                        Platform.runLater(() -> {
-                            setLabel(myPendingWarnings, data, "pendingWarnings");
-                        });
-                    }
-                } catch (Exception e) { }
-                return null;
+    private void loadStudentCount() {
+        Task<Long> task = new Task<>() {
+            @Override protected Long call() throws Exception {
+                SchoolOverviewVO overview = StatsService.getSchoolAcademicOverview();
+                return overview != null ? overview.getTotalStudents() : 0L;
             }
         };
-        new Thread(task).start();
+        task.setOnSucceeded(e -> Platform.runLater(() ->
+                valueStudents.setText(String.valueOf(task.getValue()))));
+        task.setOnFailed(e -> Platform.runLater(() ->
+                valueStudents.setText("0")));
+        AppExecutors.submit(task::run);
     }
 
-    @FXML
-    private void handleExportScores() { exportReport("score-table", "成绩表"); }
-
-    @FXML
-    private void handleExportComments() { exportReport("comments", "评语"); }
-
-    @FXML
-    private void handleExportRiskList() { exportReport("risk-list", "预警列表"); }
-
-    private void exportReport(String type, String name) {
-        Task<Void> task = new Task<>() {
-            @Override protected Void call() throws Exception {
-                byte[] data = reportService.exportScoreTable(null, null);
-                File file = new File(name + "_export.xlsx");
-                try (FileOutputStream fos = new FileOutputStream(file)) {
-                    fos.write(data);
-                }
-                return null;
+    private void loadWarningCount() {
+        Task<Long> task = new Task<>() {
+            @Override protected Long call() throws Exception {
+                Map<String, Object> summary = StatsService.getRiskSummary();
+                Object count = summary != null ? summary.get("unhandledCount") : 0;
+                return count instanceof Number ? ((Number) count).longValue() : 0L;
             }
         };
-        task.setOnSucceeded(e -> AlertHelper.showInfo("成功", name + "导出成功"));
-        task.setOnFailed(e -> AlertHelper.showError("失败", "导出失败"));
-        new Thread(task).start();
+        task.setOnSucceeded(e -> Platform.runLater(() ->
+                valueWarnings.setText(String.valueOf(task.getValue()))));
+        task.setOnFailed(e -> Platform.runLater(() ->
+                valueWarnings.setText("0")));
+        AppExecutors.submit(task::run);
     }
 
-    private void setLabel(Label label, Map<String, Object> data, String key) {
-        if (data.containsKey(key) && data.get(key) != null) label.setText(String.valueOf(data.get(key)));
+    @FXML private void goToScoreEntry() { navigateTo("/teacher/score/entry"); }
+    @FXML private void goToScoreImport() { navigateTo("/teacher/score/import"); }
+    @FXML private void goToDiagnosis() { navigateTo("/teacher/diagnosis"); }
+    @FXML private void goToComment() { navigateTo("/teacher/comment"); }
+
+    private void navigateTo(String route) {
+        MainLayoutController mainLayout = MainLayoutController.getInstance();
+        if (mainLayout != null) {
+            mainLayout.navigateTo(route);
+        }
     }
 }

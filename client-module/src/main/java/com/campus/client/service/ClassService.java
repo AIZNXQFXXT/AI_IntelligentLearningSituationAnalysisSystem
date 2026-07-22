@@ -1,50 +1,43 @@
 package com.campus.client.service;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.ApiResponse;
 import com.campus.client.model.ClassInfo;
 import com.campus.client.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
+import java.util.List;
 
 public class ClassService {
-
-    private final ApiService api = new ApiService();
-
-    public ApiResult<PageResult<ClassInfo>> getClasses(int page, int size) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        String json = api.get("/api/classes", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<ClassInfo>>>() {});
+    public static PageResult<ClassInfo> getPage(int page, int size, String keyword) throws Exception {
+        String path = "/classes?page=" + page + "&size=" + size;
+        if (keyword != null && !keyword.isEmpty()) {
+            path += "&keyword=" + ApiClient.encodeParam(keyword);
+        }
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<ClassInfo>>>() {});
     }
 
-    public ApiResult<Void> createClass(ClassInfo classInfo) throws IOException {
-        String json = api.post("/api/classes", classInfo);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static List<ClassInfo> getAll() throws Exception {
+        return ApiClient.get("/classes/list", new TypeReference<ApiResponse<List<ClassInfo>>>() {});
     }
 
-    public ApiResult<Void> updateClass(Long id, ClassInfo classInfo) throws IOException {
-        String json = api.put("/api/classes/" + id, classInfo);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static List<ClassInfo> getMyClasses() throws Exception {
+        return ApiClient.get("/classes/my", new TypeReference<ApiResponse<List<ClassInfo>>>() {});
     }
 
-    public ApiResult<Void> deleteClass(Long id) throws IOException {
-        String json = api.delete("/api/classes/" + id);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static Void create(ClassInfo cls) throws Exception {
+        return ApiClient.post("/classes", cls, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public byte[] exportExcel() throws IOException {
-        return api.getBytes("/api/classes/export/excel");
+    public static Void update(int id, ClassInfo cls) throws Exception {
+        return ApiClient.put("/classes/" + id, cls, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public ApiResult<PageResult<ClassInfo>> getMyClasses(int page, int size) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        String json = api.get("/api/classes/my", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<ClassInfo>>>() {});
+    public static Void delete(int id) throws Exception {
+        return ApiClient.delete("/classes/" + id, new TypeReference<ApiResponse<Void>>() {});
+    }
+
+    public static Void batchImport(File file) throws Exception {
+        return ApiClient.uploadFile("/classes/batch", file, new TypeReference<ApiResponse<Void>>() {});
     }
 }

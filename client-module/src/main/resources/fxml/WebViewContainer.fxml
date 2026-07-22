@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.WebViewContainerController"
+      HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+
+    <!-- Navigation toolbar -->
+    <HBox styleClass="web-view-toolbar" spacing="8" alignment="CENTER_LEFT" prefHeight="40">
+        <padding><Insets left="12" right="12" top="6" bottom="6"/></padding>
+        <Button fx:id="btnBack" text="←" onAction="#goBack"
+                styleClass="web-nav-btn"
+                disable="true"/>
+        <Button fx:id="btnForward" text="→" onAction="#goForward"
+                styleClass="web-nav-btn"
+                disable="true"/>
+        <Button fx:id="btnRefresh" text="⟳" onAction="#refresh"
+                styleClass="web-nav-btn"/>
+        <Separator orientation="VERTICAL" prefHeight="20"/>
+        <Label fx:id="loadingLabel" text="加载中..." styleClass="web-loading-label" visible="false"/>
+    </HBox>
+
+    <!-- WebView fills remaining space -->
+    <BorderPane fx:id="webContainer" VBox.vgrow="ALWAYS" styleClass="web-view-container"/>
+</VBox>

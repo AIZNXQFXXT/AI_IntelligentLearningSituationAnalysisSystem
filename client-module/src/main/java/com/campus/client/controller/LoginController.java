@@ -1,93 +1,95 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.LoginResult;
 import com.campus.client.service.AuthService;
-import com.campus.client.util.AlertHelper;
-import com.campus.client.util.FxmlLoader;
+import com.campus.client.session.UserSession;
+import com.campus.client.util.AppExecutors;
+import com.campus.client.util.ViewLoader;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-public class LoginController implements Initializable {
+public class LoginController {
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
-    @FXML private ComboBox<String> roleComboBox;
     @FXML private Button loginButton;
     @FXML private Label errorLabel;
-    @FXML private ProgressIndicator loadingIndicator;
-
-    private final AuthService authService = new AuthService();
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        roleComboBox.setItems(FXCollections.observableArrayList("管理员", "教师", "学生"));
-        roleComboBox.getSelectionModel().selectFirst();
-    }
 
     @FXML
     private void handleLogin() {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            showError("请输入用户名和密码");
+        if (username.isEmpty()) {
+            showError("请输入用户名");
+            return;
+        }
+        if (password.isEmpty()) {
+            showError("请输入密码");
             return;
         }
 
-        setLoading(true);
+        loginButton.setDisable(true);
+        loginButton.setText("登录中...");
+        hideError();
 
-        Task<ApiResult<java.util.Map<String, Object>>> loginTask = new Task<>() {
+        Task<LoginResult> loginTask = new Task<>() {
             @Override
-            protected ApiResult<java.util.Map<String, Object>> call() throws Exception {
-                return authService.login(username, password);
+            protected LoginResult call() throws Exception {
+                return AuthService.login(username, password);
             }
         };
 
-        loginTask.setOnSucceeded(e -> {
-            setLoading(false);
-            ApiResult<java.util.Map<String, Object>> result = loginTask.getValue();
-            if (result.isSuccess()) {
-                navigateToMainLayout();
+        loginTask.setOnSucceeded(event -> {
+            LoginResult result = loginTask.getValue();
+            UserSession.getInstance().login(result);
+            navigateToDashboard(result.getRole());
+        });
+
+        loginTask.setOnFailed(event -> {
+            Throwable ex = loginTask.getException();
+            if (ex != null && ex.getMessage() != null) {
+                showError(ex.getMessage());
             } else {
-                showError(result.getMessage() != null ? result.getMessage() : "登录失败");
+                showError("登录失败，请检查网络连接");
             }
+            loginButton.setDisable(false);
+            loginButton.setText("登 录");
         });
 
-        loginTask.setOnFailed(e -> {
-            setLoading(false);
-            showError("网络连接失败，请检查服务器");
-        });
-
-        new Thread(loginTask).start();
+        AppExecutors.submit(loginTask::run);
     }
 
-    private void navigateToMainLayout() {
-        try {
-            StackPane root = (StackPane) loginButton.getScene().getRoot();
-            root.getChildren().clear();
-            root.getChildren().add(FxmlLoader.load("main_layout.fxml"));
-        } catch (Exception ex) {
-            showError("加载主界面失败: " + ex.getMessage());
+    @FXML
+    private void onPasswordKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleLogin();
         }
     }
 
-    private void setLoading(boolean loading) {
-        loginButton.setDisable(loading);
-        loadingIndicator.setVisible(loading);
-        loadingIndicator.setManaged(loading);
+    private void navigateToDashboard(String role) {
+        Platform.runLater(() -> {
+            ViewLoader.loadScene("/fxml/MainLayout.fxml", "AI智能校园学情分析系统");
+        });
     }
 
     private void showError(String message) {
-        errorLabel.setText(message);
-        errorLabel.setVisible(true);
-        errorLabel.setManaged(true);
+        Platform.runLater(() -> {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+        });
+    }
+
+    private void hideError() {
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
     }
 }

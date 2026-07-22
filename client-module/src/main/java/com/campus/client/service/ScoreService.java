@@ -1,55 +1,71 @@
 package com.campus.client.service;
 
-import com.campus.client.model.ApiResult;
+import com.campus.client.model.ApiResponse;
 import com.campus.client.model.PageResult;
 import com.campus.client.model.Score;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ScoreService {
-
-    private final ApiService api = new ApiService();
-
-    public ApiResult<PageResult<Score>> getScores(int page, int size, Long examId, Long courseId) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        if (examId != null) params.put("examId", String.valueOf(examId));
-        if (courseId != null) params.put("courseId", String.valueOf(courseId));
-        String json = api.get("/api/scores", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<Score>>>() {});
+    public static PageResult<Score> getScorePage(int page, int size) throws Exception {
+        return ApiClient.get("/scores?page=" + page + "&size=" + size,
+                new TypeReference<ApiResponse<PageResult<Score>>>() {});
     }
 
-    public ApiResult<Void> submitScore(Score score) throws IOException {
-        String json = api.post("/api/scores", score);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static PageResult<Score> getScorePage(int page, int size, int studentId) throws Exception {
+        return ApiClient.get("/scores?page=" + page + "&size=" + size + "&studentId=" + studentId,
+                new TypeReference<ApiResponse<PageResult<Score>>>() {});
     }
 
-    public ApiResult<Void> updateScore(Long id, Score score) throws IOException {
-        String json = api.put("/api/scores/" + id, score);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static PageResult<Score> getMyScores(int page, int size) throws Exception {
+        return ApiClient.get("/my/scores?page=" + page + "&size=" + size,
+                new TypeReference<ApiResponse<PageResult<Score>>>() {});
     }
 
-    public ApiResult<Void> batchSubmitScores(java.util.List<Score> scores) throws IOException {
-        String json = api.post("/api/scores/batch", scores);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+    public static PageResult<Score> getMyScores(int page, int size, String semester) throws Exception {
+        String path = "/my/scores?page=" + page + "&size=" + size;
+        if (semester != null && !semester.isEmpty()) {
+            path += "&semester=" + ApiClient.encodeParam(semester);
+        }
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<Score>>>() {});
     }
 
-    public ApiResult<PageResult<Score>> getArchiveOverview(int page, int size) throws IOException {
-        Map<String, String> params = new HashMap<>();
-        params.put("page", String.valueOf(page));
-        params.put("size", String.valueOf(size));
-        String json = api.get("/api/scores/archive/overview", params);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<PageResult<Score>>>() {});
+    public static String batchImportScore(File file, int examId, int classId) throws Exception {
+        return ApiClient.upload("/scores/batch", file, examId, classId,
+                new TypeReference<ApiResponse<String>>() {});
     }
 
-    public ApiResult<Void> updateScoreStatus(Long id, Integer status) throws IOException {
+    public static Score createScore(int studentId, int examId, int courseId, double regularScore, double examScore, double finalScore) throws Exception {
+        Score score = new Score();
+        score.setStudentId(studentId);
+        score.setExamId(examId);
+        score.setCourseId(courseId);
+        score.setRegularScore(regularScore);
+        score.setExamScore(examScore);
+        score.setFinalScore(finalScore);
+        return ApiClient.post("/scores", score, new TypeReference<ApiResponse<Score>>() {});
+    }
+
+    public static List<Score> getScoresByExamAndCourse(int examId, int courseId) throws Exception {
+        return ApiClient.get("/scores?examId=" + examId + "&courseId=" + courseId + "&size=5000",
+                new TypeReference<ApiResponse<PageResult<Score>>>() {}).getRecords();
+    }
+
+    public static Score updateScore(int id, double regularScore, double examScore, double finalScore, String reason) throws Exception {
         Map<String, Object> body = new HashMap<>();
-        body.put("status", status);
-        String json = api.put("/api/scores/" + id + "/status", body);
-        return ApiService.getMapper().readValue(json, new TypeReference<ApiResult<Void>>() {});
+        body.put("regularScore", regularScore);
+        body.put("examScore", examScore);
+        body.put("finalScore", finalScore);
+        body.put("reason", reason);
+        return ApiClient.put("/scores/" + id, body, new TypeReference<ApiResponse<Score>>() {});
+    }
+
+    public static Void archiveScore(int id) throws Exception {
+        return ApiClient.put("/scores/" + id + "/status",
+                Map.of("status", 1), new TypeReference<ApiResponse<Void>>() {});
     }
 }
