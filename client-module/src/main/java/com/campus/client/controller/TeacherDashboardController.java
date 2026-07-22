@@ -1,7 +1,9 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.SchoolOverviewVO;
+import com.campus.client.model.PageResult;
+import com.campus.client.model.Student;
 import com.campus.client.service.StatsService;
+import com.campus.client.service.StudentService;
 import com.campus.client.session.UserSession;
 import com.campus.client.util.AppExecutors;
 import javafx.application.Platform;
@@ -27,8 +29,9 @@ public class TeacherDashboardController {
     private void loadStudentCount() {
         Task<Long> task = new Task<>() {
             @Override protected Long call() throws Exception {
-                SchoolOverviewVO overview = StatsService.getSchoolAcademicOverview();
-                return overview != null ? overview.getTotalStudents() : 0L;
+                // 后端对 TEACHER 角色按本班并集 (班主任 ∪ 教学任务) 过滤, total 即本班学生总数
+                PageResult<Student> pr = StudentService.getPage(1, 1, null, null);
+                return pr != null ? (long) pr.getTotal() : 0L;
             }
         };
         task.setOnSucceeded(e -> Platform.runLater(() ->
