@@ -1,10 +1,9 @@
 package com.campus.client.controller;
 
 import com.campus.client.model.ClassInfo;
-import com.campus.client.model.Course;
-import com.campus.client.model.PageResult;
+import com.campus.common.dto.CourseDTO;
 import com.campus.client.model.Teacher;
-import com.campus.client.model.TeachingTask;
+import com.campus.common.dto.TeachingTaskDTO;
 import com.campus.client.service.ClassService;
 import com.campus.client.service.CourseService;
 import com.campus.client.service.TeacherService;
@@ -17,6 +16,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import com.campus.client.util.TableUtils;
+import com.campus.client.model.PageResult;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -30,16 +30,16 @@ import java.util.Map;
 public class TeachingTaskManagementController {
 
     @FXML private TextField semesterField;
-    @FXML private TableView<TeachingTask> table;
-    @FXML private TableColumn<TeachingTask, String> colTeacherId;
-    @FXML private TableColumn<TeachingTask, String> colClassId;
-    @FXML private TableColumn<TeachingTask, String> colCourseId;
-    @FXML private TableColumn<TeachingTask, String> colSemester;
-    @FXML private TableColumn<TeachingTask, String> colCreatedAt;
-    @FXML private TableColumn<TeachingTask, Void> colActions;
+    @FXML private TableView<TeachingTaskDTO> table;
+    @FXML private TableColumn<TeachingTaskDTO, String> colTeacherId;
+    @FXML private TableColumn<TeachingTaskDTO, String> colClassId;
+    @FXML private TableColumn<TeachingTaskDTO, String> colCourseId;
+    @FXML private TableColumn<TeachingTaskDTO, String> colSemester;
+    @FXML private TableColumn<TeachingTaskDTO, String> colCreatedAt;
+    @FXML private TableColumn<TeachingTaskDTO, Void> colActions;
     @FXML private Pagination pagination;
 
-    private final ObservableList<TeachingTask> tableData = FXCollections.observableArrayList();
+    private final ObservableList<TeachingTaskDTO> tableData = FXCollections.observableArrayList();
     private final Map<Integer, String> teacherMap = new HashMap<>();
     private final Map<Integer, String> classMap = new HashMap<>();
     private final Map<Integer, String> courseMap = new HashMap<>();
@@ -73,8 +73,8 @@ public class TeachingTaskManagementController {
                     teacherMap.put(t.getId(), t.getName() + " (" + t.getTeacherNo() + ")");
                 for (ClassInfo c : ClassService.getAll())
                     classMap.put(c.getId(), c.getClassName());
-                for (Course c : CourseService.getAll())
-                    courseMap.put(c.getId(), c.getName());
+                for (CourseDTO c : CourseService.getAll())
+                    courseMap.put(c.getId().intValue(), c.getName());
                 return null;
             }
         };
@@ -84,14 +84,14 @@ public class TeachingTaskManagementController {
     }
 
     private void loadData() {
-        Task<PageResult<TeachingTask>> task = new Task<>() {
+        Task<PageResult<TeachingTaskDTO>> task = new Task<>() {
             @Override
-            protected PageResult<TeachingTask> call() throws Exception {
+            protected PageResult<TeachingTaskDTO> call() throws Exception {
                 return TeachingTaskService.getPage(currentPage, pageSize, semesterField.getText());
             }
         };
         task.setOnSucceeded(e -> {
-            PageResult<TeachingTask> result = task.getValue();
+            PageResult<TeachingTaskDTO> result = task.getValue();
             tableData.clear(); tableData.addAll(result.getRecords());
             totalItems = result.getTotal(); updatePagination();
         });
@@ -121,10 +121,10 @@ public class TeachingTaskManagementController {
     @FXML
     private void handleCreate() { showFormDialog("新增教学任务", null); }
 
-    private void handleEdit(TeachingTask item) { showFormDialog("编辑教学任务", item); }
+    private void handleEdit(TeachingTaskDTO item) { showFormDialog("编辑教学任务", item); }
 
-    private void showFormDialog(String title, TeachingTask existing) {
-        Dialog<TeachingTask> dialog = new Dialog<>();
+    private void showFormDialog(String title, TeachingTaskDTO existing) {
+        Dialog<TeachingTaskDTO> dialog = new Dialog<>();
         dialog.setTitle(title);
         ComboBox<String> teacherBox = new ComboBox<>();
         teacherBox.setPromptText("选择教师");
@@ -143,7 +143,7 @@ public class TeachingTaskManagementController {
         loadTeachers.setOnSucceeded(ev -> {
             for (Teacher t : loadTeachers.getValue())
                 teacherBox.getItems().add(t.getId() + " - " + t.getTeacherNo() + " - " + t.getName());
-            if (existing != null) selectByPrefix(teacherBox, existing.getTeacherId());
+            if (existing != null) selectByPrefix(teacherBox, existing.getTeacherId().intValue());
         });
 
         Task<List<ClassInfo>> loadClasses = new Task<>() {
@@ -152,16 +152,16 @@ public class TeachingTaskManagementController {
         loadClasses.setOnSucceeded(ev -> {
             for (ClassInfo c : loadClasses.getValue())
                 classBox.getItems().add(c.getId() + " - " + c.getClassName());
-            if (existing != null) selectByPrefix(classBox, existing.getClassId());
+            if (existing != null) selectByPrefix(classBox, existing.getClassId().intValue());
         });
 
-        Task<List<Course>> loadCourses = new Task<>() {
-            @Override protected List<Course> call() throws Exception { return CourseService.getAll(); }
+        Task<List<CourseDTO>> loadCourses = new Task<>() {
+            @Override protected List<CourseDTO> call() throws Exception { return CourseService.getAll(); }
         };
         loadCourses.setOnSucceeded(ev -> {
-            for (Course c : loadCourses.getValue())
+            for (CourseDTO c : loadCourses.getValue())
                 courseBox.getItems().add(c.getId() + " - " + c.getName());
-            if (existing != null) selectByPrefix(courseBox, existing.getCourseId());
+            if (existing != null) selectByPrefix(courseBox, existing.getCourseId().intValue());
         });
 
         AppExecutors.submit(loadTeachers::run);
@@ -188,10 +188,10 @@ public class TeachingTaskManagementController {
                         || courseBox.getValue() == null || semesterCombo.getValue() == null) {
                     CrudHelper.showError("请填写必填项"); return null;
                 }
-                TeachingTask t = existing != null ? existing : new TeachingTask();
-                t.setTeacherId(Integer.parseInt(teacherBox.getValue().split(" - ")[0]));
-                t.setClassId(Integer.parseInt(classBox.getValue().split(" - ")[0]));
-                t.setCourseId(Integer.parseInt(courseBox.getValue().split(" - ")[0]));
+                TeachingTaskDTO t = existing != null ? existing : new TeachingTaskDTO();
+                t.setTeacherId(Long.parseLong(teacherBox.getValue().split(" - ")[0]));
+                t.setClassId(Long.parseLong(classBox.getValue().split(" - ")[0]));
+                t.setCourseId(Long.parseLong(courseBox.getValue().split(" - ")[0]));
                 t.setSemester(semesterCombo.getValue());
                 return t;
             }
@@ -202,7 +202,7 @@ public class TeachingTaskManagementController {
             Task<Void> saveTask = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    if (existing != null) TeachingTaskService.update(existing.getId(), result);
+                    if (existing != null) TeachingTaskService.update(existing.getId().intValue(), result);
                     else TeachingTaskService.create(result);
                     return null;
                 }
@@ -213,11 +213,11 @@ public class TeachingTaskManagementController {
         });
     }
 
-    private void handleDelete(TeachingTask item) {
+    private void handleDelete(TeachingTaskDTO item) {
         CrudHelper.confirmDelete(selected -> {
             Task<Void> task = new Task<>() {
                 @Override
-                protected Void call() throws Exception { TeachingTaskService.delete(selected.getId()); return null; }
+                protected Void call() throws Exception { TeachingTaskService.delete(selected.getId().intValue()); return null; }
             };
             task.setOnSucceeded(e -> { CrudHelper.showAlert("删除成功"); loadData(); });
             task.setOnFailed(e -> CrudHelper.showError("删除失败"));

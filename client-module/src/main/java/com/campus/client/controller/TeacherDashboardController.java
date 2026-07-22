@@ -1,6 +1,6 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.SchoolOverviewVO;
+import com.campus.common.vo.SchoolOverviewVO;
 import com.campus.client.service.StatsService;
 import com.campus.client.session.UserSession;
 import com.campus.client.util.AppExecutors;

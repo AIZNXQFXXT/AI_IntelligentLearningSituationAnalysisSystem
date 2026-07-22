@@ -2,6 +2,8 @@ package com.campus.client.controller;
 
 import com.campus.client.model.*;
 import com.campus.client.service.*;
+import com.campus.common.dto.CourseDTO;
+import com.campus.common.dto.ExamDTO;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
 import javafx.collections.FXCollections;
@@ -21,8 +23,8 @@ public class ReportExportController {
 
     @FXML private ComboBox<String> exportTypeCombo;
     @FXML private ComboBox<ClassInfo> classCombo;
-    @FXML private ComboBox<Course> courseCombo;
-    @FXML private ComboBox<Exam> examCombo;
+    @FXML private ComboBox<CourseDTO> courseCombo;
+    @FXML private ComboBox<ExamDTO> examCombo;
     @FXML private ComboBox<String> riskLevelCombo;
     @FXML private HBox scoreOptions;
     @FXML private HBox riskOptions;
@@ -38,8 +40,8 @@ public class ReportExportController {
         riskLevelCombo.getSelectionModel().selectFirst();
 
         loadClasses();
-        loadCourses();
-        loadExams();
+        loadCourseDTOs();
+        loadExamDTOs();
     }
 
     private void updateOptionsVisibility() {
@@ -59,18 +61,18 @@ public class ReportExportController {
         AppExecutors.submit(task::run);
     }
 
-    private void loadCourses() {
-        Task<List<Course>> task = new Task<>() {
-            @Override protected List<Course> call() throws Exception { return CourseService.getAll(); }
+    private void loadCourseDTOs() {
+        Task<List<CourseDTO>> task = new Task<>() {
+            @Override protected List<CourseDTO> call() throws Exception { return CourseService.getAll(); }
         };
         task.setOnSucceeded(e -> courseCombo.setItems(FXCollections.observableArrayList(task.getValue())));
         task.setOnFailed(e -> CrudHelper.showError("加载课程列表失败"));
         AppExecutors.submit(task::run);
     }
 
-    private void loadExams() {
-        Task<List<Exam>> task = new Task<>() {
-            @Override protected List<Exam> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
+    private void loadExamDTOs() {
+        Task<List<ExamDTO>> task = new Task<>() {
+            @Override protected List<ExamDTO> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
         };
         task.setOnSucceeded(e -> examCombo.setItems(FXCollections.observableArrayList(task.getValue())));
         task.setOnFailed(e -> CrudHelper.showError("加载考试列表失败"));
@@ -89,8 +91,8 @@ public class ReportExportController {
 
     private void exportScores() {
         ClassInfo cls = classCombo.getValue();
-        Exam exam = examCombo.getValue();
-        Course course = courseCombo.getValue();
+        ExamDTO exam = examCombo.getValue();
+        CourseDTO course = courseCombo.getValue();
         if (exam == null || course == null) {
             CrudHelper.showAlert("请选择考试和课程");
             return;

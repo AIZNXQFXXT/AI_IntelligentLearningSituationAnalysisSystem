@@ -1,6 +1,6 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.SchoolOverview;
+import com.campus.common.vo.DashboardVO;
 import com.campus.client.service.StatsService;
 import com.campus.client.util.AppExecutors;
 import javafx.concurrent.Task;
@@ -20,20 +20,20 @@ public class AdminDashboardController {
     }
 
     private void loadOverview() {
-        Task<SchoolOverview> task = new Task<>() {
+        Task<DashboardVO> task = new Task<>() {
             @Override
-            protected SchoolOverview call() throws Exception {
+            protected DashboardVO call() throws Exception {
                 return StatsService.getSchoolOverview();
             }
         };
 
         task.setOnSucceeded(event -> {
-            SchoolOverview data = task.getValue();
+            DashboardVO data = task.getValue();
             if (data != null) {
-                valueClasses.setText(String.valueOf(data.getTotalClasses()));
-                valueTeachers.setText(String.valueOf(data.getTotalTeachers()));
-                valueStudents.setText(String.valueOf(data.getTotalStudents()));
-                valueCourses.setText(String.valueOf(data.getTotalCourses()));
+                valueClasses.setText(String.valueOf(data.getClassCount()));
+                valueTeachers.setText(String.valueOf(data.getTeacherCount()));
+                valueStudents.setText(String.valueOf(data.getStudentCount()));
+                valueCourses.setText(String.valueOf(data.getCourseCount()));
             }
         });
 

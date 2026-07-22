@@ -2,7 +2,7 @@ package com.campus.client.controller;
 
 import com.campus.client.model.ApiResponse;
 import com.campus.client.model.ClassInfo;
-import com.campus.client.model.Course;
+import com.campus.common.dto.CourseDTO;
 import com.campus.client.service.ApiClient;
 import com.campus.client.service.ClassService;
 import com.campus.client.service.CourseService;
@@ -57,12 +57,12 @@ public class GradeAnalyticsController {
 
     private void loadFilters() {
         loadGrades();
-        Task<List<Course>> task = new Task<>() {
+        Task<List<CourseDTO>> task = new Task<>() {
             @Override
-            protected List<Course> call() throws Exception { return CourseService.getAll(); }
+            protected List<CourseDTO> call() throws Exception { return CourseService.getAll(); }
         };
         task.setOnSucceeded(e -> {
-            for (Course c : task.getValue()) {
+            for (CourseDTO c : task.getValue()) {
                 courseFilter.getItems().add(c.getId() + " - " + c.getName());
             }
         });

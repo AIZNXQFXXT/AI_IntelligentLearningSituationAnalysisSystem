@@ -1,7 +1,7 @@
 package com.campus.client.controller;
 
 import com.campus.client.model.ClassInfo;
-import com.campus.client.model.Exam;
+import com.campus.common.dto.ExamDTO;
 import com.campus.client.service.ClassService;
 import com.campus.client.service.ExamService;
 import com.campus.client.service.ScoreService;
@@ -21,7 +21,7 @@ import java.util.List;
 
 public class ScoreImportController {
 
-    @FXML private ComboBox<Exam> examCombo;
+    @FXML private ComboBox<ExamDTO> examCombo;
     @FXML private ComboBox<ClassInfo> classCombo;
     @FXML private Label resultLabel;
 
@@ -32,8 +32,8 @@ public class ScoreImportController {
     }
 
     private void loadExams() {
-        Task<List<Exam>> task = new Task<>() {
-            @Override protected List<Exam> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
+        Task<List<ExamDTO>> task = new Task<>() {
+            @Override protected List<ExamDTO> call() throws Exception { return ExamService.getPage(1, 100, null).getRecords(); }
         };
         task.setOnSucceeded(e -> examCombo.setItems(FXCollections.observableArrayList(task.getValue())));
         task.setOnFailed(e -> CrudHelper.showError("加载考试列表失败"));
@@ -77,7 +77,7 @@ public class ScoreImportController {
 
     @FXML
     private void handleUpload() {
-        Exam exam = examCombo.getValue();
+        ExamDTO exam = examCombo.getValue();
         ClassInfo classInfo = classCombo.getValue();
         if (exam == null || classInfo == null) {
             CrudHelper.showAlert("请先选择考试和班级");
@@ -92,7 +92,7 @@ public class ScoreImportController {
 
         Task<String> task = new Task<>() {
             @Override protected String call() throws Exception {
-                return ScoreService.batchImportScore(file, exam.getId(), classInfo.getId());
+                return ScoreService.batchImportScore(file, exam.getId().intValue(), classInfo.getId());
             }
         };
         task.setOnSucceeded(e -> {

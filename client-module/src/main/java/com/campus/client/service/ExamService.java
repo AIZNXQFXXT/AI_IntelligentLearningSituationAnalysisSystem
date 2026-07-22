@@ -1,24 +1,24 @@
 package com.campus.client.service;
 
 import com.campus.client.model.ApiResponse;
-import com.campus.client.model.Exam;
 import com.campus.client.model.PageResult;
+import com.campus.common.dto.ExamDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 public class ExamService {
-    public static PageResult<Exam> getPage(int page, int size, String semester) throws Exception {
+    public static PageResult<ExamDTO> getPage(int page, int size, String semester) throws Exception {
         String path = "/exams?page=" + page + "&size=" + size;
         if (semester != null && !semester.isEmpty()) {
             path += "&semester=" + semester;
         }
-        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<Exam>>>() {});
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<ExamDTO>>>() {});
     }
 
-    public static Void create(Exam exam) throws Exception {
+    public static Void create(ExamDTO exam) throws Exception {
         return ApiClient.post("/exams", exam, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public static Void update(int id, Exam exam) throws Exception {
+    public static Void update(int id, ExamDTO exam) throws Exception {
         return ApiClient.put("/exams/" + id, exam, new TypeReference<ApiResponse<Void>>() {});
     }
 

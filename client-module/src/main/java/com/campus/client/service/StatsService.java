@@ -1,32 +1,32 @@
 package com.campus.client.service;
 
 import com.campus.client.model.ApiResponse;
-import com.campus.client.model.ScoreDistribution;
-import com.campus.client.model.SchoolOverview;
-import com.campus.client.model.SchoolOverviewVO;
-import com.campus.client.model.SchoolStats;
+import com.campus.common.vo.ClassStatsVO;
+import com.campus.common.vo.DashboardVO;
+import com.campus.common.vo.SchoolOverviewVO;
+import com.campus.common.vo.ScoreDistributionVO;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
 import java.util.Map;
 
 public class StatsService {
-    public static SchoolOverview getSchoolOverview() throws Exception {
-        return ApiClient.get("/stats/overview", new TypeReference<ApiResponse<SchoolOverview>>() {});
+    public static DashboardVO getSchoolOverview() throws Exception {
+        return ApiClient.get("/stats/overview", new TypeReference<ApiResponse<DashboardVO>>() {});
     }
 
     public static SchoolOverviewVO getSchoolAcademicOverview() throws Exception {
         return ApiClient.get("/stats/school-overview", new TypeReference<ApiResponse<SchoolOverviewVO>>() {});
     }
 
-    public static List<ScoreDistribution> getScoreDistribution(int classId, int courseId) throws Exception {
+    public static List<ScoreDistributionVO> getScoreDistribution(int classId, int courseId) throws Exception {
         return ApiClient.get("/stats/score-distribution?classId=" + classId + "&courseId=" + courseId,
-                new TypeReference<ApiResponse<List<ScoreDistribution>>>() {});
+                new TypeReference<ApiResponse<List<ScoreDistributionVO>>>() {});
     }
 
-    public static SchoolStats getClassStats(int classId, int courseId) throws Exception {
+    public static ClassStatsVO getClassStats(int classId, int courseId) throws Exception {
         return ApiClient.get("/stats/class/" + classId + "?courseId=" + courseId,
-                new TypeReference<ApiResponse<SchoolStats>>() {});
+                new TypeReference<ApiResponse<ClassStatsVO>>() {});
     }
 
     @SuppressWarnings("unchecked")

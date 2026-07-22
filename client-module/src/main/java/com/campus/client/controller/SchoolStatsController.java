@@ -1,6 +1,9 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.*;
+import com.campus.client.model.ClassInfo;
+import com.campus.common.dto.CourseDTO;
+import com.campus.common.vo.SchoolOverviewVO;
+import com.campus.common.vo.ScoreDistributionVO;
 import com.campus.client.service.ClassService;
 import com.campus.client.service.CourseService;
 import com.campus.client.service.StatsService;
@@ -30,7 +33,7 @@ public class SchoolStatsController {
     @FXML private NumberAxis yAxis;
 
     private List<ClassInfo> classList;
-    private List<Course> courseList;
+    private List<CourseDTO> courseList;
 
     @FXML
     public void initialize() {
@@ -70,7 +73,7 @@ public class SchoolStatsController {
         };
         task.setOnSucceeded(e -> {
             for (ClassInfo c : classList) classFilter.getItems().add(c.getId() + " - " + c.getClassName());
-            for (Course c : courseList) courseFilter.getItems().add(c.getId() + " - " + c.getName());
+            for (CourseDTO c : courseList) courseFilter.getItems().add(c.getId() + " - " + c.getName());
         });
         AppExecutors.submit(task::run);
     }
@@ -81,22 +84,22 @@ public class SchoolStatsController {
         if (classIdx < 0 || courseIdx < 0 || classList == null || courseList == null) return;
 
         int classId = classList.get(classIdx).getId();
-        int courseId = courseList.get(courseIdx).getId();
+        int courseId = courseList.get(courseIdx).getId().intValue();
 
-        Task<List<ScoreDistribution>> task = new Task<>() {
+        Task<List<ScoreDistributionVO>> task = new Task<>() {
             @Override
-            protected List<ScoreDistribution> call() throws Exception {
+            protected List<ScoreDistributionVO> call() throws Exception {
                 return StatsService.getScoreDistribution(classId, courseId);
             }
         };
         task.setOnSucceeded(e -> {
             chart.getData().clear();
-            List<ScoreDistribution> list = task.getValue();
+            List<ScoreDistributionVO> list = task.getValue();
             if (list == null || list.isEmpty()) return;
             XYChart.Series<String, Number> series = new XYChart.Series<>();
-            for (ScoreDistribution d : list) {
-                if (d.getRange() == null) continue;
-                series.getData().add(new XYChart.Data<>(d.getRange(), d.getCount()));
+            for (ScoreDistributionVO d : list) {
+                if (d.getRangeLabel() == null) continue;
+                series.getData().add(new XYChart.Data<>(d.getRangeLabel(), d.getCount()));
             }
             chart.getData().add(series);
         });

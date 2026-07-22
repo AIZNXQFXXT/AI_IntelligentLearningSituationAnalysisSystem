@@ -1,6 +1,6 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.Course;
+import com.campus.common.dto.CourseDTO;
 import com.campus.client.model.Score;
 import com.campus.client.service.CourseService;
 import com.campus.client.service.ScoreService;
@@ -103,8 +103,8 @@ public class StudentScoresController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                for (Course c : CourseService.getAll())
-                    courseMap.put(c.getId(), c.getName());
+                for (CourseDTO c : CourseService.getAll())
+                    courseMap.put(c.getId().intValue(), c.getName());
                 return null;
             }
         };
