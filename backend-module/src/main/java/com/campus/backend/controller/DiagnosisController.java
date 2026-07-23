@@ -32,9 +32,10 @@ public class DiagnosisController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long studentId,
+            @RequestParam(required = false) String semester,
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN", "STUDENT");
-        return ApiResponse.success(diagnosisService.pageHistory(page, size, studentId));
+        return ApiResponse.success(diagnosisService.pageHistory(page, size, studentId, semester));
     }
 
     /**

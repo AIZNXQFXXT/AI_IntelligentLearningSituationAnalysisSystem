@@ -72,7 +72,7 @@
             <Button text="成绩查询" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToScores"/>
             <Button text="成绩分析" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToAnalysis"/>
             <Button text="诊断报告" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToDiagnosis"/>
-            <Button text="学习建议" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToAdvice"/>
+
             <Button text="期末评语" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToComment"/>
             <Button text="我的预警" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToRisk"/>
         </HBox>

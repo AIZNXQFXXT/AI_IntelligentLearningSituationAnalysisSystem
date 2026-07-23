@@ -14,19 +14,41 @@
 
     <HBox spacing="15" VBox.vgrow="ALWAYS">
         <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="5">
-            <Label text="成绩趋势" styleClass="section-title"/>
+            <Label text="GPA趋势" styleClass="section-title"/>
             <LineChart fx:id="trendChart" prefHeight="350" animated="false">
                 <xAxis>
                     <CategoryAxis fx:id="trendXAxis" label="学期"/>
                 </xAxis>
                 <yAxis>
-                    <NumberAxis fx:id="trendYAxis" label="平均分"/>
+                    <NumberAxis fx:id="trendYAxis" label="绩点" autoRanging="false"
+                                lowerBound="0" upperBound="5" tickUnit="1"/>
                 </yAxis>
             </LineChart>
         </VBox>
-        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="5">
-            <Label text="各课程成绩" styleClass="section-title"/>
-            <BarChart fx:id="radarChart" prefHeight="350" animated="false">
+        <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="10" prefWidth="300">
+            <Label text="GPA 统计规则" styleClass="section-title"/>
+            <Label text="百分制成绩 → 绩点" styleClass="stat-label"/>
+            <VBox spacing="4">
+                <Label text="90 ~ 100   →  4.0 ~ 5.0"/>
+                <Label text="80 ~ 89    →  3.0 ~ 3.9"/>
+                <Label text="70 ~ 79    →  2.0 ~ 2.9"/>
+                <Label text="60 ~ 69    →  1.0 ~ 1.9"/>
+                <Label text="&lt; 60       →  0（不及格无绩点）"/>
+            </VBox>
+            <Label text="计算公式" styleClass="stat-label"/>
+            <Label text="GPA = Σ（课程绩点 × 学分） ÷ Σ 学分" wrapText="true"/>
+            <Label text="及格：GPA ≥ 1.0    优秀：GPA ≥ 4.0" wrapText="true"/>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="chart-card" spacing="10" VBox.vgrow="ALWAYS">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="学期:" styleClass="stat-label"/>
+            <ComboBox fx:id="semesterFilter" prefWidth="200"/>
+        </HBox>
+        <Label text="各课程成绩" styleClass="section-title"/>
+        <HBox spacing="15" VBox.vgrow="ALWAYS">
+            <BarChart fx:id="radarChart" prefHeight="300" animated="false" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
                 <xAxis>
                     <CategoryAxis fx:id="radarXAxis" label="课程"/>
                 </xAxis>
@@ -34,6 +56,16 @@
                     <NumberAxis fx:id="radarYAxis" label="分数" lowerBound="0" upperBound="100"/>
                 </yAxis>
             </BarChart>
-        </VBox>
-    </HBox>
+            <VBox spacing="15" alignment="CENTER">
+                <VBox styleClass="stat-card" prefWidth="180" prefHeight="80" alignment="CENTER" spacing="5">
+                    <Label text="最高分学科" styleClass="stat-label"/>
+                    <Label fx:id="maxSubjectLabel" styleClass="stat-card-value-md" text="--"/>
+                </VBox>
+                <VBox styleClass="stat-card" prefWidth="180" prefHeight="80" alignment="CENTER" spacing="5">
+                    <Label text="最低分学科" styleClass="stat-label"/>
+                    <Label fx:id="minSubjectLabel" styleClass="stat-card-value-md" text="--"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </VBox>
 </VBox>

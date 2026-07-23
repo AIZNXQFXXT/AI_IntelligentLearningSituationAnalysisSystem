@@ -419,6 +419,64 @@
     -fx-padding: 0 0 12 0;
 }
 
+.chart-card {
+    -fx-background-color: -bg-card;
+    -fx-background-radius: 8px;
+    -fx-padding: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.06), 4, 0, 0, 2);
+    -fx-border-color: -border-light;
+    -fx-border-width: 1;
+    -fx-border-radius: 8px;
+}
+
+.chart-card:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 8, 0, 0, 3);
+    -fx-translate-y: -2;
+}
+
+.crud-card {
+    -fx-background-color: -bg-card;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.06), 4, 0, 0, 2);
+    -fx-border-color: -border-light;
+    -fx-border-width: 1;
+    -fx-border-radius: 8px;
+    -fx-spacing: 0;
+}
+
+.crud-card:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 8, 0, 0, 3);
+    -fx-translate-y: -2;
+}
+
+.crud-card-header {
+    -fx-background-color: -bg-card;
+    -fx-background-radius: 8px 8px 0 0;
+    -fx-padding: 14 16;
+    -fx-border-color: transparent transparent -border-light transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.crud-card-header-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+}
+
+.crud-card-body {
+    -fx-background-color: -bg-card;
+    -fx-background-radius: 0 0 8px 8px;
+    -fx-padding: 16;
+}
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+    -fx-padding: 0 0 8 0;
+}
+
 /* ---------- Stat Cards (Dashboard) ---------- */
 .stat-card {
     -fx-background-color: -bg-card;
@@ -453,6 +511,13 @@
 .stat-card .stat-label {
     -fx-font-size: 12px;
     -fx-text-fill: -text-secondary;
+}
+
+/* 最高/最低分学科卡片值（比标题稍大） */
+.stat-card-value-md {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
 }
 
 /* ---------- Dialog / Alert ---------- */

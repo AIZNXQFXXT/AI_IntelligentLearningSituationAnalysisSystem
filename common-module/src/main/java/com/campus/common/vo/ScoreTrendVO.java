@@ -9,4 +9,5 @@ public class ScoreTrendVO {
     private Double maxScore;
     private Double minScore;
     private Integer count;
+    private Double gpa;
 }

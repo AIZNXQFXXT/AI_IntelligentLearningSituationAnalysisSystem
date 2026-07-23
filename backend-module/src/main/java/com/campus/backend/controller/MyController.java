@@ -140,10 +140,11 @@ public class MyController {
     public ApiResponse<PageResult<DiagnosisVO>> diagnosis(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String semester,
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "STUDENT");
         Student student = resolveStudent(request);
-        return ApiResponse.success(diagnosisService.pageHistory(page, size, student.getId()));
+        return ApiResponse.success(diagnosisService.pageHistory(page, size, student.getId(), semester));
     }
 
     @GetMapping("/suggestions")
@@ -174,9 +175,11 @@ public class MyController {
     public ApiResponse<PageResult<RiskWarningVO>> warnings(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String semester,
+            @RequestParam(required = false) String riskLevel,
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "STUDENT");
         Student student = resolveStudent(request);
-        return ApiResponse.success(riskWarningService.listByStudent(page, size, student.getId()));
+        return ApiResponse.success(riskWarningService.listByStudent(page, size, student.getId(), semester, riskLevel));
     }
 }

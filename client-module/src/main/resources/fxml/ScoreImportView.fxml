@@ -10,39 +10,40 @@
 
     <Label text="批量导入成绩" styleClass="crud-card-header"/>
 
-    <VBox styleClass="crud-card-body" spacing="15">
-        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="考试:"/>
-            <ComboBox fx:id="examCombo" prefWidth="200"/>
-            <Label text="班级:"/>
-            <ComboBox fx:id="classCombo" prefWidth="200"/>
-        </HBox>
+    <VBox styleClass="crud-card-body" spacing="0">
+        <VBox styleClass="chart-card" spacing="15" VBox.vgrow="ALWAYS">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="考试:"/>
+                <ComboBox fx:id="examCombo" prefWidth="200"/>
+                <Label text="班级:"/>
+                <ComboBox fx:id="classCombo" prefWidth="200"/>
+            </HBox>
 
-        <HBox spacing="20" alignment="CENTER" VBox.vgrow="ALWAYS">
-            <VBox spacing="10" alignment="CENTER" styleClass="import-step">
-                <Label text="第1步" styleClass="step-title"/>
-                <Label text="下载模板"/>
-                <Button text="下载Excel模板" onAction="#handleDownloadTemplate" styleClass="btn-primary"/>
-            </VBox>
+            <HBox spacing="20" alignment="CENTER" VBox.vgrow="ALWAYS">
+                <VBox spacing="10" alignment="CENTER" styleClass="import-step">
+                    <Label text="第1步" styleClass="step-title"/>
+                    <Label text="下载模板"/>
+                    <Button text="下载Excel模板" onAction="#handleDownloadTemplate" styleClass="btn-primary"/>
+                </VBox>
 
-            <Label text="→" styleClass="arrow-separator"/>
+                <Label text="→" styleClass="arrow-separator"/>
 
-            <VBox spacing="10" alignment="CENTER" styleClass="import-step">
-                <Label text="第2步" styleClass="step-title"/>
-                <Label text="填写数据"/>
-                <Label text="在模板中填写学生成绩"/>
-            </VBox>
+                <VBox spacing="10" alignment="CENTER" styleClass="import-step">
+                    <Label text="第2步" styleClass="step-title"/>
+                    <Label text="填写数据"/>
+                    <Label text="在模板中填写学生成绩"/>
+                </VBox>
 
-            <Label text="→" styleClass="arrow-separator"/>
+                <Label text="→" styleClass="arrow-separator"/>
 
-            <VBox spacing="10" alignment="CENTER" styleClass="import-step">
-                <Label text="第3步" styleClass="step-title"/>
-                <Label text="上传文件"/>
-                <Button text="选择并上传文件" onAction="#handleUpload" styleClass="btn-primary"/>
-            </VBox>
-        </HBox>
+                <VBox spacing="10" alignment="CENTER" styleClass="import-step">
+                    <Label text="第3步" styleClass="step-title"/>
+                    <Label text="上传文件"/>
+                    <Button text="选择并上传文件" onAction="#handleUpload" styleClass="btn-primary"/>
+                </VBox>
+            </HBox>
 
-        <Label fx:id="resultLabel" text="" styleClass="result-success" visible="false"/>
+            <Label fx:id="resultLabel" text="" styleClass="result-success" visible="false"/>
+        </VBox>
     </VBox>
 </VBox>

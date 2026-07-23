@@ -2,13 +2,17 @@ package com.campus.client.controller;
 
 import com.campus.client.model.AiDiagnosis;
 import com.campus.client.model.DiagnosisReport;
+import com.campus.client.model.PageResult;
 import com.campus.client.service.DiagnosisService;
+import com.campus.client.service.SemesterService;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
 import com.campus.client.util.JsonFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -26,9 +30,14 @@ public class StudentDiagnosisController {
     @FXML private TableColumn<AiDiagnosis, String> colDiagnosis;
     @FXML private TableColumn<AiDiagnosis, String> colCreatedAt;
     @FXML private TableColumn<AiDiagnosis, Void> colAction;
+    @FXML private ComboBox<String> semesterFilter;
+    @FXML private Pagination pagination;
     @FXML private Label emptyLabel;
 
     private final ObservableList<AiDiagnosis> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
 
     @FXML
     public void initialize() {
@@ -90,24 +99,77 @@ public class StudentDiagnosisController {
         });
 
         table.setItems(tableData);
-        loadData();
+
+        semesterFilter.setOnAction(e -> handleFilterChange());
+        loadSemesters();
+
+        pagination.setPageFactory(this::buildPage);
     }
 
-    private void loadData() {
-        Task<List<AiDiagnosis>> task = new Task<>() {
-            @Override
-            protected List<AiDiagnosis> call() throws Exception {
-                return DiagnosisService.getMyPage(1, 50).getRecords();
+    private void loadSemesters() {
+        Task<List<String>> task = new Task<>() {
+            @Override protected List<String> call() throws Exception {
+                return SemesterService.getAllSemesters();
             }
         };
         task.setOnSucceeded(e -> {
-            List<AiDiagnosis> list = task.getValue();
+            List<String> semesters = new java.util.ArrayList<>(task.getValue());
+            semesters.add(0, "全部");
+            semesterFilter.setItems(FXCollections.observableArrayList(semesters));
+            EventHandler<ActionEvent> handler = semesterFilter.getOnAction();
+            semesterFilter.setOnAction(null);
+            semesterFilter.getSelectionModel().selectFirst();
+            semesterFilter.setOnAction(handler);
+            loadData();
+        });
+        task.setOnFailed(e -> {
+            semesterFilter.setItems(FXCollections.observableArrayList("全部", "2025-1", "2024-2", "2024-1"));
+            EventHandler<ActionEvent> handler = semesterFilter.getOnAction();
+            semesterFilter.setOnAction(null);
+            semesterFilter.getSelectionModel().selectFirst();
+            semesterFilter.setOnAction(handler);
+            loadData();
+        });
+        AppExecutors.submit(task::run);
+    }
+
+    private void handleFilterChange() {
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
+        loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
+    }
+
+    private void loadData() {
+        String semester = semesterFilter.getValue();
+        String semesterParam = "全部".equals(semester) ? null : semester;
+        Task<PageResult<AiDiagnosis>> task = new Task<>() {
+            @Override
+            protected PageResult<AiDiagnosis> call() throws Exception {
+                return DiagnosisService.getMyPage(currentPage, pageSize, semesterParam);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            PageResult<AiDiagnosis> result = task.getValue();
+            List<AiDiagnosis> list = result.getRecords();
             tableData.clear();
             tableData.addAll(list);
             emptyLabel.setVisible(list.isEmpty());
             emptyLabel.setManaged(list.isEmpty());
             table.setVisible(!list.isEmpty());
             table.setManaged(!list.isEmpty());
+            totalItems = result.getTotal();
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();

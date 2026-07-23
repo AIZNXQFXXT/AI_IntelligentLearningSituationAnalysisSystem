@@ -10,29 +10,30 @@
 
     <Label text="报表导出" styleClass="crud-card-header"/>
 
-    <VBox styleClass="crud-card-body" spacing="15">
-        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="导出类型:"/>
-            <ComboBox fx:id="exportTypeCombo" prefWidth="150"/>
-        </HBox>
+    <VBox styleClass="crud-card-body" spacing="0">
+        <VBox styleClass="chart-card" spacing="15">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="导出类型:"/>
+                <ComboBox fx:id="exportTypeCombo" prefWidth="150"/>
+            </HBox>
 
-        <HBox spacing="10" alignment="CENTER_LEFT" fx:id="scoreOptions" visible="false" managed="false">
-            <Label text="班级:"/>
-            <ComboBox fx:id="classCombo" prefWidth="150"/>
-            <Label text="课程:"/>
-            <ComboBox fx:id="courseCombo" prefWidth="150"/>
-            <Label text="考试:"/>
-            <ComboBox fx:id="examCombo" prefWidth="150"/>
-        </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT" fx:id="scoreOptions" visible="false" managed="false">
+                <Label text="班级:"/>
+                <ComboBox fx:id="classCombo" prefWidth="150"/>
+                <Label text="课程:"/>
+                <ComboBox fx:id="courseCombo" prefWidth="150"/>
+                <Label text="考试:"/>
+                <ComboBox fx:id="examCombo" prefWidth="150"/>
+            </HBox>
 
-        <HBox spacing="10" alignment="CENTER_LEFT" fx:id="riskOptions" visible="false" managed="false">
-            <Label text="风险等级:"/>
-            <ComboBox fx:id="riskLevelCombo" prefWidth="150"/>
-        </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT" fx:id="riskOptions" visible="false" managed="false">
+                <Label text="风险等级:"/>
+                <ComboBox fx:id="riskLevelCombo" prefWidth="150"/>
+            </HBox>
 
-        <Button text="导出报表" onAction="#handleExport" styleClass="btn-primary" prefWidth="120"/>
+            <Button text="导出报表" onAction="#handleExport" styleClass="btn-primary" prefWidth="120"/>
 
-        <Label fx:id="resultLabel" text="" styleClass="result-success" visible="false"/>
+            <Label fx:id="resultLabel" text="" styleClass="result-success" visible="false"/>
+        </VBox>
     </VBox>
 </VBox>

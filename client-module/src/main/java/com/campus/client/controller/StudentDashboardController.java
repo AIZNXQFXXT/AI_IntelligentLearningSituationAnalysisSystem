@@ -116,7 +116,6 @@ public class StudentDashboardController {
     @FXML private void goToScores(javafx.event.ActionEvent e) { navigateTo("/student/scores"); }
     @FXML private void goToAnalysis(javafx.event.ActionEvent e) { navigateTo("/student/analysis"); }
     @FXML private void goToDiagnosis(javafx.event.ActionEvent e) { navigateTo("/student/diagnosis"); }
-    @FXML private void goToAdvice(javafx.event.ActionEvent e) { navigateTo("/student/advice"); }
     @FXML private void goToComment(javafx.event.ActionEvent e) { navigateTo("/student/comment"); }
     @FXML private void goToRisk(javafx.event.ActionEvent e) { navigateTo("/student/risk"); }
 

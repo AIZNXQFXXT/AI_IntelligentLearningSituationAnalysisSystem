@@ -135,10 +135,16 @@ public class RiskWarningServiceImpl implements RiskWarningService {
     }
 
     @Override
-    public PageResult<RiskWarningVO> listByStudent(int page, int size, Long studentId) {
+    public PageResult<RiskWarningVO> listByStudent(int page, int size, Long studentId, String semester, String riskLevel) {
         LambdaQueryWrapper<RiskWarning> wrapper = new LambdaQueryWrapper<RiskWarning>()
-                .eq(RiskWarning::getStudentId, studentId)
-                .orderByDesc(RiskWarning::getCreatedAt);
+                .eq(RiskWarning::getStudentId, studentId);
+        if (semester != null && !semester.isEmpty()) {
+            wrapper.eq(RiskWarning::getSemester, semester);
+        }
+        if (riskLevel != null && !riskLevel.isEmpty()) {
+            wrapper.eq(RiskWarning::getRiskLevel, riskLevel);
+        }
+        wrapper.orderByDesc(RiskWarning::getCreatedAt);
         Page<RiskWarning> result = riskWarningMapper.selectPage(new Page<>(page, size), wrapper);
         List<RiskWarningVO> records = result.getRecords().stream()
                 .map(converter::toVO).collect(Collectors.toList());

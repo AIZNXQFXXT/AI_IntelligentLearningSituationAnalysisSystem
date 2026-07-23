@@ -71,7 +71,7 @@ public class MainLayoutController {
         new MenuItem("/student/scores", "成绩查询"),
         new MenuItem("/student/analysis", "成绩分析"),
         new MenuItem("/student/diagnosis", "诊断报告"),
-        new MenuItem("/student/advice", "学习建议"),
+
         new MenuItem("/student/comment", "期末评语"),
         new MenuItem("/student/risk", "我的预警")
     };
@@ -105,7 +105,7 @@ public class MainLayoutController {
     private static final String STUDENT_SCORES = "/student/scores";
     private static final String STUDENT_ANALYSIS = "/student/analysis";
     private static final String STUDENT_DIAGNOSIS = "/student/diagnosis";
-    private static final String STUDENT_ADVICE = "/student/advice";
+
     private static final String STUDENT_COMMENT = "/student/comment";
     private static final String STUDENT_RISK = "/student/risk";
 
@@ -195,7 +195,7 @@ public class MainLayoutController {
             case STUDENT_SCORES: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentScoresView.fxml"); break;
             case STUDENT_ANALYSIS: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentAnalysisView.fxml"); break;
             case STUDENT_DIAGNOSIS: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentDiagnosisView.fxml"); break;
-            case STUDENT_ADVICE: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentAdviceView.fxml"); break;
+
             case STUDENT_COMMENT: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentCommentView.fxml"); break;
             case STUDENT_RISK: ViewLoader.loadFXMLInto(contentArea, "/fxml/StudentRiskView.fxml"); break;
             default: ViewLoader.loadFXMLInto(contentArea, "/fxml/AdminDashboardView.fxml"); break;

@@ -107,9 +107,17 @@ public interface ScoreMapper extends BaseMapper<Score> {
             "ROUND(AVG(s.final_score), 2) AS avg_score, " +
             "MAX(s.final_score) AS max_score, " +
             "MIN(s.final_score) AS min_score, " +
-            "COUNT(*) AS count " +
+            "COUNT(*) AS count, " +
+            "ROUND(SUM(CASE " +
+            "WHEN s.final_score >= 90 THEN (s.final_score - 90) * 0.1 + 4.0 " +
+            "WHEN s.final_score >= 80 THEN (s.final_score - 80) * 0.1 + 3.0 " +
+            "WHEN s.final_score >= 70 THEN (s.final_score - 70) * 0.1 + 2.0 " +
+            "WHEN s.final_score >= 60 THEN (s.final_score - 60) * 0.1 + 1.0 " +
+            "ELSE 0 END * COALESCE(c.credit, 1)) " +
+            "/ NULLIF(SUM(COALESCE(c.credit, 1)), 0), 2) AS gpa " +
             "FROM score s " +
             "JOIN exam e ON s.exam_id = e.id AND e.is_deleted = 0 " +
+            "LEFT JOIN course c ON s.course_id = c.id AND c.is_deleted = 0 " +
             "WHERE s.student_id = #{studentId} AND s.is_deleted = 0 AND s.final_score IS NOT NULL " +
             "GROUP BY e.semester ORDER BY e.semester")
     List<ScoreTrendVO> selectTrend(@Param("studentId") Long studentId);

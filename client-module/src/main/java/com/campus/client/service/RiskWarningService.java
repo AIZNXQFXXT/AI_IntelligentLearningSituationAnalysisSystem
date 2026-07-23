@@ -35,8 +35,17 @@ public class RiskWarningService {
     }
 
     public static List<RiskWarning> getMyWarnings() throws Exception {
-        PageResult<RiskWarning> result = ApiClient.get("/my/warnings",
-                new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
-        return result != null ? result.getRecords() : List.of();
+        return getMyWarnings(1, 999, null, null).getRecords();
+    }
+
+    public static PageResult<RiskWarning> getMyWarnings(int page, int size, String semester, String riskLevel) throws Exception {
+        StringBuilder path = new StringBuilder("/my/warnings?page=" + page + "&size=" + size);
+        if (semester != null && !semester.isEmpty()) {
+            path.append("&semester=").append(ApiClient.encodeParam(semester));
+        }
+        if (riskLevel != null && !riskLevel.isEmpty()) {
+            path.append("&riskLevel=").append(ApiClient.encodeParam(riskLevel));
+        }
+        return ApiClient.get(path.toString(), new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
     }
 }

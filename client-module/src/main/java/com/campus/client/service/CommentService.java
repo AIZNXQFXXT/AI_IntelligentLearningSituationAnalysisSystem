@@ -31,8 +31,11 @@ public class CommentService {
                 new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public static PageResult<AiComment> getMyPage(int page, int size) throws Exception {
+    public static PageResult<AiComment> getMyPage(int page, int size, String semester) throws Exception {
         String path = "/my/comments?page=" + page + "&size=" + size;
+        if (semester != null && !semester.isEmpty()) {
+            path += "&semester=" + ApiClient.encodeParam(semester);
+        }
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<AiComment>>>() {});
     }
 }

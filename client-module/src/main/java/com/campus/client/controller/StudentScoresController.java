@@ -89,11 +89,13 @@ public class StudentScoresController {
             }
         };
         task.setOnSucceeded(e -> {
-            semesterFilter.setItems(FXCollections.observableArrayList(task.getValue()));
+            List<String> semesters = new java.util.ArrayList<>(task.getValue());
+            semesters.add(0, "全部");
+            semesterFilter.setItems(FXCollections.observableArrayList(semesters));
             semesterFilter.getSelectionModel().selectFirst();
         });
         task.setOnFailed(e -> {
-            semesterFilter.setItems(FXCollections.observableArrayList("2025-1", "2024-2", "2024-1"));
+            semesterFilter.setItems(FXCollections.observableArrayList("全部", "2025-1", "2024-2", "2024-1"));
             semesterFilter.getSelectionModel().selectFirst();
         });
         AppExecutors.submit(task::run);
@@ -115,10 +117,11 @@ public class StudentScoresController {
 
     private void loadData() {
         String semester = semesterFilter.getValue();
+        String semesterParam = "全部".equals(semester) ? null : semester;
         Task<List<Score>> task = new Task<>() {
             @Override
             protected List<Score> call() throws Exception {
-                return ScoreService.getMyScores(1, 200, semester).getRecords();
+                return ScoreService.getMyScores(1, 200, semesterParam).getRecords();
             }
         };
         task.setOnSucceeded(e -> {

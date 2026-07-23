@@ -10,6 +10,13 @@
     <Label text="我的预警" styleClass="crud-card-header"/>
 
     <VBox styleClass="crud-card-body" VBox.vgrow="ALWAYS">
+        <HBox spacing="10" styleClass="filter-bar" alignment="CENTER_LEFT">
+            <Label text="学期"/>
+            <ComboBox fx:id="semesterFilter" prefWidth="180"/>
+            <Label text="风险等级"/>
+            <ComboBox fx:id="riskLevelFilter" prefWidth="140"/>
+        </HBox>
+
         <Label fx:id="emptyLabel" text="暂无预警信息" visible="false" managed="false"
                styleClass="empty-state-label" VBox.vgrow="ALWAYS"
                alignment="CENTER"/>
@@ -25,5 +32,6 @@
                 <TableColumn fx:id="colRemark" text="处理备注" prefWidth="200"/>
             </columns>
         </TableView>
+        <Pagination fx:id="pagination" maxPageIndicatorCount="5"/>
     </VBox>
 </VBox>
