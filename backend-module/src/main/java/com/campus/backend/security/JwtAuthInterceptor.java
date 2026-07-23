@@ -21,7 +21,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String path = request.getRequestURI();
-        if (path.equals("/api/auth/login") || path.equals("/api/auth/refresh")) {
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/refresh") || path.equals("/api/health")) {
             return true;
         }
         String authHeader = request.getHeader("Authorization");

@@ -46,7 +46,20 @@ start /b cmd /c "mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true >
 echo [OK] Backend is starting (logs: backend.log)
 
 echo.
-echo [4/4] Starting JavaFX client...
+echo [4/4] Waiting for backend to be ready...
+for /l %%i in (1,1,60) do (
+    curl -s http://localhost:8080/api/health >nul 2>nul
+    if not errorlevel 1 (
+        echo [OK] Backend is ready
+        goto :backend_ready
+    )
+    echo      Waiting... (%%i/60)
+    timeout /t 2 /nobreak >nul
+)
+:backend_ready
+
+echo.
+echo [5/4] Starting JavaFX client...
 echo      Client will auto-retry connection while backend starts up.
 echo.
 call mvn javafx:run -pl client-module

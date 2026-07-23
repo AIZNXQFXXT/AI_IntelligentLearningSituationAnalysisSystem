@@ -19,7 +19,11 @@ client-module/   JavaFX/FXML desktop client (older/incomplete, part of root pom.
 mvn compile -DskipTests
 
 # full start (auto-installs common-module, starts backend + JavaFX client)
-bash start.sh
+bash start.sh          # Linux
+start.bat              # Windows (double-click or cmd)
+
+# start.sh / start.bat poll GET /api/health (2s × 60 tries) before
+# launching the client — backend must be ready first.
 
 # run backend only
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
@@ -50,7 +54,7 @@ Credentials and secrets come from `.env` (not tracked): `DB_URL`, `DB_USERNAME`,
 - **Identifier lookups**: most mappers use `@Select` with `is_deleted = 0`. Each has `*IncludeDeleted` variants omitting that filter for soft-delete recovery.
   Key methods: `StudentMapper.selectByStudentNo(String)`, `TeacherMapper.selectByTeacherNo(String)`, `ClassMapper.selectByClassName(String)`, `CourseMapper.selectByName(String)`
 - **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
-- **JWT**: access token (2h) + refresh token (7d). `JwtAuthInterceptor` on `/api/**` sets `request.setAttribute("userId", ...)` and `request.setAttribute("role", ...)`.
+- **JWT**: access token (2h) + refresh token (7d). `JwtAuthInterceptor` on `/api/**` sets `request.setAttribute("userId", ...)` and `request.setAttribute("role", ...)`. Bypasses: `/api/auth/login`, `/api/auth/refresh`, `/api/health`.
 - **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`. It resolves `username` from `operatorId` via `UserMapper.selectById(...)` and writes both `username` + `operatorId`. When `userId` is null (unauthenticated, or `/api/auth/login` + `/api/auth/refresh` which bypass the JWT interceptor) or the user can't be resolved, `username` falls back to `"游客"` (operatorId stays NULL). Do NOT regress to writing only `operatorId` — the log list UI filters/displays by `username`. `AiCallLogAspect` logs AI calls.
 - **RBAC**: `SecurityHelper.requireAdmin(request)` / `SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN")`. Pass `HttpServletRequest request` as controller param. Do NOT use `@RequireRole`.
 - **Pagination**: `PageResult.of(records, total, page, size)` from MyBatis-Plus `Page`.
@@ -85,9 +89,9 @@ Student-facing APIs at `/api/my/*` (`MyController`). Key: JWT `userId` maps to `
 
 `@WebMvcTest` / `@SpringBootTest` **will fail** (`@MapperScan` forces DataSource). All tests use `MockMvcBuilders.standaloneSetup()` with `GlobalExceptionHandler` and `LocalValidatorFactoryBean`.
 
-Test files under `backend-module/src/test/` — most are gitignored by `test/` in `.gitignore`, but 3 files (`AsyncConfigTest`, `StudentServiceImplTest`, `TaskServiceImplTest`) were tracked before the pattern was added. New tests won't be tracked unless force-added.
+Test files under `backend-module/src/test/` — most are gitignored by `test/` in `.gitignore`, but 4 files were tracked before the pattern was added: `AsyncConfigTest`, `ClassServiceImplTest`, `StudentServiceImplTest`, `TaskServiceImplTest`. New tests won't be tracked unless force-added.
 
-Existing test classes (on disk): `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `AcademicStatsControllerTest`, `GenericTaskControllerTest`, `AcademicStatsServiceImplTest`, `StudentServiceImplTest`, `SystemServiceImplTest`, `TaskServiceImplTest`, `AsyncConfigTest`, `WebMvcConfigTest`, `ApiRateLimitInterceptorTest`, `ErrorCodeTest`, `GenerateTestExcel`.
+Existing test classes (on disk, 17 total): `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `AcademicStatsControllerTest`, `GenericTaskControllerTest`, `StatsControllerTest`, `AcademicStatsServiceImplTest`, `ClassServiceImplTest`, `StudentServiceImplTest`, `SystemServiceImplTest`, `TaskServiceImplTest`, `StatsServiceImplTest`, `AsyncConfigTest`, `WebMvcConfigTest`, `ApiRateLimitInterceptorTest`, `ErrorCodeTest`, `GenerateTestExcel`.
 
 ## Soft-Delete Recovery
 

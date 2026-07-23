@@ -51,7 +51,18 @@ BACKEND_PID=$!
 echo "[OK] Backend is starting (PID: $BACKEND_PID, logs: backend.log)"
 
 echo ""
-echo "[4/4] Starting JavaFX client..."
+echo "[4/4] Waiting for backend to be ready..."
+for i in $(seq 1 60); do
+    if curl -s http://localhost:8080/api/health > /dev/null 2>&1; then
+        echo "[OK] Backend is ready"
+        break
+    fi
+    echo "     Waiting... ($i/60)"
+    sleep 2
+done
+
+echo ""
+echo "[5/4] Starting JavaFX client..."
 echo "     Client will auto-retry connection while backend starts up."
 echo ""
 mvn javafx:run -pl client-module
