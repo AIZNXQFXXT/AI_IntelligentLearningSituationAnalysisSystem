@@ -18,7 +18,10 @@ client-module/   JavaFX/FXML desktop client (older/incomplete, part of root pom.
 # compile everything
 mvn compile -DskipTests
 
-# run backend (JAVA_HOME must be set on Linux)
+# full start (auto-installs common-module, starts backend + JavaFX client)
+bash start.sh
+
+# run backend only
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
 
@@ -36,7 +39,7 @@ mvn test -pl backend-module -am -Dtest=SystemControllerTest,SystemServiceImplTes
 > Otherwise `spring-boot:run -pl backend-module` silently ignores new fields.
 > Tests with `-pl backend-module` resolve `common-module` from `target/classes` — re-compilation suffices.
 
-Default admin: `admin / 123456`. Active profile defaults to `application.yml`; `-Dspring.profiles.active=dev` merges with `application-dev.yml`.
+Default admin: `admin / 123456`. Three profiles (`application.yml`, `-dev.yml`, `-prod.yml`) are identical copies — env differences come from `.env` overrides.
 
 Credentials and secrets come from `.env` (not tracked): `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_URL`, `REDIS_PORT`, `JWT_SECRET`, `DEEPSEEK_API_KEY`, `GLM_API_KEY`.
 
@@ -109,4 +112,5 @@ Embedded in `create()` methods: look up by unique key **without** `is_deleted` f
 - **Converter/VO must expose every entity field the frontend needs**: DB entity → VO → API JSON → client model → FXML column is a 5-layer chain; a single missing link makes a column silently blank with no error. Example: `AIDiagnosisRecord.aiModel` and `tokensUsed` are written by `DiagnosisServiceImpl` and stored in DB, but `DiagnosisVO` originally omitted both fields and `DiagnosisConverter.toVO()` didn't map them, so the API JSON had no `aiModel` key and the frontend `colAiModel` / `colTokens` columns were always empty. Client model `AiDiagnosis` already had the fields — the break was purely server-side VO/Converter. **Rule**: when a frontend table column is empty but the DB column is populated, check `Entity → VO → Converter` first, not the DB. Adding a field to `common-module` VO requires `mvn install -DskipTests -pl common-module -am` (see Build & Run) before the backend picks it up.
 - **JavaFX `styleClass` referenced in FXML must exist in CSS or it's a silent no-op**: Many `styleClass=` across the codebase were missing CSS rules — `chart-card`, `section-title`, and the entire `crud-card` / `crud-card-header` / `crud-card-header-title` / `crud-card-body` family had no definitions, making card borders/shadows/hover effects invisible. Adding CSS for these was batched together — any new FXML `styleClass=` must be cross-checked against `client-module/src/main/resources/css/styles.css`. Combined with `Button`'s default `maxWidth = USE_COMPUTED_SIZE`, buttons sized by text content won't stretch to fill parent; fix: `.quick-action-btn { -fx-max-width: Infinity; -fx-alignment: CENTER; }`.
 - **GPA 5-tier formula (single source of truth)**: `StatsServiceImpl.bracketGpa(score)` and `weightedGpa(scores, credits)` are the ONLY GPA implementation. Brackets: `90-100→4.0-5.0`, `80-89→3.0-3.9`, `70-79→2.0-2.9`, `60-69→1.0-1.9`, `<60→0`. Formula per tier: `(score - lowerBound) * 0.1 + tierBaseGpa`. Weighted GPA = `Σ(绩点×学分) ÷ Σ学分`, rounded to 2 decimals. If the GPA definition ever changes, update these two `static` methods AND the spec/API doc — do NOT duplicate the formula elsewhere. `getGradePoints(classId, courseId)` behavior: `courseId != null` → single-course GPA using the student's latest `Score` (by `id DESC`); `courseId == null` → credit-weighted GPA across ALL the student's courses (no exam/semester filter, aggregates mock+midterm+final — documented limitation).
+- **Top-bar HBox must lock all 3 height bounds in `MainLayout.fxml`**: `<HBox styleClass="top-bar" prefHeight="60" minHeight="60" maxHeight="60">`. Without `minHeight`/`maxHeight`, the VBox layout pass triggered by child-view swaps (`contentArea.setCenter()`) may compress the top bar below 60px. `prefHeight` alone is a suggestion, not a hard limit in JavaFX VBox.
 - **Class stats chart page uses ScatterChart + 3-series BarChart**: `ClassStatsView.fxml` replaced the old `distributionChart` (BarChart 分数段) and `trendChart` (LineChart 学期) with `gradePointChart` (`ScatterChart<String,Number>`, Y axis fixed `0-5`, tickUnit `1`, X = student name) and `courseGradeChart` (`BarChart<String,Number>` with 3 series 平均分/最高分/最低分 per course). `handleLoadStats()` requires ONLY `classId` — `courseId` is now OPTIONAL (course dropdown may be empty). When the chart FXML fields are renamed, the controller `@FXML` fields MUST be renamed identically or JavaFX silently NPEs on load. Backend endpoints: `GET /api/stats/grade-points?classId=&courseId=` and `GET /api/stats/course-grades?classId=`.

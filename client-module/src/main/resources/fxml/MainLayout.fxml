@@ -9,7 +9,7 @@
       prefWidth="1200" prefHeight="800">
 
     <!-- Top Bar — full width -->
-    <HBox styleClass="top-bar" prefHeight="60" alignment="CENTER_LEFT">
+    <HBox styleClass="top-bar" prefHeight="60" minHeight="60" maxHeight="60" alignment="CENTER_LEFT">
         <padding><Insets left="20" right="20"/></padding>
         <Label text="AI学情分析" styleClass="top-bar-logo"/>
         <Label fx:id="pageTitle" styleClass="top-bar-title" HBox.hgrow="ALWAYS"/>
