@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.entity.Score;
+import com.campus.common.vo.CourseGradeVO;
 import com.campus.common.vo.ScoreArchiveVO;
 import com.campus.common.vo.ScoreRadarVO;
 import com.campus.common.vo.ScoreTrendVO;
@@ -124,4 +125,21 @@ public interface ScoreMapper extends BaseMapper<Score> {
             "</script>")
     List<ScoreRadarVO> selectRadar(@Param("studentId") Long studentId,
                                    @Param("semester") String semester);
+
+    @Select("<script>" +
+            "SELECT c.name AS course_name, " +
+            "ROUND(AVG(s.final_score), 2) AS avg_score, " +
+            "MAX(s.final_score) AS max_score, " +
+            "MIN(s.final_score) AS min_score, " +
+            "COUNT(s.final_score) AS student_count " +
+            "FROM score s " +
+            "JOIN student stu ON s.student_id = stu.id AND stu.is_deleted = 0 " +
+            "JOIN course c ON s.course_id = c.id AND c.is_deleted = 0 " +
+            "WHERE s.is_deleted = 0 " +
+            "AND stu.class_id = #{classId} " +
+            "AND s.final_score IS NOT NULL " +
+            "GROUP BY c.id, c.name " +
+            "ORDER BY c.name" +
+            "</script>")
+    List<CourseGradeVO> selectCourseGradeStats(@Param("classId") Long classId);
 }

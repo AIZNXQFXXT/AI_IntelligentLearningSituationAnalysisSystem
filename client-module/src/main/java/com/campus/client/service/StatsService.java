@@ -1,6 +1,8 @@
 package com.campus.client.service;
 
 import com.campus.client.model.ApiResponse;
+import com.campus.client.model.CourseGrade;
+import com.campus.client.model.GradePoint;
 import com.campus.client.model.ScoreDistribution;
 import com.campus.client.model.SchoolOverview;
 import com.campus.client.model.SchoolOverviewVO;
@@ -24,15 +26,31 @@ public class StatsService {
                 new TypeReference<ApiResponse<List<ScoreDistribution>>>() {});
     }
 
-    public static SchoolStats getClassStats(int classId, int courseId) throws Exception {
-        return ApiClient.get("/stats/class/" + classId + "?courseId=" + courseId,
-                new TypeReference<ApiResponse<SchoolStats>>() {});
+    public static SchoolStats getClassStats(int classId, Integer courseId) throws Exception {
+        String url = "/stats/class/" + classId;
+        if (courseId != null) {
+            url += "?courseId=" + courseId;
+        }
+        return ApiClient.get(url, new TypeReference<ApiResponse<SchoolStats>>() {});
     }
 
     @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> getTrend(int classId, int courseId) throws Exception {
         return ApiClient.get("/stats/trend?classId=" + classId + "&courseId=" + courseId,
                 new TypeReference<ApiResponse<List<Map<String, Object>>>>() {});
+    }
+
+    public static List<GradePoint> getGradePoints(int classId, Integer courseId) throws Exception {
+        String url = "/stats/grade-points?classId=" + classId;
+        if (courseId != null) {
+            url += "&courseId=" + courseId;
+        }
+        return ApiClient.get(url, new TypeReference<ApiResponse<List<GradePoint>>>() {});
+    }
+
+    public static List<CourseGrade> getCourseGrades(int classId) throws Exception {
+        return ApiClient.get("/stats/course-grades?classId=" + classId,
+                new TypeReference<ApiResponse<List<CourseGrade>>>() {});
     }
 
     @SuppressWarnings("unchecked")

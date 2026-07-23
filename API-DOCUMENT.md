@@ -260,6 +260,8 @@ Headers: `Authorization: Bearer {accessToken}`
 | GET | `/api/stats/score-distribution` | 分数段分布，?examId, courseId, classId |
 | GET | `/api/stats/ranking` | 排名，?examId, courseId, classId |
 | GET | `/api/stats/trend` | 趋势，?classId, courseId |
+| GET | `/api/stats/grade-points` | 学生绩点（GPA），?classId（必填）, courseId（可选）→ GradePointVO[] |
+| GET | `/api/stats/course-grades` | 课程成绩统计（平均/最高/最低），?classId（必填）→ CourseGradeVO[] |
 
 **ClassStatsVO：** classId, className, courseName, totalStudents, scoredStudents, avgScore, passRate, maxScore, minScore, medianScore, excellentCount, goodCount, mediumCount, passCount, failCount
 
@@ -268,6 +270,12 @@ Headers: `Authorization: Bearer {accessToken}`
 **RankingItemVO：** `[{"rank":1,"studentId":1,"studentNo":"2024001","studentName":"张三","classId":1,"className":"计算机一班","finalScore":98.0}]`
 
 **TrendItemVO：** `[{"semester":"2024-2025-1","studentCount":48,"avgScore":78.5,"passRate":85.0,"maxScore":98.0,"minScore":35.0}]`
+
+**GradePointVO：** `[{"studentId":1,"studentNo":"2024001","studentName":"张三","gpa":4.25,"courseCount":6}]`
+- GPA 5 档（90~100→4.0~5.0, 80~89→3.0~3.9, 70~79→2.0~2.9, 60~69→1.0~1.9, <60→0）
+- 传 `courseId` 时返回单科绩点（取该学生最近一条成绩），不传时返回该班学生全部课程的学分加权平均绩点
+
+**CourseGradeVO：** `[{"courseName":"高等数学","avgScore":78.5,"maxScore":98.0,"minScore":45.0,"studentCount":48}]`
 
 ---
 

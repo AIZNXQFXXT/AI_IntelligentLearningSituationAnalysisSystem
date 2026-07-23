@@ -3,6 +3,8 @@ package com.campus.backend.controller;
 import com.campus.backend.service.StatsService;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.ClassStatsVO;
+import com.campus.common.vo.CourseGradeVO;
+import com.campus.common.vo.GradePointVO;
 import com.campus.common.vo.RankingItemVO;
 import com.campus.common.vo.ScoreDistributionVO;
 import com.campus.common.vo.TrendItemVO;
@@ -51,5 +53,18 @@ public class StatsController {
             @RequestParam(required = false) Long classId,
             @RequestParam(required = false) Long courseId) {
         return ApiResponse.success(statsService.getTrend(classId, courseId));
+    }
+
+    @GetMapping("/grade-points")
+    public ApiResponse<List<GradePointVO>> getGradePoints(
+            @RequestParam Long classId,
+            @RequestParam(required = false) Long courseId) {
+        return ApiResponse.success(statsService.getGradePoints(classId, courseId));
+    }
+
+    @GetMapping("/course-grades")
+    public ApiResponse<List<CourseGradeVO>> getCourseGrades(
+            @RequestParam Long classId) {
+        return ApiResponse.success(statsService.getCourseGrades(classId));
     }
 }

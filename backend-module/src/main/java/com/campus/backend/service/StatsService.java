@@ -1,6 +1,8 @@
 package com.campus.backend.service;
 
 import com.campus.common.vo.ClassStatsVO;
+import com.campus.common.vo.CourseGradeVO;
+import com.campus.common.vo.GradePointVO;
 import com.campus.common.vo.RankingItemVO;
 import com.campus.common.vo.ScoreDistributionVO;
 import com.campus.common.vo.TrendItemVO;
@@ -12,4 +14,6 @@ public interface StatsService {
     List<ScoreDistributionVO> getScoreDistribution(Long examId, Long courseId, Long classId);
     List<RankingItemVO> getRanking(Long examId, Long courseId, Long classId);
     List<TrendItemVO> getTrend(Long classId, Long courseId);
+    List<GradePointVO> getGradePoints(Long classId, Long courseId);
+    List<CourseGradeVO> getCourseGrades(Long classId);
 }

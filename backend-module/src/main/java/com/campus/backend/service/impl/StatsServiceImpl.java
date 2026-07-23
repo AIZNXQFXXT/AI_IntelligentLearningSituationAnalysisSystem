@@ -2,15 +2,19 @@ package com.campus.backend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.campus.backend.entity.ClassInfo;
+import com.campus.backend.entity.Course;
 import com.campus.backend.entity.Exam;
 import com.campus.backend.entity.Score;
 import com.campus.backend.entity.Student;
 import com.campus.backend.mapper.ClassMapper;
+import com.campus.backend.mapper.CourseMapper;
 import com.campus.backend.mapper.ExamMapper;
 import com.campus.backend.mapper.ScoreMapper;
 import com.campus.backend.mapper.StudentMapper;
 import com.campus.backend.service.StatsService;
 import com.campus.common.vo.ClassStatsVO;
+import com.campus.common.vo.CourseGradeVO;
+import com.campus.common.vo.GradePointVO;
 import com.campus.common.vo.RankingItemVO;
 import com.campus.common.vo.ScoreDistributionVO;
 import com.campus.common.vo.TrendItemVO;
@@ -20,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +38,7 @@ public class StatsServiceImpl implements StatsService {
     private final StudentMapper studentMapper;
     private final ClassMapper classMapper;
     private final ExamMapper examMapper;
+    private final CourseMapper courseMapper;
 
     @Override
     public ClassStatsVO getClassStats(Long classId, Long examId, Long courseId) {
@@ -238,6 +244,84 @@ public class StatsServiceImpl implements StatsService {
         return result;
     }
 
+    @Override
+    public List<GradePointVO> getGradePoints(Long classId, Long courseId) {
+        List<Long> studentIds = getStudentIdsByClass(classId);
+        if (studentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Score> scores = queryScores(studentIds, null, courseId);
+        if (scores.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 课程学分映射
+        List<Long> courseIds = scores.stream().map(Score::getCourseId).distinct().toList();
+        List<Course> courses = courseMapper.selectList(
+                new LambdaQueryWrapper<Course>().in(Course::getId, courseIds));
+        Map<Long, Double> creditMap = courses.stream()
+                .collect(Collectors.toMap(Course::getId,
+                        c -> c.getCredit() == null ? 0.0 : c.getCredit()));
+
+        // 学生信息映射
+        List<Student> students = studentMapper.selectList(
+                new LambdaQueryWrapper<Student>().in(Student::getId, studentIds));
+        Map<Long, Student> studentMap = students.stream()
+                .collect(Collectors.toMap(Student::getId, s -> s));
+
+        // 按学生分组成绩
+        Map<Long, List<Score>> byStudent = scores.stream()
+                .collect(Collectors.groupingBy(Score::getStudentId));
+
+        List<GradePointVO> result = new ArrayList<>();
+        for (Map.Entry<Long, List<Score>> entry : byStudent.entrySet()) {
+            Long sid = entry.getKey();
+            Student stu = studentMap.get(sid);
+            if (stu == null) continue;
+
+            List<Score> stuScores = entry.getValue();
+            double gpa;
+            int courseCount;
+            if (courseId != null) {
+                // 单科绩点：取最近一条（id 最大，随创建时间递增）
+                Score latest = stuScores.stream()
+                        .max(Comparator.comparing(Score::getId))
+                        .orElse(null);
+                if (latest == null || latest.getFinalScore() == null) continue;
+                gpa = bracketGpa(latest.getFinalScore().doubleValue());
+                courseCount = 1;
+            } else {
+                // 全课程学分加权 GPA
+                List<Double> sList = new ArrayList<>();
+                List<Double> cList = new ArrayList<>();
+                for (Score s : stuScores) {
+                    if (s.getFinalScore() == null) continue;
+                    sList.add(s.getFinalScore().doubleValue());
+                    cList.add(creditMap.getOrDefault(s.getCourseId(), 0.0));
+                }
+                if (sList.isEmpty()) continue;
+                gpa = weightedGpa(sList, cList);
+                courseCount = sList.size();
+            }
+
+            GradePointVO vo = new GradePointVO();
+            vo.setStudentId(sid);
+            vo.setStudentNo(stu.getStudentNo());
+            vo.setStudentName(stu.getName());
+            vo.setGpa(gpa);
+            vo.setCourseCount(courseCount);
+            result.add(vo);
+        }
+
+        result.sort((a, b) -> Double.compare(b.getGpa(), a.getGpa()));
+        return result;
+    }
+
+    @Override
+    public List<CourseGradeVO> getCourseGrades(Long classId) {
+        return scoreMapper.selectCourseGradeStats(classId);
+    }
+
     private List<Long> getStudentIdsByClass(Long classId) {
         List<Student> students = studentMapper.selectList(
                 new LambdaQueryWrapper<Student>()
@@ -270,5 +354,26 @@ public class StatsServiceImpl implements StatsService {
     private void addDistributionItem(List<ScoreDistributionVO> list, String label, int count, int total) {
         double pct = Math.round(count * 10000.0 / total) / 100.0;
         list.add(new ScoreDistributionVO(label, count, pct));
+    }
+
+    /** 单科绩点（五分制）。不及格返回 0。 */
+    static double bracketGpa(double score) {
+        if (score >= 90) return (score - 90) * 0.1 + 4.0;
+        if (score >= 80) return (score - 80) * 0.1 + 3.0;
+        if (score >= 70) return (score - 70) * 0.1 + 2.0;
+        if (score >= 60) return (score - 60) * 0.1 + 1.0;
+        return 0.0;
+    }
+
+    /** 学分加权 GPA = Σ(绩点×学分) / Σ学分，保留 2 位小数。总学分为 0 返回 0。 */
+    static double weightedGpa(List<Double> scores, List<Double> credits) {
+        double sumGpCredit = 0.0;
+        double sumCredit = 0.0;
+        for (int i = 0; i < scores.size(); i++) {
+            sumGpCredit += bracketGpa(scores.get(i)) * credits.get(i);
+            sumCredit += credits.get(i);
+        }
+        if (sumCredit == 0) return 0.0;
+        return Math.round(sumGpCredit / sumCredit * 100.0) / 100.0;
     }
 }

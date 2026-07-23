@@ -21,55 +21,82 @@
 
     <VBox styleClass="crud-card-body" spacing="15" VBox.vgrow="ALWAYS">
         <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-        <HBox spacing="15">
-            <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
-                <Label text="平均分" styleClass="stat-label"/>
-                <Label fx:id="avgScore" text="--" styleClass="stat-value"/>
-            </VBox>
-            <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
-                <Label text="最高分" styleClass="stat-label"/>
-                <Label fx:id="maxScore" text="--" styleClass="stat-value"/>
-            </VBox>
-            <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
-                <Label text="最低分" styleClass="stat-label"/>
-                <Label fx:id="minScore" text="--" styleClass="stat-value"/>
-            </VBox>
-            <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
-                <Label text="及格率" styleClass="stat-label"/>
-                <Label fx:id="passRate" text="--" styleClass="stat-value"/>
-            </VBox>
-            <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
-                <Label text="优秀率" styleClass="stat-label"/>
-                <Label fx:id="excellentRate" text="--" styleClass="stat-value"/>
-            </VBox>
-            <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
-                <Label text="学生人数" styleClass="stat-label"/>
-                <Label fx:id="studentCount" text="--" styleClass="stat-value"/>
-            </VBox>
-        </HBox>
-
+        <!-- 上半部分：统计卡片 + 课程成绩图 -->
         <HBox spacing="15" VBox.vgrow="ALWAYS">
+            <!-- 左：两排 stat cards -->
+            <VBox spacing="15" HBox.hgrow="ALWAYS">
+                <HBox spacing="15">
+                    <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
+                        <Label text="平均绩点" styleClass="stat-label"/>
+                        <Label fx:id="avgGpa" text="--" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
+                        <Label text="最高绩点" styleClass="stat-label"/>
+                        <Label fx:id="maxGpa" text="--" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
+                        <Label text="最低绩点" styleClass="stat-label"/>
+                        <Label fx:id="minGpa" text="--" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" prefWidth="140" alignment="CENTER">
+                        <Label text="学生人数" styleClass="stat-label"/>
+                        <Label fx:id="studentCount" text="--" styleClass="stat-value"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="15">
+                    <VBox styleClass="stat-card" prefWidth="170" alignment="CENTER">
+                        <Label text="及格率" styleClass="stat-label"/>
+                        <Label fx:id="passRate" text="--" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" prefWidth="170" alignment="CENTER">
+                        <Label text="优秀率" styleClass="stat-label"/>
+                        <Label fx:id="excellentRate" text="--" styleClass="stat-value"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+            <!-- 右：课程成绩图 -->
             <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="5">
-                <Label text="成绩分布" styleClass="section-title"/>
-                <BarChart fx:id="distributionChart" prefHeight="300" animated="false">
+                <Label text="课程成绩图" styleClass="section-title"/>
+                <BarChart fx:id="courseGradeChart" prefHeight="300" animated="false" VBox.vgrow="ALWAYS">
                     <xAxis>
-                        <CategoryAxis fx:id="distXAxis" label="分数段"/>
+                        <CategoryAxis fx:id="cgXAxis" label="课程"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis fx:id="distYAxis" label="人数"/>
+                        <NumberAxis fx:id="cgYAxis" label="分数"/>
                     </yAxis>
                 </BarChart>
             </VBox>
+        </HBox>
+
+        <!-- 下半部分：GPA 图 + GPA 统计规则 -->
+        <HBox spacing="15" VBox.vgrow="ALWAYS">
             <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="5">
-                <Label text="学期趋势" styleClass="section-title"/>
-                <LineChart fx:id="trendChart" prefHeight="300" animated="false">
+                <Label text="成绩点图" styleClass="section-title"/>
+                <ScatterChart fx:id="gradePointChart" prefHeight="300" animated="false" VBox.vgrow="ALWAYS">
                     <xAxis>
-                        <CategoryAxis fx:id="trendXAxis" label="学期"/>
+                        <CategoryAxis fx:id="gpXAxis" label="学生"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis fx:id="trendYAxis" label="平均分"/>
+                        <NumberAxis fx:id="gpYAxis" label="绩点" autoRanging="false"
+                                    lowerBound="0" upperBound="5" tickUnit="1"/>
                     </yAxis>
-                </LineChart>
+                </ScatterChart>
+            </VBox>
+            <VBox styleClass="chart-card" HBox.hgrow="ALWAYS" spacing="10">
+                <Label text="GPA 统计规则" styleClass="section-title"/>
+                <Label text="百分制成绩 → 绩点" styleClass="stat-label"/>
+                <VBox spacing="4">
+                    <Label text="90 ~ 100   →  4.0 ~ 5.0"/>
+                    <Label text="80 ~ 89    →  3.0 ~ 3.9"/>
+                    <Label text="70 ~ 79    →  2.0 ~ 2.9"/>
+                    <Label text="60 ~ 69    →  1.0 ~ 1.9"/>
+                    <Label text="&lt; 60       →  0（不及格无绩点）"/>
+                </VBox>
+                <Label text="计算公式" styleClass="stat-label"/>
+                <Label text="GPA = Σ（课程绩点 × 学分） ÷ Σ 学分" wrapText="true"/>
+                <Label text="及格：GPA ≥ 1.0    优秀：GPA ≥ 4.0" wrapText="true"/>
+                <Label text="单科模式：取学生该课程最近一次成绩计算" wrapText="true"/>
+                <Label text="全科模式：全部课程按学分加权平均" wrapText="true"/>
             </VBox>
         </HBox>
     </VBox>
