@@ -339,7 +339,7 @@
     -fx-border-color: transparent -primary-surface transparent transparent;
 }
 
-.sidebar-menu-item:active, .sidebar-menu-item.active {
+.sidebar-menu-item.active {
     -fx-background-color: -bg-sidebar-active;
     -fx-border-color: transparent #FFFFFF transparent transparent;
 }
@@ -468,7 +468,7 @@
     -fx-background-radius: 0 0 8px 8px;
     -fx-padding: 16;
 }
-}
+
 
 .section-title {
     -fx-font-size: 15px;
