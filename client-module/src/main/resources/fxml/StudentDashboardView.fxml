@@ -37,7 +37,7 @@
                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                 </columnResizePolicy>
                 <columns>
-                <TableColumn fx:id="colCourseId" text="课程ID" prefWidth="80"/>
+                <TableColumn fx:id="colCourseName" text="课程名称" prefWidth="120"/>
                 <TableColumn fx:id="colFinalScore" text="成绩" prefWidth="80"/>
                 <TableColumn fx:id="colRankClass" text="班级排名" prefWidth="90"/>
                 <TableColumn fx:id="colRankGrade" text="年级排名" prefWidth="90"/>
@@ -65,39 +65,16 @@
         </VBox>
     </HBox>
 
-    <!-- Feature Navigation Cards -->
-    <HBox spacing="20">
-        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
-              onMouseClicked="#goToScores">
-            <Label text="成绩查询" styleClass="quick-action-card-icon"/>
-            <Label text="查看各科成绩和班级排名" styleClass="quick-action-card-sub"/>
-        </VBox>
-        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
-              onMouseClicked="#goToAnalysis">
-            <Label text="成绩分析" styleClass="quick-action-card-icon"/>
-            <Label text="查看成绩趋势和能力雷达图" styleClass="quick-action-card-sub"/>
-        </VBox>
-        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
-              onMouseClicked="#goToDiagnosis">
-            <Label text="诊断报告" styleClass="quick-action-card-icon"/>
-            <Label text="查看AI学情诊断分析" styleClass="quick-action-card-sub"/>
-        </VBox>
-    </HBox>
-    <HBox spacing="20">
-        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
-              onMouseClicked="#goToAdvice">
-            <Label text="学习建议" styleClass="quick-action-card-icon"/>
-            <Label text="查看个性化学习提升方案" styleClass="quick-action-card-sub"/>
-        </VBox>
-        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
-              onMouseClicked="#goToComment">
-            <Label text="期末评语" styleClass="quick-action-card-icon"/>
-            <Label text="查看教师评语" styleClass="quick-action-card-sub"/>
-        </VBox>
-        <VBox styleClass="quick-action-card" HBox.hgrow="ALWAYS"
-              onMouseClicked="#goToRisk">
-            <Label text="我的预警" styleClass="quick-action-card-icon"/>
-            <Label text="查看学业预警信息" styleClass="quick-action-card-sub"/>
-        </VBox>
-    </HBox>
+    <!-- Quick Actions -->
+    <VBox styleClass="stat-card" spacing="12">
+        <Label text="快捷操作" styleClass="section-title"/>
+        <HBox spacing="12">
+            <Button text="成绩查询" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToScores"/>
+            <Button text="成绩分析" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToAnalysis"/>
+            <Button text="诊断报告" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToDiagnosis"/>
+            <Button text="学习建议" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToAdvice"/>
+            <Button text="期末评语" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToComment"/>
+            <Button text="我的预警" styleClass="quick-action-btn" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#goToRisk"/>
+        </HBox>
+    </VBox>
 </VBox>

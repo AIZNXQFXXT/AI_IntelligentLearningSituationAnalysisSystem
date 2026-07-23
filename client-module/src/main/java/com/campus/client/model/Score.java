@@ -13,6 +13,8 @@ public class Score {
     private int examId;
     @JsonProperty("courseId")
     private int courseId;
+    @JsonProperty("courseName")
+    private String courseName;
     @JsonProperty("regularScore")
     private double regularScore;
     @JsonProperty("examScore")
@@ -34,6 +36,8 @@ public class Score {
     public void setExamId(int examId) { this.examId = examId; }
     public int getCourseId() { return courseId; }
     public void setCourseId(int courseId) { this.courseId = courseId; }
+    public String getCourseName() { return courseName; }
+    public void setCourseName(String courseName) { this.courseName = courseName; }
     public double getRegularScore() { return regularScore; }
     public void setRegularScore(double regularScore) { this.regularScore = regularScore; }
     public double getExamScore() { return examScore; }

@@ -84,6 +84,7 @@ public class MyController {
         vo.setAvatar(user != null ? user.getAvatar() : null);
         vo.setPhone(user != null ? user.getPhone() : null);
         vo.setGuardianPhone(student.getGuardianPhone());
+        vo.setStatus(student.getStatus());
         return ApiResponse.success(vo);
     }
 

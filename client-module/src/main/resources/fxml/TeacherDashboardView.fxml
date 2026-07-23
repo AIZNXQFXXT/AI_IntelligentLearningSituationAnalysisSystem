@@ -21,7 +21,7 @@
             <Label fx:id="valueWarnings" styleClass="stat-card-value" text="--"/>
         </VBox>
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
-            <Label styleClass="stat-card-title" text="用户名"/>
+            <Label styleClass="stat-card-title" text="欢迎"/>
             <Label fx:id="valueUsername" styleClass="stat-card-value" text="--"/>
         </VBox>
     </HBox>

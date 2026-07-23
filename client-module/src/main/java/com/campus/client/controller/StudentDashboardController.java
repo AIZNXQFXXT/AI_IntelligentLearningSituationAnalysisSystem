@@ -15,7 +15,6 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
 
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class StudentDashboardController {
     @FXML private Label valueWarnings;
     @FXML private Label valueUsername;
     @FXML private TableView<Score> scoreTable;
-    @FXML private TableColumn<Score, Integer> colCourseId;
+    @FXML private TableColumn<Score, String> colCourseName;
     @FXML private TableColumn<Score, Double> colFinalScore;
     @FXML private TableColumn<Score, Integer> colRankClass;
     @FXML private TableColumn<Score, Integer> colRankGrade;
@@ -44,7 +43,7 @@ public class StudentDashboardController {
     public void initialize() {
         valueUsername.setText(UserSession.getInstance().getUsername());
 
-        colCourseId.setCellValueFactory(new PropertyValueFactory<>("courseId"));
+        colCourseName.setCellValueFactory(new PropertyValueFactory<>("courseName"));
         colFinalScore.setCellValueFactory(new PropertyValueFactory<>("finalScore"));
         colRankClass.setCellValueFactory(new PropertyValueFactory<>("rankClass"));
         colRankGrade.setCellValueFactory(new PropertyValueFactory<>("rankGrade"));
@@ -87,7 +86,14 @@ public class StudentDashboardController {
                             ? warnings.subList(0, 5)
                             : warnings;
                     warningData.addAll(recentWarnings);
-                    valueWarnings.setText(String.valueOf(warnings.size()));
+                    // 预警数量只统计中风险(MEDIUM)和高风险(HIGH/CRITICAL)
+                    long effectiveWarnings = warnings.stream()
+                            .filter(w -> {
+                                String lvl = w.getRiskLevel();
+                                return "HIGH".equals(lvl) || "MEDIUM".equals(lvl) || "CRITICAL".equals(lvl);
+                            })
+                            .count();
+                    valueWarnings.setText(String.valueOf(effectiveWarnings));
                     if (recentWarnings.isEmpty()) {
                         noWarningLabel.setVisible(true);
                         noWarningLabel.setManaged(true);
@@ -107,12 +113,12 @@ public class StudentDashboardController {
         AppExecutors.submit(task::run);
     }
 
-    @FXML private void goToScores(MouseEvent e) { navigateTo("/student/scores"); }
-    @FXML private void goToAnalysis(MouseEvent e) { navigateTo("/student/analysis"); }
-    @FXML private void goToDiagnosis(MouseEvent e) { navigateTo("/student/diagnosis"); }
-    @FXML private void goToAdvice(MouseEvent e) { navigateTo("/student/advice"); }
-    @FXML private void goToComment(MouseEvent e) { navigateTo("/student/comment"); }
-    @FXML private void goToRisk(MouseEvent e) { navigateTo("/student/risk"); }
+    @FXML private void goToScores(javafx.event.ActionEvent e) { navigateTo("/student/scores"); }
+    @FXML private void goToAnalysis(javafx.event.ActionEvent e) { navigateTo("/student/analysis"); }
+    @FXML private void goToDiagnosis(javafx.event.ActionEvent e) { navigateTo("/student/diagnosis"); }
+    @FXML private void goToAdvice(javafx.event.ActionEvent e) { navigateTo("/student/advice"); }
+    @FXML private void goToComment(javafx.event.ActionEvent e) { navigateTo("/student/comment"); }
+    @FXML private void goToRisk(javafx.event.ActionEvent e) { navigateTo("/student/risk"); }
 
     private void navigateTo(String route) {
         MainLayoutController mainLayout = MainLayoutController.getInstance();

@@ -52,8 +52,16 @@ public class TeacherStudentsController {
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
-                    Label label = new Label(item == 1 ? "正常" : "停用");
-                    label.getStyleClass().add(item == 1 ? "tag-success" : "tag-danger");
+                    String text;
+                    String styleClass;
+                    switch (item) {
+                        case 1:  text = "在读"; styleClass = "tag-success"; break;
+                        case 0:  text = "休学"; styleClass = "tag-warning"; break;
+                        case 2:  text = "退学"; styleClass = "tag-danger"; break;
+                        default: text = "未知"; styleClass = "tag-danger"; break;
+                    }
+                    Label label = new Label(text);
+                    label.getStyleClass().add(styleClass);
                     setGraphic(label);
                 }
             }

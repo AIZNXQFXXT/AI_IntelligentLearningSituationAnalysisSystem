@@ -54,10 +54,10 @@ public class StudentManagementController {
         colEnrollYear.setCellValueFactory(new PropertyValueFactory<>("enrollYear"));
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
         colStatus.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getStatus() == 1 ? "正常" : "停用"));
+                new SimpleStringProperty(mapStudentStatus(cellData.getValue().getStatus())));
 
         TableUtils.setupActionColumn(colActions, this::handleEdit, this::handleDelete, this::handleStatusToggle,
-            student -> student.getStatus() == 1 ? "停用" : "启用");
+            student -> student.getStatus() == 1 ? "休学" : "在读");
 
         classFilter.setItems(classNames);
         classFilter.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
@@ -115,6 +115,15 @@ public class StudentManagementController {
             }
         }
         table.refresh();
+    }
+
+    private String mapStudentStatus(int status) {
+        switch (status) {
+            case 1: return "在读";
+            case 0: return "休学";
+            case 2: return "退学";
+            default: return "未知";
+        }
     }
 
     private Integer getSelectedClassId() {
@@ -293,6 +302,7 @@ public class StudentManagementController {
     }
 
     private void handleStatusToggle(Student item) {
+        // 在读(1) ↔ 休学(0) 二态切换; 退学(2) 不通过此按钮切换
         int newStatus = item.getStatus() == 1 ? 0 : 1;
         Task<Void> task = new Task<>() {
             @Override
