@@ -4,20 +4,6 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_PID=""
 
-# 选择运行环境:优先用环境变量 SPRING_PROFILES_ACTIVE,否则交互式选择
-if [ -n "${SPRING_PROFILES_ACTIVE:-}" ]; then
-    PROFILE="$SPRING_PROFILES_ACTIVE"
-else
-    echo "请选择运行环境:"
-    echo "  1) dev  (开发环境,默认)"
-    echo "  2) prod (生产环境)"
-    read -p "请输入 [1/2] (默认 1): " choice || choice=""
-    case "${choice:-}" in
-        2) PROFILE="prod" ;;
-        *) PROFILE="dev" ;;
-    esac
-fi
-
 cleanup() {
     echo ""
     echo "Shutting down backend (PID: $BACKEND_PID)..."
@@ -44,7 +30,7 @@ if [ -z "${JAVA_HOME:-}" ]; then
     fi
 fi
 
-echo "[OK] Environment OK  (profile: $PROFILE)"
+echo "[OK] Environment OK"
 
 echo ""
 echo "[2/4] Installing common-module..."
@@ -60,9 +46,9 @@ echo "[OK] common-module installed"
 
 echo ""
 echo "[3/4] Starting backend in background..."
-mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true -Dspring-boot.run.profiles="$PROFILE" > backend.log 2>&1 &
+mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true > backend.log 2>&1 &
 BACKEND_PID=$!
-echo "[OK] Backend is starting (PID: $BACKEND_PID, profile: $PROFILE, logs: backend.log)"
+echo "[OK] Backend is starting (PID: $BACKEND_PID, logs: backend.log)"
 
 echo ""
 echo "[4/4] Starting JavaFX client..."

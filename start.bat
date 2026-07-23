@@ -23,20 +23,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-set "PROFILE=%SPRING_PROFILES_ACTIVE%"
-if "%PROFILE%"=="" (
-    echo.
-    echo Please select environment:
-    echo   1^) dev  (development, default)
-    echo   2^) prod (production)
-    set /p "choice=Enter [1/2] (default 1): "
-    if "!choice!"=="2" (
-        set "PROFILE=prod"
-    ) else (
-        set "PROFILE=dev"
-    )
-)
-echo [OK] Environment OK  (profile: %PROFILE%)
+echo [OK] Environment OK
 
 echo.
 echo [2/4] Installing common-module...
@@ -55,8 +42,8 @@ echo [OK] common-module installed
 
 echo.
 echo [3/4] Starting backend in background...
-start /b cmd /c "mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true -Dspring-boot.run.profiles=%PROFILE% > backend.log 2>&1"
-echo [OK] Backend is starting (profile: %PROFILE%, logs: backend.log)
+start /b cmd /c "mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true > backend.log 2>&1"
+echo [OK] Backend is starting (logs: backend.log)
 
 echo.
 echo [4/4] Starting JavaFX client...
