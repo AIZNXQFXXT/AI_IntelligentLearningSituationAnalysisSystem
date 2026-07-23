@@ -22,11 +22,12 @@ public class RiskWarningController {
     public ApiResponse<PageResult<RiskWarningVO>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String semester,
             @RequestParam(required = false) String riskLevel,
             @RequestParam(required = false) String handleStatus,
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN");
-        return ApiResponse.success(riskWarningService.pageList(page, size, riskLevel, handleStatus));
+        return ApiResponse.success(riskWarningService.pageList(page, size, semester, riskLevel, handleStatus));
     }
 
     @PostMapping("/detect")

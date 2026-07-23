@@ -5,15 +5,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.ai.AiRequest;
 import com.campus.backend.ai.AiResult;
 import com.campus.backend.ai.AiServiceFactory;
+import com.campus.backend.ai.AiUtils;
 import com.campus.backend.converter.DiagnosisConverter;
 import com.campus.backend.entity.AIDiagnosisRecord;
 import com.campus.backend.entity.AISuggestion;
 import com.campus.backend.entity.ClassInfo;
+import com.campus.backend.entity.RiskWarning;
 import com.campus.backend.entity.Score;
 import com.campus.backend.entity.Student;
 import com.campus.backend.mapper.AIDiagnosisRecordMapper;
 import com.campus.backend.mapper.AISuggestionMapper;
 import com.campus.backend.mapper.ClassMapper;
+import com.campus.backend.mapper.RiskWarningMapper;
 import com.campus.backend.mapper.ScoreMapper;
 import com.campus.backend.mapper.StudentMapper;
 import com.campus.backend.service.DiagnosisService;
@@ -40,6 +43,7 @@ public class DiagnosisServiceImpl implements DiagnosisService {
     private final ScoreMapper scoreMapper;
     private final StudentMapper studentMapper;
     private final ClassMapper classMapper;
+    private final RiskWarningMapper riskWarningMapper;
     private final AiServiceFactory aiServiceFactory;
     private final DiagnosisConverter converter;
 
@@ -137,6 +141,9 @@ public class DiagnosisServiceImpl implements DiagnosisService {
             suggestionMapper.insert(suggestion);
         }
 
+        // 同步风险预警：从诊断结果提取 riskLevel 归一化后写入 risk_warning 表（同学期去重）
+        syncRiskWarning(record, json);
+
         return converter.toVO(record);
     }
 
@@ -153,6 +160,25 @@ public class DiagnosisServiceImpl implements DiagnosisService {
         return PageResult.of(records, result.getTotal(), page, size);
     }
 
+    @Override
+    public int backfillRiskWarnings() {
+        List<AIDiagnosisRecord> all = diagnosisMapper.selectList(
+                new LambdaQueryWrapper<AIDiagnosisRecord>()
+                        .orderByAsc(AIDiagnosisRecord::getCreatedAt));
+        int count = 0;
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (AIDiagnosisRecord record : all) {
+            try {
+                var json = mapper.readTree(record.getDiagnosisText());
+                syncRiskWarning(record, json);
+                count++;
+            } catch (Exception e) {
+                log.warn("回填跳过诊断记录 {}，JSON 解析失败", record.getId(), e);
+            }
+        }
+        return count;
+    }
+
     private String formatScoresForPrompt(List<Score> scores) {
         StringBuilder sb = new StringBuilder();
         for (Score s : scores) {
@@ -164,5 +190,49 @@ public class DiagnosisServiceImpl implements DiagnosisService {
                     s.getRankClass() != null ? s.getRankClass() : 0));
         }
         return sb.toString();
+    }
+
+    /**
+     * 从诊断结果同步风险预警到 risk_warning 表。
+     * 同一学生同一学期已有记录则更新风险字段，否则新增。
+     * riskLevel 为 NONE/无/无法识别时跳过（不写入无风险记录）。
+     */
+    private void syncRiskWarning(AIDiagnosisRecord record, com.fasterxml.jackson.databind.JsonNode json) {
+        if (json == null) return;
+        String rawLevel = json.has("riskLevel") ? json.get("riskLevel").asText() : null;
+        String normalized = AiUtils.normalizeRiskLevel(rawLevel);
+        if (normalized == null) return;
+
+        // 从诊断 JSON 提取风险原因描述
+        String riskReason = "";
+        if (json.has("weaknesses")) {
+            riskReason = json.get("weaknesses").toString();
+        } else if (json.has("trend")) {
+            riskReason = json.get("trend").asText();
+        }
+
+        // 同学期去重：查是否已有风险预警记录
+        RiskWarning existing = riskWarningMapper.selectOne(
+                new LambdaQueryWrapper<RiskWarning>()
+                        .eq(RiskWarning::getStudentId, record.getStudentId())
+                        .eq(RiskWarning::getSemester, record.getSemester())
+                        .eq(RiskWarning::getIsDeleted, 0)
+                        .last("LIMIT 1"));
+
+        if (existing != null) {
+            existing.setRiskLevel(normalized);
+            existing.setRiskReason(riskReason);
+            existing.setAiAnalysis(record.getDiagnosisText());
+            riskWarningMapper.updateById(existing);
+        } else {
+            RiskWarning warning = new RiskWarning();
+            warning.setStudentId(record.getStudentId());
+            warning.setSemester(record.getSemester());
+            warning.setRiskLevel(normalized);
+            warning.setRiskReason(riskReason);
+            warning.setAiAnalysis(record.getDiagnosisText());
+            warning.setHandleStatus("PENDING");
+            riskWarningMapper.insert(warning);
+        }
     }
 }

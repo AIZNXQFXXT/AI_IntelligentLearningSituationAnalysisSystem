@@ -76,12 +76,16 @@ public class TableUtils {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); return; }
-                Label label = new Label(item);
+                String text;
+                String style;
                 switch (item) {
-                    case "HIGH": label.getStyleClass().add("tag-danger"); break;
-                    case "MEDIUM": label.getStyleClass().add("tag-warning"); break;
-                    default: label.getStyleClass().add("tag-success"); break;
+                    case "HIGH":   text = "高风险"; style = "tag-danger";  break;
+                    case "MEDIUM": text = "中风险"; style = "tag-warning"; break;
+                    case "LOW":    text = "低风险"; style = "tag-success"; break;
+                    default:       text = item;    style = "tag-info";     break;
                 }
+                Label label = new Label(text);
+                label.getStyleClass().add(style);
                 setGraphic(label);
             }
         });

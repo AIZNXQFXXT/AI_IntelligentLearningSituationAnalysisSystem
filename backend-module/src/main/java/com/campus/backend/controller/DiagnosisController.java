@@ -36,4 +36,15 @@ public class DiagnosisController {
         SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN", "STUDENT");
         return ApiResponse.success(diagnosisService.pageHistory(page, size, studentId));
     }
+
+    /**
+     * 一次性回填：把已有诊断记录的 riskLevel 同步到 risk_warning 表。
+     * 仅用于历史数据迁移，新数据在生成诊断时已自动同步。
+     */
+    @PostMapping("/backfill-risk-warnings")
+    public ApiResponse<Integer> backfillRiskWarnings(HttpServletRequest request) {
+        SecurityHelper.requireAdmin(request);
+        int processed = diagnosisService.backfillRiskWarnings();
+        return ApiResponse.success(processed);
+    }
 }

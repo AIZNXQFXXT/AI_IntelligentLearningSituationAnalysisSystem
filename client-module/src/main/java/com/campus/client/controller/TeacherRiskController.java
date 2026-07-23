@@ -37,9 +37,9 @@ public class TeacherRiskController {
     @FXML
     public void initialize() {
         loadSemesters();
-        riskLevelCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "HIGH", "MEDIUM", "LOW")));
+        riskLevelCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "高风险", "中风险", "低风险")));
         riskLevelCombo.getSelectionModel().selectFirst();
-        statusCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "PENDING", "PROCESSING", "HANDLED", "IGNORED")));
+        statusCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "待处理", "处理中", "已处理", "已忽略")));
         statusCombo.getSelectionModel().selectFirst();
 
         colStudentId.setCellValueFactory(data ->
@@ -75,8 +75,8 @@ public class TeacherRiskController {
 
     private void loadData() {
         String semester = semesterCombo.getValue();
-        String riskLevel = "全部".equals(riskLevelCombo.getValue()) ? null : riskLevelCombo.getValue();
-        String status = "全部".equals(statusCombo.getValue()) ? null : statusCombo.getValue();
+        String riskLevel = mapRiskLevel(riskLevelCombo.getValue());
+        String status = mapStatus(statusCombo.getValue());
 
         Task<List<RiskWarning>> task = new Task<>() {
             @Override protected List<RiskWarning> call() throws Exception {
@@ -106,6 +106,27 @@ public class TeacherRiskController {
             semesterCombo.getSelectionModel().selectFirst();
         });
         AppExecutors.submit(task::run);
+    }
+
+    private String mapRiskLevel(String display) {
+        if (display == null || "全部".equals(display)) return null;
+        switch (display) {
+            case "高风险": return "HIGH";
+            case "中风险": return "MEDIUM";
+            case "低风险": return "LOW";
+            default: return null;
+        }
+    }
+
+    private String mapStatus(String display) {
+        if (display == null || "全部".equals(display)) return null;
+        switch (display) {
+            case "待处理": return "PENDING";
+            case "处理中": return "PROCESSING";
+            case "已处理": return "HANDLED";
+            case "已忽略": return "IGNORED";
+            default: return null;
+        }
     }
 
     private void handleProcess(RiskWarning w) {

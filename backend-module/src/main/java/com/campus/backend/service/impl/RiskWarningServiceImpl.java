@@ -90,7 +90,7 @@ public class RiskWarningServiceImpl implements RiskWarningService {
             try {
                 var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(cleanedContent);
                 String aiLevel = json.has("riskLevel") ? json.get("riskLevel").asText() : null;
-                String normalized = normalizeRiskLevel(aiLevel);
+                String normalized = com.campus.backend.ai.AiUtils.normalizeRiskLevel(aiLevel);
                 warning.setRiskLevel(normalized != null ? normalized : initialRiskLevel);
                 warning.setRiskReason(json.has("riskReason") ? json.get("riskReason").asText() : "");
             } catch (Exception e) {
@@ -102,9 +102,12 @@ public class RiskWarningServiceImpl implements RiskWarningService {
     }
 
     @Override
-    public PageResult<RiskWarningVO> pageList(int page, int size, String riskLevel, String handleStatus) {
+    public PageResult<RiskWarningVO> pageList(int page, int size, String semester, String riskLevel, String handleStatus) {
         LambdaQueryWrapper<RiskWarning> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RiskWarning::getIsDeleted, 0);
+        if (semester != null && !semester.isEmpty()) {
+            wrapper.eq(RiskWarning::getSemester, semester);
+        }
         if (riskLevel != null) {
             wrapper.eq(RiskWarning::getRiskLevel, riskLevel);
         }
@@ -179,23 +182,6 @@ public class RiskWarningServiceImpl implements RiskWarningService {
         if (level >= 2) return "HIGH";
         if (level == 1) return "MEDIUM";
         return "NONE";
-    }
-
-    /**
-     * 归一化 AI 返回的 riskLevel 字段，覆盖中文/英文/大小写/带修饰词等变体。
-     * 匹配失败返回 null，调用方回退到本地 initialRiskLevel。
-     */
-    private String normalizeRiskLevel(String raw) {
-        if (raw == null) return null;
-        String s = raw.trim().toUpperCase(Locale.ROOT);
-        if (s.isEmpty()) return null;
-        // 含 HIGH 关键字或单独"高/高风险"
-        if (s.contains("HIGH") || s.equals("高") || s.contains("高风险") || s.contains("严重")) return "HIGH";
-        if (s.contains("MEDIUM") || s.equals("中") || s.contains("中风险") || s.contains("中等")) return "MEDIUM";
-        if (s.contains("LOW") || s.equals("低") || s.contains("低风险")) return "LOW";
-        // NONE / 无 / 不适用 等表示无风险
-        if (s.contains("NONE") || s.contains("无") || s.contains("N/A") || s.equals("NA")) return null;
-        return null;
     }
 
     private double calculateAvgScore(List<Score> scores, Map<Long, String> examSemesterMap, String currentSemester) {

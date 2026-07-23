@@ -37,7 +37,7 @@ public class RiskWarningConverter {
         vo.setStudentId(entity.getStudentId());
         vo.setSemester(entity.getSemester());
         vo.setRiskLevel(entity.getRiskLevel());
-        vo.setRiskReason(entity.getRiskReason());
+        vo.setRiskReason(parseRiskReason(entity.getRiskReason()));
         vo.setAiAnalysis(entity.getAiAnalysis());
         vo.setHandleStatus(entity.getHandleStatus());
         vo.setHandleRemark(entity.getHandleRemark());
@@ -77,5 +77,44 @@ public class RiskWarningConverter {
         }
 
         return vo;
+    }
+
+    /**
+     * 解析 riskReason 字段。可能格式：
+     * - JSON 数组 [{"subject":"数学","reason":"基础薄弱"}] → "数学：基础薄弱；英语：词汇不足"
+     * - JSON 数组 ["基础薄弱","词汇不足"] → "基础薄弱；词汇不足"
+     * - 普通文本 → 直接返回
+     */
+    private String parseRiskReason(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        String trimmed = raw.trim();
+        if (!trimmed.startsWith("[")) {
+            return trimmed;
+        }
+        try {
+            var node = objectMapper.readTree(trimmed);
+            if (!node.isArray() || node.isEmpty()) return "";
+            StringBuilder sb = new StringBuilder();
+            for (var item : node) {
+                if (sb.length() > 0) sb.append("；");
+                if (item.isObject()) {
+                    String subject = item.has("subject") ? item.get("subject").asText() : "";
+                    String reason = item.has("reason") ? item.get("reason").asText() : "";
+                    if (!subject.isEmpty() && !reason.isEmpty()) {
+                        sb.append(subject).append("：").append(reason);
+                    } else if (!reason.isEmpty()) {
+                        sb.append(reason);
+                    } else if (!subject.isEmpty()) {
+                        sb.append(subject);
+                    }
+                } else {
+                    String text = item.asText();
+                    if (!text.isEmpty()) sb.append(text);
+                }
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return trimmed;
+        }
     }
 }
