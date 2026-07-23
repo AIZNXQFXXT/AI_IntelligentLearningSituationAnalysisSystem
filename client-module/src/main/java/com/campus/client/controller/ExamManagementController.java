@@ -171,7 +171,10 @@ public class ExamManagementController {
         TextField nameField = new TextField();
         ComboBox<String> typeBox = new ComboBox<>();
         typeBox.getItems().addAll("月考", "期中", "期末", "补考");
-        TextField semesterFieldLocal = new TextField(); semesterFieldLocal.setPromptText("如: 2025-1");
+        ComboBox<String> semesterFieldLocal = new ComboBox<>();
+        int currentYear = java.time.Year.now().getValue();
+        semesterFieldLocal.getItems().addAll(currentYear + "-1", currentYear + "-2");
+        semesterFieldLocal.setPromptText("选择学期");
         ComboBox<String> classBox = new ComboBox<>();
         classBox.setPromptText("选择班级");
         Task<List<ClassInfo>> loadClasses = new Task<>() {
@@ -196,7 +199,7 @@ public class ExamManagementController {
         if (existing != null) {
             nameField.setText(existing.getName());
             typeBox.setValue(mapExamType(existing.getType()));
-            semesterFieldLocal.setText(existing.getSemester());
+            semesterFieldLocal.setValue(existing.getSemester());
             if (existing.getExamDate() != null && !existing.getExamDate().isEmpty()) {
                 examDatePicker.setValue(java.time.LocalDate.parse(existing.getExamDate()));
             }
@@ -216,13 +219,13 @@ public class ExamManagementController {
 
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
-                if (nameField.getText().isEmpty() || typeBox.getValue() == null || semesterFieldLocal.getText().isEmpty()) {
+                if (nameField.getText().isEmpty() || typeBox.getValue() == null || semesterFieldLocal.getValue() == null) {
                     CrudHelper.showError("请填写必填项"); return null;
                 }
                 Exam e = existing != null ? existing : new Exam();
                 e.setName(nameField.getText());
                 e.setType(mapExamTypeReverse(typeBox.getValue()));
-                e.setSemester(semesterFieldLocal.getText());
+                e.setSemester(semesterFieldLocal.getValue());
                 String classVal = classBox.getValue();
                 if (classVal != null) e.setClassId(Integer.parseInt(classVal.split(" - ")[0]));
                 e.setExamDate(examDatePicker.getValue() != null ? examDatePicker.getValue().toString() : "");

@@ -176,7 +176,7 @@ public class StudentManagementController {
         if (classList != null) {
             for (ClassInfo c : classList) classBox.getItems().add(c.getId() + " - " + c.getClassName());
         }
-        Spinner<Integer> enrollYearSpinner = new Spinner<>(2000, 2099, 2025);
+        Spinner<Integer> enrollYearSpinner = new Spinner<>(2000, 2099, java.time.Year.now().getValue());
         enrollYearSpinner.setEditable(true);
         enrollYearSpinner.setPrefWidth(150);
         TextField phoneField = new TextField();

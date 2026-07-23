@@ -35,7 +35,7 @@
         <!-- Quick Actions -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12">
             <Label text="快捷操作" styleClass="section-title"/>
-            <HBox spacing="12">
+            <VBox spacing="12">
                 <Button text="班级管理" styleClass="quick-action-btn"
                         onAction="#goToClasses"/>
                 <Button text="教师管理" styleClass="quick-action-btn"
@@ -44,7 +44,7 @@
                         onAction="#goToStudents"/>
                 <Button text="教学任务" styleClass="quick-action-btn"
                         onAction="#goToTeachingTasks"/>
-            </HBox>
+            </VBox>
         </VBox>
         <!-- System Overview -->
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
@@ -53,7 +53,7 @@
                 <Label text="系统状态" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <Label text="正常运行" styleClass="status-success" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
                 <Label text="AI服务" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <Label text="DeepSeek" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label text="DeepSeek / GLM" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                 <Label text="版本" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                 <Label text="v1.0.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
             </GridPane>
