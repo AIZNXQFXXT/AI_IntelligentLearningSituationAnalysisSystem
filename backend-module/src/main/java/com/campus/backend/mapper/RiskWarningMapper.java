@@ -21,6 +21,6 @@ public interface RiskWarningMapper extends BaseMapper<RiskWarning> {
     @Select("SELECT COUNT(*) FROM risk_warning WHERE is_deleted = 0 AND handle_status = 'HANDLED'")
     long countHandled();
 
-    @Select("SELECT COUNT(*) FROM risk_warning WHERE is_deleted = 0 AND (handle_status IS NULL OR handle_status != 'HANDLED')")
+    @Select("SELECT COUNT(*) FROM risk_warning WHERE is_deleted = 0 AND (handle_status IS NULL OR handle_status IN ('PENDING', 'PROCESSING'))")
     long countUnhandled();
 }

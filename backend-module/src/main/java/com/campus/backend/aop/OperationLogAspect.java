@@ -1,7 +1,9 @@
 package com.campus.backend.aop;
 
 import com.campus.backend.entity.OperationLog;
+import com.campus.backend.entity.User;
 import com.campus.backend.mapper.OperationLogMapper;
+import com.campus.backend.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -13,10 +15,14 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Aspect
 @Component
 public class OperationLogAspect {
-    private final OperationLogMapper logMapper;
+    private static final String GUEST = "游客";
 
-    public OperationLogAspect(OperationLogMapper logMapper) {
+    private final OperationLogMapper logMapper;
+    private final UserMapper userMapper;
+
+    public OperationLogAspect(OperationLogMapper logMapper, UserMapper userMapper) {
         this.logMapper = logMapper;
+        this.userMapper = userMapper;
     }
 
     @Around("@annotation(org.springframework.web.bind.annotation.PostMapping) " +
@@ -50,6 +56,12 @@ public class OperationLogAspect {
             Long userId = (Long) request.getAttribute("userId");
             if (userId != null) {
                 log.setOperatorId(userId);
+                User user = userMapper.selectById(userId);
+                String username = (user != null) ? user.getUsername() : null;
+                log.setUsername((username != null && !username.isEmpty()) ? username : GUEST);
+            } else {
+                // 未登录或登录接口本身：标记为游客
+                log.setUsername(GUEST);
             }
 
             logMapper.insert(log);

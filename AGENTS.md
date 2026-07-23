@@ -92,7 +92,7 @@ Embedded in `create()` methods: look up by unique key **without** `is_deleted` f
 
 ## Known Pitfalls
 
-- **Broken auto-fill**: `BaseEntity` uses `createdAt`/`updatedAt` but `MyBatisPlusConfig` fills `"createTime"`/`"updateTime"` — set timestamps manually in service code. The meta-object handler names don't match the field names.
+- **Auto-fill timestamps**: `BaseEntity` uses `createdAt`/`updatedAt`, and `MyBatisPlusConfig`'s `MetaObjectHandler` fills these via `strictInsertFill`/`strictUpdateFill` on INSERT and INSERT_UPDATE. Time is set automatically — no need to set `setCreatedAt`/`setUpdatedAt` manually in service code. `strictInsertFill` does NOT overwrite a non-null value, so manual timestamps (if any) still win. Legacy service code with manual `setCreatedAt`/`setUpdatedAt` calls is redundant but harmless.
 - **`@AllArgsConstructor` + `@Qualifier`**: Lombok drops `@Qualifier`. Write a manual constructor (see `TaskController`, `TeacherController`, etc.).
 - **BusinessException returns HTTP 200**: `GlobalExceptionHandler.handleBusiness()` uses `@ResponseStatus(HttpStatus.OK)` — all business errors come as HTTP 200 with error code in JSON body. Don't rely on HTTP status.
 - **`.gitignore` traps**: `*.yml` excludes most config files (but `!application.yml` exempts the default), `.xlsx`, `test/`, `docs/`, `.log` (not `*.log`), `.opencode/`, `.env`.

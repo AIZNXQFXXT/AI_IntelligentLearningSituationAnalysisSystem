@@ -39,7 +39,7 @@ public class TeacherRiskController {
         loadSemesters();
         riskLevelCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "HIGH", "MEDIUM", "LOW")));
         riskLevelCombo.getSelectionModel().selectFirst();
-        statusCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "UNHANDLED", "HANDLED")));
+        statusCombo.setItems(FXCollections.observableArrayList(Arrays.asList("全部", "PENDING", "PROCESSING", "HANDLED", "IGNORED")));
         statusCombo.getSelectionModel().selectFirst();
 
         colStudentId.setCellValueFactory(data ->

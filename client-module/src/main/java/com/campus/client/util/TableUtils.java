@@ -93,8 +93,17 @@ public class TableUtils {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); return; }
-                Label label = new Label("HANDLED".equals(item) ? "已处理" : "未处理");
-                label.getStyleClass().add("HANDLED".equals(item) ? "tag-success" : "tag-danger");
+                String text;
+                String style;
+                switch (item) {
+                    case "HANDLED":   text = "已处理";   style = "tag-success"; break;
+                    case "PROCESSING":text = "处理中";   style = "tag-warning"; break;
+                    case "IGNORED":   text = "已忽略";   style = "tag-info";    break;
+                    case "PENDING":
+                    default:          text = "待处理";   style = "tag-danger";  break;
+                }
+                Label label = new Label(text);
+                label.getStyleClass().add(style);
                 setGraphic(label);
             }
         });

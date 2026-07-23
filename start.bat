@@ -55,8 +55,8 @@ echo [OK] common-module installed
 
 echo.
 echo [3/4] Starting backend in background...
-start /b cmd /c "mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true > backend.log 2>&1"
-echo [OK] Backend is starting (logs: backend.log)
+start /b cmd /c "mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true -Dspring-boot.run.profiles=%PROFILE% > backend.log 2>&1"
+echo [OK] Backend is starting (profile: %PROFILE%, logs: backend.log)
 
 echo.
 echo [4/4] Starting JavaFX client...

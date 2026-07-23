@@ -46,7 +46,10 @@ public class RiskWarningController {
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN");
         Long userId = (Long) request.getAttribute("userId");
-        riskWarningService.handle(id, body.get("remark"), userId);
+        // 客户端发送的 key 是 handleRemark，兼容 remark
+        String remark = body.get("handleRemark");
+        if (remark == null) remark = body.get("remark");
+        riskWarningService.handle(id, remark, userId);
         return ApiResponse.success();
     }
 }
