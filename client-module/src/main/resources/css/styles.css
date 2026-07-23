@@ -136,6 +136,17 @@
     -fx-border-radius: 4;
 }
 
+/* Dashboard quick action buttons — fill container width so all buttons are equal */
+.quick-action-btn {
+    -fx-max-width: Infinity;
+    -fx-pref-width: 200;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+    -fx-padding: 10 20;
+    -fx-font-size: 14px;
+}
+
+
 /* ---------- TextFields / PasswordFields ---------- */
 .text-field, .password-field, .text-area {
     -fx-background-color: #FFFFFF;

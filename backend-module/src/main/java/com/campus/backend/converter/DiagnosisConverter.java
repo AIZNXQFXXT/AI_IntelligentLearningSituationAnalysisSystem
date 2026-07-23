@@ -35,6 +35,8 @@ public class DiagnosisConverter {
         vo.setDiagnosisText(record.getDiagnosisText());
         vo.setCreatedAt(record.getCreatedAt());
         vo.setRiskLevel(record.getRiskLevel());
+        vo.setAiModel(record.getAiModel());
+        vo.setTokensUsed(record.getTokensUsed());
 
         Student student = studentMapper.selectById(record.getStudentId());
         if (student != null) {

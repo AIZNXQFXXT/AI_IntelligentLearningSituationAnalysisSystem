@@ -18,6 +18,8 @@ public class DiagnosisVO {
     private List<String> suggestions;
     private String riskLevel;
     private String diagnosisText;
+    private String aiModel;
+    private Integer tokensUsed;
     private LocalDateTime createdAt;
 
     @Data
