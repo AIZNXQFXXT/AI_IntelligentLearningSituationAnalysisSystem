@@ -54,11 +54,26 @@ public class AiCallLogController {
         colCreatedAt.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
 
         table.setItems(tableData);
+        // 分页工厂只注册一次：用户点页码时由它触发加载
+        pagination.setPageFactory(this::buildPage);
         loadData();
     }
 
     @FXML
-    private void handleSearch() { currentPage = 1; loadData(); }
+    private void handleSearch() {
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
+        loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
+    }
 
     private void loadData() {
         Boolean success = null;
@@ -76,23 +91,16 @@ public class AiCallLogController {
         task.setOnSucceeded(e -> {
             PageResult<AiCallLog> result = task.getValue();
             tableData.clear(); tableData.addAll(result.getRecords());
-            totalItems = result.getTotal(); updatePagination();
+            totalItems = result.getTotal();
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
+            // 此处不再调用 setCurrentPageIndex / setPageFactory，否则异步响应会把指针拽回本次页，触发连环重载
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
             CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
         });
         AppExecutors.submit(task::run);
-    }
-
-    private void updatePagination() {
-        int pageCount = (int) Math.ceil((double) totalItems / pageSize);
-        if (pageCount < 1) pageCount = 1;
-        pagination.setPageCount(pageCount);
-        pagination.setCurrentPageIndex(currentPage - 1);
-        pagination.setPageFactory(pageIndex -> {
-            if (pageIndex + 1 != currentPage) { currentPage = pageIndex + 1; loadData(); }
-            return new Label("");
-        });
     }
 }

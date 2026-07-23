@@ -41,7 +41,11 @@ public class CourseManagementController {
     public void initialize() {
         typeFilter.getItems().addAll("全部", "必修", "选修", "专业");
         typeFilter.setValue("全部");
-        typeFilter.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> { currentPage = 1; loadData(); });
+        typeFilter.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
+            loadData();
+        });
 
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colType.setCellValueFactory(cellData -> new SimpleStringProperty(mapCourseType(cellData.getValue().getType())));
@@ -52,7 +56,18 @@ public class CourseManagementController {
         TableUtils.setupActionColumn(colActions, this::handleEdit, this::handleDelete);
 
         table.setItems(tableData);
+        // 分页工厂只注册一次：用户点页码时由它触发加载
+        pagination.setPageFactory(this::buildPage);
         loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
     }
 
     private String getSelectedType() {
@@ -94,7 +109,11 @@ public class CourseManagementController {
         task.setOnSucceeded(e -> {
             PageResult<Course> result = task.getValue();
             tableData.clear(); tableData.addAll(result.getRecords());
-            totalItems = result.getTotal(); updatePagination();
+            totalItems = result.getTotal();
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
+            // 此处不再调用 setCurrentPageIndex / setPageFactory，否则异步响应会把指针拽回本次页，触发连环重载
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
@@ -103,20 +122,13 @@ public class CourseManagementController {
         AppExecutors.submit(task::run);
     }
 
-    private void updatePagination() {
-        int pageCount = (int) Math.ceil((double) totalItems / pageSize);
-        if (pageCount < 1) pageCount = 1;
-        pagination.setPageCount(pageCount);
-        pagination.setCurrentPageIndex(currentPage - 1);
-        pagination.setPageFactory(pageIndex -> {
-            if (pageIndex + 1 != currentPage) { currentPage = pageIndex + 1; loadData(); }
-            return new Label("");
-        });
-    }
-
     @FXML
     private void onSearchKeyPressed(javafx.scene.input.KeyEvent event) {
-        if (event.getCode() == javafx.scene.input.KeyCode.ENTER) { currentPage = 1; loadData(); }
+        if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
+            loadData();
+        }
     }
 
     @FXML

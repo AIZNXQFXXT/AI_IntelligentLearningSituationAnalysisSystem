@@ -46,9 +46,11 @@ public class LogController {
     public ApiResponse<PageResult<AICallLog>> pageAiCalls(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String functionName,
+            @RequestParam(required = false) Integer success,
             HttpServletRequest request) {
         SecurityHelper.requireAdmin(request);
-        IPage<AICallLog> result = logService.pageAiCalls(page, size);
+        IPage<AICallLog> result = logService.pageAiCalls(page, size, functionName, success);
         return ApiResponse.success(PageResult.of(
                 result.getRecords(), result.getTotal(), page, size));
     }

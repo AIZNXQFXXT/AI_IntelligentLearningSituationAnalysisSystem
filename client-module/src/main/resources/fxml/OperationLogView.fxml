@@ -14,8 +14,8 @@
         <HBox spacing="12" alignment="CENTER_RIGHT">
             <TextField fx:id="usernameField" promptText="用户名" prefWidth="120" styleClass="crud-search"/>
             <TextField fx:id="operationField" promptText="操作类型" prefWidth="120" styleClass="crud-search"/>
-            <TextField fx:id="startDateField" promptText="开始 YYYY-MM-DD" prefWidth="140" styleClass="crud-search"/>
-            <TextField fx:id="endDateField" promptText="结束 YYYY-MM-DD" prefWidth="140" styleClass="crud-search"/>
+            <DatePicker fx:id="startDateField" promptText="开始日期" prefWidth="140" styleClass="crud-search"/>
+            <DatePicker fx:id="endDateField" promptText="结束日期" prefWidth="140" styleClass="crud-search"/>
             <Button text="查询" styleClass="btn-primary" onAction="#handleSearch"/>
         </HBox>
     </HBox>
@@ -28,7 +28,6 @@
             <columns>
                 <TableColumn fx:id="colUsername" text="用户" prefWidth="100"/>
                 <TableColumn fx:id="colOperation" text="操作" prefWidth="120"/>
-                <TableColumn fx:id="colTargetType" text="目标类型" prefWidth="100"/>
                 <TableColumn fx:id="colDetail" text="详情" prefWidth="200"/>
                 <TableColumn fx:id="colIp" text="IP" prefWidth="120"/>
                 <TableColumn fx:id="colStatus" text="状态" prefWidth="80"/>

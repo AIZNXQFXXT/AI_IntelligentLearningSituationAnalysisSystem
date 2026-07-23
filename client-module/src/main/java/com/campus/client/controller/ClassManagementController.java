@@ -54,8 +54,19 @@ public class ClassManagementController {
         TableUtils.setupActionColumn(colActions, this::handleEdit, this::handleDelete);
 
         table.setItems(tableData);
+        // 分页工厂只注册一次：用户点页码时由它触发加载
+        pagination.setPageFactory(this::buildPage);
         loadTeacherMap();
         loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
     }
 
     private void loadTeacherMap() {
@@ -89,7 +100,10 @@ public class ClassManagementController {
             tableData.clear();
             tableData.addAll(result.getRecords());
             totalItems = result.getTotal();
-            updatePagination();
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
+            // 此处不再调用 setCurrentPageIndex / setPageFactory，否则异步响应会把指针拽回本次页，触发连环重载
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
@@ -98,24 +112,11 @@ public class ClassManagementController {
         AppExecutors.submit(task::run);
     }
 
-    private void updatePagination() {
-        int pageCount = (int) Math.ceil((double) totalItems / pageSize);
-        if (pageCount < 1) pageCount = 1;
-        pagination.setPageCount(pageCount);
-        pagination.setCurrentPageIndex(currentPage - 1);
-        pagination.setPageFactory(pageIndex -> {
-            if (pageIndex + 1 != currentPage) {
-                currentPage = pageIndex + 1;
-                loadData();
-            }
-            return new Label("");
-        });
-    }
-
     @FXML
     private void onSearchKeyPressed(javafx.scene.input.KeyEvent event) {
         if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
             currentPage = 1;
+            pagination.setCurrentPageIndex(0);
             loadData();
         }
     }

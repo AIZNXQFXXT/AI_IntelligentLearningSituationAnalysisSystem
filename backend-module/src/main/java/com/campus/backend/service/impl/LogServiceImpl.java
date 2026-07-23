@@ -53,9 +53,15 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public IPage<AICallLog> pageAiCalls(int page, int size) {
+    public IPage<AICallLog> pageAiCalls(int page, int size, String functionName, Integer success) {
         Page<AICallLog> p = new Page<>(page, size);
         LambdaQueryWrapper<AICallLog> wrapper = new LambdaQueryWrapper<>();
+        if (functionName != null && !functionName.isEmpty()) {
+            wrapper.like(AICallLog::getFunctionName, functionName);
+        }
+        if (success != null) {
+            wrapper.eq(AICallLog::getSuccess, success);
+        }
         wrapper.orderByDesc(AICallLog::getId);
         return aiCallLogMapper.selectPage(p, wrapper);
     }

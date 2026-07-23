@@ -12,5 +12,5 @@ public interface LogService {
                                  String targetType, String resultStatus,
                                  LocalDate startDate, LocalDate endDate);
 
-    IPage<AICallLog> pageAiCalls(int page, int size);
+    IPage<AICallLog> pageAiCalls(int page, int size, String functionName, Integer success);
 }
