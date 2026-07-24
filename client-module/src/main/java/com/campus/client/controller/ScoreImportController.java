@@ -1,12 +1,13 @@
 package com.campus.client.controller;
 
-import com.campus.client.model.ClassInfo;
+import com.campus.client.model.Course;
 import com.campus.client.model.Exam;
-import com.campus.client.service.ClassService;
+import com.campus.client.service.CourseService;
 import com.campus.client.service.ExamService;
 import com.campus.client.service.ScoreService;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
+import com.campus.client.controller.ImportProgressController;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -22,13 +23,13 @@ import java.util.List;
 public class ScoreImportController {
 
     @FXML private ComboBox<Exam> examCombo;
-    @FXML private ComboBox<ClassInfo> classCombo;
+    @FXML private ComboBox<Course> courseCombo;
     @FXML private Label resultLabel;
 
     @FXML
     public void initialize() {
         loadExams();
-        loadClasses();
+        loadCourses();
     }
 
     private void loadExams() {
@@ -40,12 +41,12 @@ public class ScoreImportController {
         AppExecutors.submit(task::run);
     }
 
-    private void loadClasses() {
-        Task<List<ClassInfo>> task = new Task<>() {
-            @Override protected List<ClassInfo> call() throws Exception { return ClassService.getAll(); }
+    private void loadCourses() {
+        Task<List<Course>> task = new Task<>() {
+            @Override protected List<Course> call() throws Exception { return CourseService.getAll(); }
         };
-        task.setOnSucceeded(e -> classCombo.setItems(FXCollections.observableArrayList(task.getValue())));
-        task.setOnFailed(e -> CrudHelper.showError("加载班级列表失败"));
+        task.setOnSucceeded(e -> courseCombo.setItems(FXCollections.observableArrayList(task.getValue())));
+        task.setOnFailed(e -> CrudHelper.showError("加载课程列表失败"));
         AppExecutors.submit(task::run);
     }
 
@@ -78,9 +79,9 @@ public class ScoreImportController {
     @FXML
     private void handleUpload() {
         Exam exam = examCombo.getValue();
-        ClassInfo classInfo = classCombo.getValue();
-        if (exam == null || classInfo == null) {
-            CrudHelper.showAlert("请先选择考试和班级");
+        Course course = courseCombo.getValue();
+        if (exam == null || course == null) {
+            CrudHelper.showAlert("请先选择考试和课程");
             return;
         }
 
@@ -90,14 +91,19 @@ public class ScoreImportController {
         File file = fileChooser.showOpenDialog(null);
         if (file == null) return;
 
-        Task<String> task = new Task<>() {
-            @Override protected String call() throws Exception {
-                return ScoreService.batchImportScore(file, exam.getId(), classInfo.getId());
+        Task<Long> task = new Task<>() {
+            @Override protected Long call() throws Exception {
+                return ScoreService.batchImportScore(file, exam.getId(), course.getId());
             }
         };
         task.setOnSucceeded(e -> {
-            resultLabel.setText("导入任务已提交，任务ID: " + task.getValue());
-            resultLabel.setVisible(true);
+            Long taskId = task.getValue();
+            if (taskId != null) {
+                resultLabel.setVisible(false);
+                ImportProgressController.show(taskId, () -> {});
+            } else {
+                CrudHelper.showError("导入失败: 未获取到任务ID");
+            }
         });
         task.setOnFailed(e -> CrudHelper.showError("导入失败"));
         AppExecutors.submit(task::run);

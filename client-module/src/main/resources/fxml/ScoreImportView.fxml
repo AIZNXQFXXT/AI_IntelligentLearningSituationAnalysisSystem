@@ -15,8 +15,8 @@
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Label text="考试:"/>
                 <ComboBox fx:id="examCombo" prefWidth="200"/>
-                <Label text="班级:"/>
-                <ComboBox fx:id="classCombo" prefWidth="200"/>
+                <Label text="课程:"/>
+                <ComboBox fx:id="courseCombo" prefWidth="200"/>
             </HBox>
 
             <HBox spacing="20" alignment="CENTER" VBox.vgrow="ALWAYS">

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public class TeacherService {
     public static PageResult<Teacher> getPage(int page, int size, String keyword) throws Exception {
@@ -33,7 +34,9 @@ public class TeacherService {
         return ApiClient.delete("/teachers/" + id, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public static Void batchImport(File file) throws Exception {
-        return ApiClient.uploadFile("/teachers/batch", file, new TypeReference<ApiResponse<Void>>() {});
+    public static Long batchImport(File file) throws Exception {
+        Map<String, Long> result = ApiClient.uploadFile("/teachers/batch", file,
+                new TypeReference<ApiResponse<Map<String, Long>>>() {});
+        return result != null ? result.get("taskId") : null;
     }
 }

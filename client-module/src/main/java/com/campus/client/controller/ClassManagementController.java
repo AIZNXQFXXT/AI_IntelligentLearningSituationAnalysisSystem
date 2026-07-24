@@ -17,9 +17,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.stage.FileChooser;
-
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,26 +121,6 @@ public class ClassManagementController {
     @FXML
     private void handleCreate() {
         showFormDialog("新增班级", null);
-    }
-
-    @FXML
-    private void handleBatchImport() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("选择Excel文件");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel文件", "*.xlsx", "*.xls"));
-        File file = chooser.showOpenDialog(table.getScene().getWindow());
-        if (file != null) {
-            Task<Void> task = new Task<>() {
-                @Override
-                protected Void call() throws Exception { ClassService.batchImport(file); return null; }
-            };
-            task.setOnSucceeded(e -> { CrudHelper.showAlert("导入成功"); loadData(); });
-            task.setOnFailed(e -> {
-                Throwable ex = task.getException();
-                CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "导入失败");
-            });
-            AppExecutors.submit(task::run);
-        }
     }
 
     private void handleEdit(ClassInfo item) {

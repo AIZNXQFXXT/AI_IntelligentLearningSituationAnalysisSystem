@@ -89,6 +89,7 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>com.campus.client.App</mainClass>
+                    <keepAlive>false</keepAlive>
                 </configuration>
             </plugin>
         </plugins>

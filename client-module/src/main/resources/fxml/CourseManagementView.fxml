@@ -16,7 +16,6 @@
             <TextField fx:id="keywordField" promptText="搜索课程名称"
                        prefWidth="200" onKeyPressed="#onSearchKeyPressed" styleClass="crud-search"/>
             <Button text="新增课程" styleClass="btn-primary" onAction="#handleCreate"/>
-            <Button text="批量导入" styleClass="btn-warning" onAction="#handleBatchImport"/>
         </HBox>
     </HBox>
 

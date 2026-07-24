@@ -5,7 +5,6 @@ import com.campus.client.model.ClassInfo;
 import com.campus.client.model.PageResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.File;
 import java.util.List;
 
 public class ClassService {
@@ -35,9 +34,5 @@ public class ClassService {
 
     public static Void delete(int id) throws Exception {
         return ApiClient.delete("/classes/" + id, new TypeReference<ApiResponse<Void>>() {});
-    }
-
-    public static Void batchImport(File file) throws Exception {
-        return ApiClient.uploadFile("/classes/batch", file, new TypeReference<ApiResponse<Void>>() {});
     }
 }

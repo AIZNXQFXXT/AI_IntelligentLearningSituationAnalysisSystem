@@ -34,9 +34,10 @@ public class ScoreService {
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<Score>>>() {});
     }
 
-    public static String batchImportScore(File file, int examId, int classId) throws Exception {
-        return ApiClient.upload("/scores/batch", file, examId, classId,
-                new TypeReference<ApiResponse<String>>() {});
+    public static Long batchImportScore(File file, int examId, int courseId) throws Exception {
+        Map<String, Long> result = ApiClient.upload("/scores/batch", file, examId, courseId,
+                new TypeReference<ApiResponse<Map<String, Long>>>() {});
+        return result != null ? result.get("taskId") : null;
     }
 
     public static Score createScore(int studentId, int examId, int courseId, double regularScore, double examScore, double finalScore) throws Exception {

@@ -101,7 +101,7 @@ public class ApiClient {
         return handleResponse(response, typeRef);
     }
 
-    public static <T> T upload(String path, File file, int examId, int classId, TypeReference<ApiResponse<T>> typeRef) throws Exception {
+    public static <T> T upload(String path, File file, int examId, int courseId, TypeReference<ApiResponse<T>> typeRef) throws Exception {
         String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
         String CRLF = "\r\n";
 
@@ -110,8 +110,8 @@ public class ApiClient {
         bodyBuilder.append("Content-Disposition: form-data; name=\"examId\"").append(CRLF).append(CRLF);
         bodyBuilder.append(examId).append(CRLF);
         bodyBuilder.append("--").append(boundary).append(CRLF);
-        bodyBuilder.append("Content-Disposition: form-data; name=\"classId\"").append(CRLF).append(CRLF);
-        bodyBuilder.append(classId).append(CRLF);
+        bodyBuilder.append("Content-Disposition: form-data; name=\"courseId\"").append(CRLF).append(CRLF);
+        bodyBuilder.append(courseId).append(CRLF);
         bodyBuilder.append("--").append(boundary).append(CRLF);
         bodyBuilder.append("Content-Disposition: form-data; name=\"file\"; filename=\"").append(file.getName()).append("\"").append(CRLF);
         bodyBuilder.append("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").append(CRLF).append(CRLF);

@@ -5,6 +5,7 @@ import com.campus.client.model.Teacher;
 import com.campus.client.service.TeacherService;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
+import com.campus.client.controller.ImportProgressController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -203,14 +204,18 @@ public class TeacherManagementController {
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel文件", "*.xlsx", "*.xls"));
         File file = chooser.showOpenDialog(table.getScene().getWindow());
         if (file != null) {
-            Task<Void> task = new Task<>() {
+            Task<Long> task = new Task<>() {
                 @Override
-                protected Void call() throws Exception {
-                    TeacherService.batchImport(file);
-                    return null;
-                }
+                protected Long call() throws Exception { return TeacherService.batchImport(file); }
             };
-            task.setOnSucceeded(e -> { CrudHelper.showAlert("导入成功"); loadData(); });
+            task.setOnSucceeded(e -> {
+                Long taskId = task.getValue();
+                if (taskId != null) {
+                    ImportProgressController.show(taskId, this::loadData);
+                } else {
+                    CrudHelper.showError("导入失败: 未获取到任务ID");
+                }
+            });
             task.setOnFailed(e -> {
                 Throwable ex = task.getException();
                 CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "导入失败");

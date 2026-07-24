@@ -6,6 +6,7 @@ import com.campus.client.model.Student;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.File;
+import java.util.Map;
 
 public class StudentService {
     public static PageResult<Student> getPage(int page, int size, String keyword, Integer classId) throws Exception {
@@ -35,8 +36,10 @@ public class StudentService {
         return ApiClient.delete("/students/" + id, new TypeReference<ApiResponse<Void>>() {});
     }
 
-    public static Void batchImport(File file) throws Exception {
-        return ApiClient.uploadFile("/students/batch", file, new TypeReference<ApiResponse<Void>>() {});
+    public static Long batchImport(File file) throws Exception {
+        Map<String, Long> result = ApiClient.uploadFile("/students/batch", file,
+                new TypeReference<ApiResponse<Map<String, Long>>>() {});
+        return result != null ? result.get("taskId") : null;
     }
 
     public static Void toggleStatus(int id, int status) throws Exception {
