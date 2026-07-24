@@ -55,17 +55,21 @@ public class StudentServiceImpl implements StudentService {
             if (existing.getIsDeleted() == 0) {
                 throw new BusinessException(ErrorCode.CONFLICT.getCode(), "学号已存在");
             }
-            // 恢复 student 记录
+            // 记录 DB 中真实的旧 classId（软删除时已对旧班级 -1）
+            Long oldClassId = existing.getClassId();
+            Long newClassId = dto.getClassId();
+
+            // 恢复 student 记录：全字段更新（含 class_id），保证 DB 与 DTO 一致
             existing.setIsDeleted(0);
             existing.setName(dto.getName());
             existing.setGender(dto.getGender());
-            existing.setClassId(dto.getClassId());
+            existing.setClassId(newClassId);
             existing.setEnrollYear(dto.getEnrollYear());
             existing.setPhone(dto.getPhone());
             existing.setGuardianPhone(dto.getGuardianPhone());
             existing.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
             existing.setUpdatedAt(LocalDateTime.now());
-            studentMapper.recoverByStudentNo(dto.getStudentNo());
+            studentMapper.updateById(existing);
 
             // 恢复关联的 User（如果也处于软删除状态）
             String username = dto.getUsername() != null ? dto.getUsername() : dto.getStudentNo();
@@ -77,11 +81,17 @@ public class StudentServiceImpl implements StudentService {
                 user.setUpdatedAt(LocalDateTime.now());
                 userMapper.recoverById(user.getId());
             }
-            Long classId = existing.getClassId(); // 获取学生所属的班级ID
-            if (classId != null) {
+
+            // 修正班级人数：删除时旧班级已 -1，恢复时撤销（旧班级 +1）；
+            // 若班级变更，新班级要 +1；旧==新时只 +1 一次
+            if (oldClassId != null) {
                 classMapper.update(null, new LambdaUpdateWrapper<ClassInfo>()
-                        .eq(ClassInfo::getId, classId)
-                        // 直接写 SQL 片段，让数据库自己 +1，防止并发问题
+                        .eq(ClassInfo::getId, oldClassId)
+                        .setSql("student_count = student_count + 1"));
+            }
+            if (newClassId != null && !newClassId.equals(oldClassId)) {
+                classMapper.update(null, new LambdaUpdateWrapper<ClassInfo>()
+                        .eq(ClassInfo::getId, newClassId)
                         .setSql("student_count = student_count + 1"));
             }
             return existing;
