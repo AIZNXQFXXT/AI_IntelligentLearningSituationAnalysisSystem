@@ -43,13 +43,16 @@ jwt:
 
 campus:
   ai:
-    provider: glm4  # 可切换值: deepseek / glm4 / mock
+    provider: qianfan  # 可切换值: deepseek / glm4 / qianfan / mock
     deepseek-api-key: ${DEEPSEEK_API_KEY:your-key-here}
     deepseek-base-url: https://api.deepseek.com
     deepseek-model: deepseek-chat
     glm-api-key: ${GLM_API_KEY:your-key-here}
     glm-base-url: https://open.bigmodel.cn/api/paas/v4
     glm-model: glm-4.7-flash
+    qianfan-api-key: ${QIANFAN_API_KEY:your-key-here}
+    qianfan-base-url: https://qianfan.baidubce.com/v2
+    qianfan-model: ernie-speed-128k
     daily-limit: 50
     timeout-connect: 5000
     timeout-read: 30000
