@@ -5,9 +5,15 @@ Maven multi-module (Java 17, Spring Boot 3.2, MyBatis-Plus, PostgreSQL, Redis). 
 ## Modules
 
 ```
+<<<<<<< Updated upstream
 common-module/   DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups, prompt templates, Excel row models
 backend-module/  Spring Boot REST API :8080, JWT auth, MyBatis-Plus ORM, AOP logging, AI integration, controllers
 client-module/   JavaFX/FXML desktop client (older/incomplete, part of root pom.xml)
+=======
+common-module/   → shared DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups
+backend-module/  → Spring Boot REST API on :8080, JWT auth, MyBatis-Plus ORM, AOP logging, No tests
+client-module/   → JavaFX/FXML desktop client via OkHttp → backend; **CampusApp.java is empty (0 bytes)** — no FXML, no CSS, no resources exist
+>>>>>>> Stashed changes
 ```
 
 `client-module` is the only frontend module — there is no standalone `javafx-frontend/`.
@@ -61,6 +67,7 @@ Credentials and secrets come from `.env` (not tracked): `DB_URL`, `DB_USERNAME`,
 - **All entities** extend `BaseEntity` (`Long id`, `LocalDateTime createdAt/updatedAt`, `Integer isDeleted`).
 - **Validation**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs, not `@Valid`.
 
+<<<<<<< Updated upstream
 ## AI Module
 
 `backend-module/.../ai/` — AI provider abstraction via OkHttp. Config key: `campus.ai.provider` (`qianfan` default, also `deepseek`, `glm4`, or `mock`). All four providers are always registered (no `@ConditionalOnProperty`); `provider` selects the primary, others serve as connect-timeout fallbacks.
@@ -120,3 +127,47 @@ Embedded in `create()` methods: look up by unique key **without** `is_deleted` f
 - **GPA 5-tier formula (single source of truth)**: `StatsServiceImpl.bracketGpa(score)` and `weightedGpa(scores, credits)` are the ONLY GPA implementation. Brackets: `90-100→4.0-5.0`, `80-89→3.0-3.9`, `70-79→2.0-2.9`, `60-69→1.0-1.9`, `<60→0`. Formula per tier: `(score - lowerBound) * 0.1 + tierBaseGpa`. Weighted GPA = `Σ(绩点×学分) ÷ Σ学分`, rounded to 2 decimals. If the GPA definition ever changes, update these two `static` methods AND the spec/API doc — do NOT duplicate the formula elsewhere. `getGradePoints(classId, courseId)` behavior: `courseId != null` → single-course GPA using the student's latest `Score` (by `id DESC`); `courseId == null` → credit-weighted GPA across ALL the student's courses (no exam/semester filter, aggregates mock+midterm+final — documented limitation).
 - **Top-bar HBox must lock all 3 height bounds in `MainLayout.fxml`**: `<HBox styleClass="top-bar" prefHeight="60" minHeight="60" maxHeight="60">`. Without `minHeight`/`maxHeight`, the VBox layout pass triggered by child-view swaps (`contentArea.setCenter()`) may compress the top bar below 60px. `prefHeight` alone is a suggestion, not a hard limit in JavaFX VBox.
 - **Class stats chart page uses ScatterChart + 3-series BarChart**: `ClassStatsView.fxml` replaced the old `distributionChart` (BarChart 分数段) and `trendChart` (LineChart 学期) with `gradePointChart` (`ScatterChart<String,Number>`, Y axis fixed `0-5`, tickUnit `1`, X = student name) and `courseGradeChart` (`BarChart<String,Number>` with 3 series 平均分/最高分/最低分 per course). `handleLoadStats()` requires ONLY `classId` — `courseId` is now OPTIONAL (course dropdown may be empty). When the chart FXML fields are renamed, the controller `@FXML` fields MUST be renamed identically or JavaFX silently NPEs on load. Backend endpoints: `GET /api/stats/grade-points?classId=&courseId=` and `GET /api/stats/course-grades?classId=`.
+=======
+## Architecture
+
+- **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus BaseMapper)
+- **Injection**: constructor injection via `@AllArgsConstructor` + `final` fields (no `@Autowired`)
+- **Response**: all controllers return `ApiResponse<T>`; service layer returns entities, not DTOs
+- **Pagination**: MyBatis-Plus `Page<>` → `PageResult.of(records, total, page, size)`
+- **Soft delete**: `is_deleted` field (0=active, 1=deleted). Never `DELETE FROM`.
+- **Entity → DTO**: dedicated `@Component` `*Converter` classes per domain, manual hand-written (no MapStruct)
+- **Validation**: `Create.class` / `Update.class` marker interfaces on request DTOs
+- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` — no Spring Security
+- **AOP**: `OperationLogAspect` logs every `@PostMapping`/`@PutMapping`/`@DeleteMapping` automatically
+- **RBAC**: `ADMIN / TEACHER / STUDENT` enum, role checked manually in controllers (no annotation-based RBAC)
+- **Error handling**: `BusinessException(ErrorCode)` → `GlobalExceptionHandler` → `ApiResponse.error()`
+
+## Known bugs / gotchas
+
+- **`MyBatisPlusConfig` auto-fill broken**: `BaseEntity` uses `createdAt`/`updatedAt` but the auto-fill handler sets `"createTime"`/`"updateTime"` (wrong field names). Auto-fill is effectively dead — services manually set `setCreatedAt(LocalDateTime.now())`.
+- **`TaskService` has no implementation**: interface + empty `TaskController` exist, but `service/impl/` has no `TaskServiceImpl`. `ScoreImportTask` references a non-existent bean.
+- **`ScoreImportTask.convertRow()`** throws `UnsupportedOperationException("未实现")` — unimplemented.
+- **`ScoreRow` DTO missing**: referenced in common-module as `com.campus.common.dto.ScoreRow` but no file exists.
+- **AI module is skeleton**: 5 tables + entities exist (`ai_diagnosis_record`, `ai_comment`, `ai_comment_version`, `ai_call_log`, `risk_warning`) but no services, controllers, or DeepSeek LLM client code.
+- **No tests anywhere** — no `src/test` in any module.
+- **No Maven wrapper** (`mvnw`), no `lombok.config`, no CI/CD, no `.github/`.
+- **Plaintext secrets in YAML**: DB password (`123456`) and JWT secret committed. Rotate before production.
+- **`application*.yml` in `.gitignore`** but already tracked — changes ignored after first commit.
+- **Only `application.yml` used**: dev/prod YAMLs are identical copies; no `spring.profiles.active` set.
+- **Custom `PasswordEncoder`**: thin BCrypt wrapper around Spring Security's `BCryptPasswordEncoder` — no Spring Security `SecurityFilterChain`.
+
+## Client module
+
+- **Skeleton only**: `CampusApp.java` is empty (0 bytes). No `src/main/resources/` at all.
+- Dependencies declared (`JavaFX`, `OkHttp 4.12`, `Jackson 2.16`) but unused.
+- Needs full implementation: `Application` subclass, FXML views, controllers, OkHttp client setup.
+
+## Commands
+
+| Action | Command |
+|--------|---------|
+| Compile | `mvn clean compile -DskipTests` (from root) |
+| Run backend | `mvn spring-boot:run -pl backend-module` |
+| Run single module | `mvn compile -pl <module>` |
+| Init DB | `psql -U test -d ai_campus -f backend-module/src/main/resources/db/init.sql` |
+>>>>>>> Stashed changes

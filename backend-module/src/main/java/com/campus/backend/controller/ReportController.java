@@ -107,7 +107,8 @@ public class ReportController {
         List<RiskRow> rows = list.stream().map(r -> new RiskRow(
                 r.getStudentNo(), r.getStudentName(), r.getClassName(),
                 r.getSemester(), r.getRiskLevel(), r.getRiskReason(),
-                r.getHandleStatus(), r.getHandlerName(), r.getHandleAt()
+                r.getHandleStatus(), r.getHandlerName(),
+                r.getHandleAt() != null ? r.getHandleAt().toLocalDate().toString() : ""
         )).collect(Collectors.toList());
         setDownloadHeaders(response, "高风险清单.xlsx");
         EasyExcel.write(response.getOutputStream(), RiskRow.class).sheet("风险清单").doWrite(rows);

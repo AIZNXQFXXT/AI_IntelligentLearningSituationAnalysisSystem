@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,5 +26,5 @@ public class RiskRow {
     @ExcelProperty("处理人")
     private String handlerName;
     @ExcelProperty("处理时间")
-    private LocalDateTime handleAt;
+    private String handleAt;
 }
