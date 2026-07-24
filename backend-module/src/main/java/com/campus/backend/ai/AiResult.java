@@ -18,6 +18,7 @@ public class AiResult {
     private double estimatedCost;
     private long durationMs;
     private String errorMessage;
+    private boolean connectionTimeout;
 
     public static AiResult success(String content, int tokensInput, int tokensOutput, long durationMs) {
         double cost = (tokensInput * 0.0000005 + tokensOutput * 0.000002);
@@ -35,5 +36,14 @@ public class AiResult {
     public static AiResult error(String error, long durationMs) {
         return AiResult.builder()
                 .success(false).errorMessage(error).durationMs(durationMs).build();
+    }
+
+    public static AiResult connectionTimeout(String msg, long durationMs) {
+        return AiResult.builder()
+                .success(false)
+                .errorMessage(msg)
+                .durationMs(durationMs)
+                .connectionTimeout(true)
+                .build();
     }
 }
