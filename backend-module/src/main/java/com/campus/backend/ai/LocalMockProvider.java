@@ -1,12 +1,10 @@
 package com.campus.backend.ai;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "campus.ai.provider", havingValue = "mock", matchIfMissing = false)
 public class LocalMockProvider implements AiService {
 
     @Override

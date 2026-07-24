@@ -9,7 +9,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "campus.ai.provider", havingValue = "deepseek", matchIfMissing = true)
 public class DeepSeekProvider implements AiService {
 
     private final AiProperties aiProperties;
@@ -72,6 +70,15 @@ public class DeepSeekProvider implements AiService {
 
                 return AiResult.success(content, inputTokens, outputTokens, duration);
             }
+        } catch (java.net.SocketTimeoutException e) {
+            long duration = System.currentTimeMillis() - start;
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("connect")) {
+                log.warn("DeepSeek connect timeout");
+                return AiResult.connectionTimeout("connect timeout", duration);
+            }
+            log.error("DeepSeek read/call timeout", e);
+            return AiResult.error("DeepSeek network error: " + e.getMessage(), duration);
         } catch (IOException e) {
             long duration = System.currentTimeMillis() - start;
             log.error("DeepSeek call failed", e);
