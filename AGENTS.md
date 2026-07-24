@@ -63,9 +63,11 @@ Credentials and secrets come from `.env` (not tracked): `DB_URL`, `DB_USERNAME`,
 
 ## AI Module
 
-`backend-module/.../ai/` — AI provider abstraction via OkHttp. Config key: `campus.ai.provider` (`glm4` default, also `deepseek` or `mock`).
+`backend-module/.../ai/` — AI provider abstraction via OkHttp. Config key: `campus.ai.provider` (`qianfan` default, also `deepseek`, `glm4`, or `mock`). All four providers are always registered (no `@ConditionalOnProperty`); `provider` selects the primary, others serve as connect-timeout fallbacks.
 
 `AiServiceFactory.execute()` retries with linear backoff (1s, 2s, 3s), falls back to `LocalMockProvider` if primary fails. Always check `aiResult.isSuccess()` before using content. Clean Markdown fences: `content.replaceAll("^```json\\s*|```$", "").trim()`. Do NOT put `@Transactional` on methods calling `AiServiceFactory` (HTTP call).
+
+- **Connect-timeout provider polling**: When the primary provider's OkHttp `connectTimeout` fires (`SocketTimeoutException` with `connect` in message), `AiServiceFactory.executeWithRetry` breaks out of phase-1 retry and **polls every other registered real provider once** (skipping the primary and `localmock`). If any succeeds, its result is returned; otherwise phase-3 `LocalMockProvider` fallback runs as before. `readTimeout`, HTTP errors, and other IOExceptions do NOT trigger polling — they stay in phase-1 retry. The `connectionTimeout` signal is carried via `AiResult.isConnectionTimeout()`. To support polling, all four providers (`DeepSeekProvider`, `GLM4Provider`, `QianfanProvider`, `LocalMockProvider`) are unconditionally registered as `@Service` beans — no `@ConditionalOnProperty`. Provider-key derivation in `AiServiceFactory.init()` is unchanged: class simple name minus `Provider` suffix, lowercased → `deepseek` / `glm4` / `qianfan` / `localmock`.
 
 AI analysis endpoints: `POST /api/diagnoses`, `POST /api/comments` (single + batch), `POST /api/risk-warnings/detect`, `GET /api/suggestions`. Prompt templates in `common-module/.../constant/PromptTemplate.java`.
 
