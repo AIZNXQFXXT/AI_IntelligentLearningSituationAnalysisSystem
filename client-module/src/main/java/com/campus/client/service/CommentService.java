@@ -13,10 +13,13 @@ public class CommentService {
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<AiComment>>>() {});
     }
 
-    public static PageResult<AiComment> getPage(int page, int size, int classId, String semester) throws Exception {
+    public static PageResult<AiComment> getPage(int page, int size, int classId, String semester, String keyword) throws Exception {
         String path = "/comments?page=" + page + "&size=" + size + "&classId=" + classId;
         if (semester != null && !semester.isEmpty()) {
             path += "&semester=" + ApiClient.encodeParam(semester);
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            path += "&keyword=" + ApiClient.encodeParam(keyword);
         }
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<AiComment>>>() {});
     }

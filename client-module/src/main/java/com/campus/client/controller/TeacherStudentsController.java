@@ -25,6 +25,7 @@ public class TeacherStudentsController {
 
     @FXML private Label titleLabel;
     @FXML private ComboBox<ClassInfo> classComboBox;
+    @FXML private TextField searchField;
     @FXML private TableView<Student> table;
     @FXML private TableColumn<Student, String> colStudentNo;
     @FXML private TableColumn<Student, String> colName;
@@ -121,6 +122,11 @@ public class TeacherStudentsController {
         AppExecutors.submit(loadClasses::run);
     }
 
+    @FXML
+    private void handleSearch() {
+        loadData();
+    }
+
     private void loadData() {
         ClassInfo selected = classComboBox.getValue();
         if (selected == null) {
@@ -131,10 +137,13 @@ public class TeacherStudentsController {
         titleLabel.setText("本班学生 · " + selected.toString());
 
         final Integer classId = selected.getId();
+        final String keyword = searchField != null && searchField.getText() != null
+                ? searchField.getText().trim() : "";
         Task<List<Student>> task = new Task<>() {
             @Override
             protected List<Student> call() throws Exception {
-                return StudentService.getPage(1, 200, null, classId).getRecords();
+                String kw = keyword.isEmpty() ? null : keyword;
+                return StudentService.getPage(1, 200, kw, classId).getRecords();
             }
         };
         task.setOnSucceeded(e -> {

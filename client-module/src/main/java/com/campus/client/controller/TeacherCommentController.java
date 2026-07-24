@@ -31,6 +31,7 @@ public class TeacherCommentController {
     @FXML private TableColumn<AiComment, Void> colAction;
     @FXML private ComboBox<ClassInfo> classCombo;
     @FXML private ComboBox<String> semesterCombo;
+    @FXML private TextField searchField;
 
     private final ObservableList<AiComment> tableData = FXCollections.observableArrayList();
 
@@ -131,14 +132,21 @@ public class TeacherCommentController {
         AppExecutors.submit(task::run);
     }
 
+    @FXML
+    private void handleSearch() {
+        loadData();
+    }
+
     private void loadData() {
         ClassInfo cls = classCombo.getValue();
         String semester = semesterCombo.getValue();
         if (cls == null) return;
         int classId = cls.getId();
+        final String keyword = searchField != null && searchField.getText() != null
+                ? searchField.getText().trim() : "";
         Task<List<AiComment>> task = new Task<>() {
             @Override protected List<AiComment> call() throws Exception {
-                return CommentService.getPage(1, 200, classId, semester).getRecords();
+                return CommentService.getPage(1, 200, classId, semester, keyword).getRecords();
             }
         };
         task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });

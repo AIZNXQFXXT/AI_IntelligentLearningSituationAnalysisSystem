@@ -144,7 +144,7 @@ public class MyController {
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "STUDENT");
         Student student = resolveStudent(request);
-        return ApiResponse.success(diagnosisService.pageHistory(page, size, student.getId(), semester));
+        return ApiResponse.success(diagnosisService.pageHistory(page, size, student.getId(), semester, null));
     }
 
     @GetMapping("/suggestions")

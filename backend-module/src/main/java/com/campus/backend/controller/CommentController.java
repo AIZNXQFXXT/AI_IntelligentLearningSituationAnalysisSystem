@@ -88,9 +88,10 @@ public class CommentController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long classId,
             @RequestParam(required = false) String semester,
+            @RequestParam(required = false) String keyword,
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN");
-        return ApiResponse.success(commentService.pageList(page, size, classId, semester));
+        return ApiResponse.success(commentService.pageList(page, size, classId, semester, keyword));
     }
 
     @PutMapping("/{id}")

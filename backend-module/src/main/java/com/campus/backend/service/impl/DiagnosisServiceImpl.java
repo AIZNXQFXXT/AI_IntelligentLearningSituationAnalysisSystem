@@ -148,13 +148,25 @@ public class DiagnosisServiceImpl implements DiagnosisService {
     }
 
     @Override
-    public PageResult<DiagnosisVO> pageHistory(int page, int size, Long studentId, String semester) {
+    public PageResult<DiagnosisVO> pageHistory(int page, int size, Long studentId, String semester, String keyword) {
         LambdaQueryWrapper<AIDiagnosisRecord> wrapper = new LambdaQueryWrapper<>();
         if (studentId != null) {
             wrapper.eq(AIDiagnosisRecord::getStudentId, studentId);
         }
         if (semester != null && !semester.isEmpty()) {
             wrapper.eq(AIDiagnosisRecord::getSemester, semester);
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            List<Long> studentIds = studentMapper.selectList(
+                    new LambdaQueryWrapper<Student>()
+                            .and(w -> w.like(Student::getName, keyword)
+                                    .or().like(Student::getStudentNo, keyword))
+                            .select(Student::getId)
+            ).stream().map(Student::getId).collect(Collectors.toList());
+            if (studentIds.isEmpty()) {
+                return PageResult.of(List.of(), 0, page, size);
+            }
+            wrapper.in(AIDiagnosisRecord::getStudentId, studentIds);
         }
         wrapper.orderByDesc(AIDiagnosisRecord::getCreatedAt);
         Page<AIDiagnosisRecord> result = diagnosisMapper.selectPage(new Page<>(page, size), wrapper);

@@ -25,9 +25,10 @@ public class RiskWarningController {
             @RequestParam(required = false) String semester,
             @RequestParam(required = false) String riskLevel,
             @RequestParam(required = false) String handleStatus,
+            @RequestParam(required = false) String keyword,
             HttpServletRequest request) {
         SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN");
-        return ApiResponse.success(riskWarningService.pageList(page, size, semester, riskLevel, handleStatus));
+        return ApiResponse.success(riskWarningService.pageList(page, size, semester, riskLevel, handleStatus, keyword));
     }
 
     @PostMapping("/detect")

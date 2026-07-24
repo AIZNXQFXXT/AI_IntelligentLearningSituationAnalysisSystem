@@ -19,6 +19,17 @@ public class DiagnosisService {
         return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<AiDiagnosis>>>() {});
     }
 
+    public static PageResult<AiDiagnosis> getPage(int page, int size, String semester, String keyword) throws Exception {
+        String path = "/diagnoses?page=" + page + "&size=" + size;
+        if (semester != null && !semester.isEmpty()) {
+            path += "&semester=" + ApiClient.encodeParam(semester);
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            path += "&keyword=" + ApiClient.encodeParam(keyword);
+        }
+        return ApiClient.get(path, new TypeReference<ApiResponse<PageResult<AiDiagnosis>>>() {});
+    }
+
     public static PageResult<AiDiagnosis> getMyPage(int page, int size, String semester) throws Exception {
         String path = "/my/diagnosis?page=" + page + "&size=" + size;
         if (semester != null && !semester.isEmpty()) {

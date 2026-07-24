@@ -16,6 +16,7 @@
         <ComboBox fx:id="riskLevelCombo" prefWidth="100"/>
         <Label text="状态:"/>
         <ComboBox fx:id="statusCombo" prefWidth="100"/>
+        <TextField fx:id="searchField" promptText="学号 / 姓名" prefWidth="160" styleClass="crud-search"/>
         <Button text="查询" onAction="#handleSearch" styleClass="btn-primary"/>
     </HBox>
 

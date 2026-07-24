@@ -14,6 +14,8 @@
         <ComboBox fx:id="semesterCombo" prefWidth="120"/>
         <Label text="学生:"/>
         <ComboBox fx:id="studentCombo" prefWidth="150"/>
+        <TextField fx:id="searchField" promptText="学号 / 姓名" prefWidth="160" styleClass="crud-search"/>
+        <Button text="查询" onAction="#handleSearch" styleClass="btn-primary"/>
         <Button text="生成诊断" onAction="#handleGenerate" styleClass="btn-success"/>
     </HBox>
 
@@ -23,11 +25,10 @@
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
             </columnResizePolicy>
             <columns>
+                <TableColumn fx:id="colStudent" text="学生" prefWidth="150"/>
                 <TableColumn fx:id="colSemester" text="学期" prefWidth="100"/>
                 <TableColumn fx:id="colRiskLevel" text="风险等级" prefWidth="100"/>
                 <TableColumn fx:id="colDiagnosis" text="诊断摘要" prefWidth="250"/>
-                <TableColumn fx:id="colAiModel" text="AI模型" prefWidth="120"/>
-                <TableColumn fx:id="colTokens" text="Token数" prefWidth="80"/>
                 <TableColumn fx:id="colCreatedAt" text="创建时间" prefWidth="160"/>
                 <TableColumn fx:id="colAction" text="操作" prefWidth="100" minWidth="100"/>
             </columns>

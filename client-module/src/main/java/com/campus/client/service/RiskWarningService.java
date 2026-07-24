@@ -19,11 +19,12 @@ public class RiskWarningService {
         return ApiClient.get(params.toString(), new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
     }
 
-    public static PageResult<RiskWarning> getPage(int page, int size, String semester, String riskLevel, String handleStatus) throws Exception {
+    public static PageResult<RiskWarning> getPage(int page, int size, String semester, String riskLevel, String handleStatus, String keyword) throws Exception {
         StringBuilder params = new StringBuilder("/risk-warnings?page=" + page + "&size=" + size);
         if (semester != null) params.append("&semester=").append(ApiClient.encodeParam(semester));
         if (riskLevel != null) params.append("&riskLevel=").append(ApiClient.encodeParam(riskLevel));
         if (handleStatus != null) params.append("&handleStatus=").append(ApiClient.encodeParam(handleStatus));
+        if (keyword != null && !keyword.isEmpty()) params.append("&keyword=").append(ApiClient.encodeParam(keyword));
         return ApiClient.get(params.toString(), new TypeReference<ApiResponse<PageResult<RiskWarning>>>() {});
     }
 

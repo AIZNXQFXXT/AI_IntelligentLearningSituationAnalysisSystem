@@ -14,6 +14,9 @@
         <HBox styleClass="crud-toolbar" spacing="10" alignment="CENTER_LEFT">
             <Label text="班级:" styleClass="filter-label"/>
             <ComboBox fx:id="classComboBox" prefWidth="220"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="searchField" promptText="学号 / 姓名" prefWidth="160" styleClass="crud-search"/>
+            <Button text="查询" onAction="#handleSearch" styleClass="btn-primary"/>
         </HBox>
         <TableView fx:id="table" VBox.vgrow="ALWAYS">
             <columnResizePolicy>

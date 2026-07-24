@@ -41,6 +41,7 @@ public class DiagnosisConverter {
         Student student = studentMapper.selectById(record.getStudentId());
         if (student != null) {
             vo.setStudentName(student.getName());
+            vo.setStudentNo(student.getStudentNo());
             if (student.getClassId() != null) {
                 ClassInfo classInfo = classMapper.selectById(student.getClassId());
                 if (classInfo != null) {

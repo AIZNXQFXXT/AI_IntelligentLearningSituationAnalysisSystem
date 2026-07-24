@@ -133,14 +133,19 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public PageResult<CommentVO> pageList(int page, int size, Long classId, String semester) {
+    public PageResult<CommentVO> pageList(int page, int size, Long classId, String semester, String keyword) {
         LambdaQueryWrapper<AIComment> wrapper = new LambdaQueryWrapper<>();
-        if (classId != null) {
-            List<Long> studentIds = studentMapper.selectList(
-                    new LambdaQueryWrapper<Student>()
-                            .eq(Student::getClassId, classId)
-                            .select(Student::getId)
-            ).stream().map(Student::getId).collect(Collectors.toList());
+        if (classId != null || (keyword != null && !keyword.isEmpty())) {
+            LambdaQueryWrapper<Student> studentWrapper = new LambdaQueryWrapper<Student>().select(Student::getId);
+            if (classId != null) {
+                studentWrapper.eq(Student::getClassId, classId);
+            }
+            if (keyword != null && !keyword.isEmpty()) {
+                studentWrapper.and(w -> w.like(Student::getName, keyword)
+                        .or().like(Student::getStudentNo, keyword));
+            }
+            List<Long> studentIds = studentMapper.selectList(studentWrapper).stream()
+                    .map(Student::getId).collect(Collectors.toList());
             if (studentIds.isEmpty()) {
                 return PageResult.of(List.of(), 0, page, size);
             }

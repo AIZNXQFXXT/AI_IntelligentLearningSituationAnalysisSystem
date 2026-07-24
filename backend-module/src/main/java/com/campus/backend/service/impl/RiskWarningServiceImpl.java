@@ -102,7 +102,7 @@ public class RiskWarningServiceImpl implements RiskWarningService {
     }
 
     @Override
-    public PageResult<RiskWarningVO> pageList(int page, int size, String semester, String riskLevel, String handleStatus) {
+    public PageResult<RiskWarningVO> pageList(int page, int size, String semester, String riskLevel, String handleStatus, String keyword) {
         LambdaQueryWrapper<RiskWarning> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RiskWarning::getIsDeleted, 0);
         if (semester != null && !semester.isEmpty()) {
@@ -113,6 +113,18 @@ public class RiskWarningServiceImpl implements RiskWarningService {
         }
         if (handleStatus != null) {
             wrapper.eq(RiskWarning::getHandleStatus, handleStatus);
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            List<Long> studentIds = studentMapper.selectList(
+                    new LambdaQueryWrapper<Student>()
+                            .and(w -> w.like(Student::getName, keyword)
+                                    .or().like(Student::getStudentNo, keyword))
+                            .select(Student::getId)
+            ).stream().map(Student::getId).collect(Collectors.toList());
+            if (studentIds.isEmpty()) {
+                return PageResult.of(List.of(), 0, page, size);
+            }
+            wrapper.in(RiskWarning::getStudentId, studentIds);
         }
         wrapper.orderByDesc(RiskWarning::getRiskLevel)
                 .orderByAsc(RiskWarning::getHandleStatus);

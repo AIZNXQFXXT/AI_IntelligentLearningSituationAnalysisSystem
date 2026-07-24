@@ -31,6 +31,7 @@ public class TeacherRiskController {
     @FXML private ComboBox<String> semesterCombo;
     @FXML private ComboBox<String> riskLevelCombo;
     @FXML private ComboBox<String> statusCombo;
+    @FXML private TextField searchField;
 
     private final ObservableList<RiskWarning> tableData = FXCollections.observableArrayList();
 
@@ -77,10 +78,12 @@ public class TeacherRiskController {
         String semester = semesterCombo.getValue();
         String riskLevel = mapRiskLevel(riskLevelCombo.getValue());
         String status = mapStatus(statusCombo.getValue());
+        final String keyword = searchField != null && searchField.getText() != null
+                ? searchField.getText().trim() : "";
 
         Task<List<RiskWarning>> task = new Task<>() {
             @Override protected List<RiskWarning> call() throws Exception {
-                return RiskWarningService.getPage(1, 50, semester, riskLevel, status).getRecords();
+                return RiskWarningService.getPage(1, 50, semester, riskLevel, status, keyword).getRecords();
             }
         };
         task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });

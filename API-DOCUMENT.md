@@ -330,9 +330,9 @@ Headers: `Authorization: Bearer {accessToken}`
 | 方法 | 路径 | 角色 | 说明 |
 |------|------|------|------|
 | POST | `/api/diagnoses` | TEACHER/ADMIN | 生成诊断 `{"studentId":1,"semester":"2024-2025-1"}` → DiagnosisVO |
-| GET | `/api/diagnoses` | 通用 | 诊断记录分页，?studentId |
+| GET | `/api/diagnoses` | 通用 | 诊断记录分页，?studentId, semester, keyword |
 
-**DiagnosisVO：** id, studentId, studentName, className, semester, overall, strengths[{subject, reason}], weaknesses[{subject, reason}], trend, suggestions[], riskLevel, diagnosisText, createdAt
+**DiagnosisVO：** id, studentId, studentName, studentNo, className, semester, overall, strengths[{subject, reason}], weaknesses[{subject, reason}], trend, suggestions[], riskLevel, diagnosisText, createdAt
 
 ---
 
@@ -342,7 +342,7 @@ Headers: `Authorization: Bearer {accessToken}`
 |------|------|------|------|
 | POST | `/api/comments` | TEACHER/ADMIN | 生成单条 `{"studentId":1,"semester":"2024-2025-1"}` → CommentVO |
 | POST | `/api/comments/batch` | TEACHER/ADMIN | 批量生成 `{"classId":1,"semester":"..."}` → `{"taskId":1,"status":"PENDING"}` |
-| GET | `/api/comments` | TEACHER/ADMIN | 评语列表分页，?classId, semester |
+| GET | `/api/comments` | TEACHER/ADMIN | 评语列表分页，?classId, semester, keyword |
 | PUT | `/api/comments/{id}` | TEACHER/ADMIN | 编辑 `{"content":"..."}` → CommentVO（新版本） |
 
 **CommentVO：** id, studentId, studentName, studentNo, className, semester, content, isTeacherEdited, status, generatedBy, createdAt, updatedAt
@@ -353,7 +353,7 @@ Headers: `Authorization: Bearer {accessToken}`
 
 | 方法 | 路径 | 角色 | 说明 |
 |------|------|------|------|
-| GET | `/api/risk-warnings` | TEACHER/ADMIN | 列表分页，?riskLevel, handleStatus |
+| GET | `/api/risk-warnings` | TEACHER/ADMIN | 列表分页，?semester, riskLevel, handleStatus, keyword |
 | POST | `/api/risk-warnings/detect` | TEACHER/ADMIN | 自动检测 `?semester=...` |
 | PUT | `/api/risk-warnings/{id}/handle` | TEACHER/ADMIN | 处理 `{"remark":"..."}` |
 

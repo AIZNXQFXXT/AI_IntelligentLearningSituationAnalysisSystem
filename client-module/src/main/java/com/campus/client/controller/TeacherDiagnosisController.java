@@ -18,21 +18,22 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.GridPane;
+import javafx.beans.property.SimpleStringProperty;
 
 import java.util.List;
 
 public class TeacherDiagnosisController {
 
     @FXML private TableView<AiDiagnosis> table;
+    @FXML private TableColumn<AiDiagnosis, String> colStudent;
     @FXML private TableColumn<AiDiagnosis, String> colSemester;
     @FXML private TableColumn<AiDiagnosis, String> colRiskLevel;
     @FXML private TableColumn<AiDiagnosis, String> colDiagnosis;
-    @FXML private TableColumn<AiDiagnosis, String> colAiModel;
-    @FXML private TableColumn<AiDiagnosis, Integer> colTokens;
     @FXML private TableColumn<AiDiagnosis, String> colCreatedAt;
     @FXML private TableColumn<AiDiagnosis, Void> colAction;
     @FXML private ComboBox<String> semesterCombo;
     @FXML private ComboBox<Student> studentCombo;
+    @FXML private TextField searchField;
 
     private final ObservableList<AiDiagnosis> tableData = FXCollections.observableArrayList();
 
@@ -43,10 +44,12 @@ public class TeacherDiagnosisController {
 
         loadStudents();
 
+        colStudent.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().getStudentName() != null
+                        ? data.getValue().getStudentName() + " (" + (data.getValue().getStudentNo() != null ? data.getValue().getStudentNo() : "") + ")"
+                        : ""));
         colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
         colRiskLevel.setCellValueFactory(new PropertyValueFactory<>("riskLevel"));
-        colAiModel.setCellValueFactory(new PropertyValueFactory<>("aiModel"));
-        colTokens.setCellValueFactory(new PropertyValueFactory<>("tokensUsed"));
         colCreatedAt.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
 
         colRiskLevel.setCellFactory(param -> new TableCell<>() {
@@ -147,12 +150,19 @@ public class TeacherDiagnosisController {
         AppExecutors.submit(task::run);
     }
 
+    @FXML
+    private void handleSearch() {
+        loadData();
+    }
+
     private void loadData() {
         String semester = semesterCombo.getValue();
+        final String keyword = searchField != null && searchField.getText() != null
+                ? searchField.getText().trim() : "";
         Task<List<AiDiagnosis>> task = new Task<>() {
             @Override
             protected List<AiDiagnosis> call() throws Exception {
-                return DiagnosisService.getPage(1, 50, semester).getRecords();
+                return DiagnosisService.getPage(1, 50, semester, keyword).getRecords();
             }
         };
         task.setOnSucceeded(e -> {

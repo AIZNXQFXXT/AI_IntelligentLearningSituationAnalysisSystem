@@ -11,6 +11,10 @@ public class AiDiagnosis {
     private int id;
     @JsonProperty("studentId")
     private int studentId;
+    @JsonProperty("studentName")
+    private String studentName;
+    @JsonProperty("studentNo")
+    private String studentNo;
     @JsonProperty("diagnosisText")
     private String diagnosisText;
     @JsonProperty("strengths")
@@ -34,6 +38,10 @@ public class AiDiagnosis {
     public void setId(int id) { this.id = id; }
     public int getStudentId() { return studentId; }
     public void setStudentId(int studentId) { this.studentId = studentId; }
+    public String getStudentName() { return studentName; }
+    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getStudentNo() { return studentNo; }
+    public void setStudentNo(String studentNo) { this.studentNo = studentNo; }
     public String getDiagnosisText() { return diagnosisText; }
     public void setDiagnosisText(String diagnosisText) { this.diagnosisText = diagnosisText; }
     public List<Map<String, String>> getStrengths() { return strengths; }
