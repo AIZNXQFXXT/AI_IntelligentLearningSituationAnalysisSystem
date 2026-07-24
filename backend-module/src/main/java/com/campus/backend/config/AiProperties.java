@@ -14,13 +14,20 @@ public class AiProperties {
     private String deepseekModel = "deepseek-chat";
     private String glmApiKey = "";
     private String glmBaseUrl = "https://open.bigmodel.cn/api/paas/v4";
-    private String glmModel = "glm-4v-flash";
+    private String glmModel = "glm-4.7-flash";
+    private String qianfanApiKey = "";
+    private String qianfanBaseUrl = "https://qianfan.baidubce.com/v2";
+    private String qianfanModel = "ernie-speed-128k";
     private int dailyLimit = 200;
     private int timeoutConnect = 5000;
     private int timeoutRead = 30000;
     private int maxRetries = 2;
 
     public String getActiveModel() {
-        return "glm4".equals(provider) ? glmModel : deepseekModel;
+        return switch (provider) {
+            case "glm4" -> glmModel;
+            case "qianfan" -> qianfanModel;
+            default -> deepseekModel;
+        };
     }
 }
