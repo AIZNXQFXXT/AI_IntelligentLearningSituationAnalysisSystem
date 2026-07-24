@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campus.client.controller.ImportProgressController"
+      styleClass="progress-dialog" spacing="12" alignment="CENTER" prefWidth="360">
+
+    <Label text="导入进度" styleClass="progress-title"/>
+
+    <ProgressBar fx:id="progressBar" prefWidth="320" progress="0"/>
+
+    <Label fx:id="percentLabel" text="0%" styleClass="progress-percent"/>
+
+    <Label fx:id="statusLabel" text="正在提交导入任务..." styleClass="progress-message"/>
+
+    <HBox spacing="8" alignment="CENTER">
+        <Label text="已处理:"/>
+        <Label fx:id="processedLabel" text="0"/>
+        <Label text="/"/>
+        <Label fx:id="totalLabel" text="0"/>
+        <Label text="条"/>
+    </HBox>
+
+    <HBox spacing="8" alignment="CENTER">
+        <Label text="成功:"/>
+        <Label fx:id="successLabel" text="0" styleClass="text-success"/>
+    </HBox>
+
+    <HBox spacing="8" alignment="CENTER">
+        <Label text="失败:"/>
+        <Label fx:id="failLabel" text="0" styleClass="text-danger"/>
+    </HBox>
+
+    <TextArea fx:id="errorArea" prefHeight="80" prefWidth="320"
+              wrapText="true" editable="false"
+              visible="false" managed="false"/>
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button fx:id="closeButton" text="关闭" disable="true" onAction="#handleClose"/>
+    </HBox>
+</VBox>
