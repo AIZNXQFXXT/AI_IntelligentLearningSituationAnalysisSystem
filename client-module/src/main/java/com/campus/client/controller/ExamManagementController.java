@@ -54,25 +54,21 @@ public class ExamManagementController {
                 cellData.getValue().getIsArchived() != null && cellData.getValue().getIsArchived() == 1 ? "已归档" : "未归档"));
 
         colActions.setCellFactory(param -> new TableCell<>() {
-            {
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setGraphic(null); return; }
+                Exam exam = getTableView().getItems().get(getIndex());
+                boolean archived = exam.getIsArchived() != null && exam.getIsArchived() == 1;
                 Button editBtn = new Button("编辑"); editBtn.getStyleClass().addAll("btn-edit", "btn-sm");
                 Button archiveBtn = new Button("归档"); archiveBtn.getStyleClass().addAll("btn-primary", "btn-sm");
                 Button deleteBtn = new Button("删除"); deleteBtn.getStyleClass().addAll("btn-delete", "btn-sm");
                 editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 archiveBtn.setOnAction(e -> handleArchive(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
-                HBox box = new HBox(8, editBtn, archiveBtn, deleteBtn); box.setAlignment(Pos.CENTER); setGraphic(box);
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) { setGraphic(null); return; }
-                Exam exam = getTableView().getItems().get(getIndex());
-                if (getGraphic() instanceof HBox && ((HBox) getGraphic()).getChildren().get(1) instanceof Button) {
-                    Button ab = (Button) ((HBox) getGraphic()).getChildren().get(1);
-                    boolean archived = exam.getIsArchived() != null && exam.getIsArchived() == 1;
-                    ab.setVisible(!archived); ab.setManaged(!archived);
-                }
+                archiveBtn.setVisible(!archived); archiveBtn.setManaged(!archived);
+                HBox box = new HBox(8, editBtn, archiveBtn, deleteBtn); box.setAlignment(Pos.CENTER);
+                setGraphic(box);
             }
         });
 
