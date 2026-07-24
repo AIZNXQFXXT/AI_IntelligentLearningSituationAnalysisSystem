@@ -49,6 +49,7 @@ public class AiServiceFactory {
         int maxRetries = aiProperties.getMaxRetries();
         String activeProvider = aiProperties.getProvider();
 
+        // 阶段一：主 provider 重试（保留原逻辑）
         for (int i = 0; i <= maxRetries; i++) {
             try {
                 AiService primary = providerMap.get(activeProvider);
@@ -59,6 +60,10 @@ public class AiServiceFactory {
                     }
                     lastResult = result;
                     log.warn("{} attempt {} failed: {}", activeProvider, i + 1, result.getErrorMessage());
+                    // 连接超时：跳出本 provider 重试，进入阶段二轮询
+                    if (result.isConnectionTimeout()) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 lastResult = AiResult.error(e.getMessage(), 0);
@@ -75,6 +80,29 @@ public class AiServiceFactory {
             }
         }
 
+        // 阶段二：连接超时轮询其他真实 provider（每个只试一次，不再重试）
+        if (lastResult != null && lastResult.isConnectionTimeout()) {
+            log.warn("Primary provider {} hit connect timeout, polling fallback providers", activeProvider);
+            for (Map.Entry<String, AiService> entry : providerMap.entrySet()) {
+                String name = entry.getKey();
+                if (name.equals(activeProvider) || "localmock".equals(name)) {
+                    continue;
+                }
+                try {
+                    log.info("Trying fallback provider: {}", name);
+                    AiResult result = entry.getValue().call(request);
+                    if (result.isSuccess()) {
+                        return result;
+                    }
+                    lastResult = result;
+                    log.warn("Fallback {} failed: {}", name, result.getErrorMessage());
+                } catch (Exception e) {
+                    log.warn("Fallback {} exception: {}", name, e.getMessage());
+                }
+            }
+        }
+
+        // 阶段三：Mock 兜底（保留原逻辑）
         AiService mock = providerMap.get("localmock");
         if (mock != null) {
             log.warn("Falling back to LocalMockProvider");
