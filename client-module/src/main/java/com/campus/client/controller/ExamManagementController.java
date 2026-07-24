@@ -50,7 +50,8 @@ public class ExamManagementController {
         colClassId.setCellValueFactory(data ->
                 new SimpleStringProperty(classMap.getOrDefault(data.getValue().getClassId(), "未知")));
         colExamDate.setCellValueFactory(new PropertyValueFactory<>("examDate"));
-        colArchived.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIsArchived() ? "已归档" : "未归档"));
+        colArchived.setCellValueFactory(cellData -> new SimpleStringProperty(
+                cellData.getValue().getIsArchived() != null && cellData.getValue().getIsArchived() == 1 ? "已归档" : "未归档"));
 
         colActions.setCellFactory(param -> new TableCell<>() {
             {
@@ -69,7 +70,8 @@ public class ExamManagementController {
                 Exam exam = getTableView().getItems().get(getIndex());
                 if (getGraphic() instanceof HBox && ((HBox) getGraphic()).getChildren().get(1) instanceof Button) {
                     Button ab = (Button) ((HBox) getGraphic()).getChildren().get(1);
-                    ab.setVisible(!exam.getIsArchived()); ab.setManaged(!exam.getIsArchived());
+                    boolean archived = exam.getIsArchived() != null && exam.getIsArchived() == 1;
+                    ab.setVisible(!archived); ab.setManaged(!archived);
                 }
             }
         });
@@ -219,16 +221,18 @@ public class ExamManagementController {
 
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
-                if (nameField.getText().isEmpty() || typeBox.getValue() == null || semesterFieldLocal.getValue() == null) {
-                    CrudHelper.showError("请填写必填项"); return null;
+                if (nameField.getText().isEmpty() || typeBox.getValue() == null
+                        || semesterFieldLocal.getValue() == null || classBox.getValue() == null) {
+                    CrudHelper.showError("请填写必填项（含班级）"); return null;
                 }
                 Exam e = existing != null ? existing : new Exam();
                 e.setName(nameField.getText());
                 e.setType(mapExamTypeReverse(typeBox.getValue()));
                 e.setSemester(semesterFieldLocal.getValue());
                 String classVal = classBox.getValue();
-                if (classVal != null) e.setClassId(Integer.parseInt(classVal.split(" - ")[0]));
-                e.setExamDate(examDatePicker.getValue() != null ? examDatePicker.getValue().toString() : "");
+                e.setClassId(Integer.parseInt(classVal.split(" - ")[0]));
+                // 日期为空时不传（避免后端 LocalDate 解析失败）
+                e.setExamDate(examDatePicker.getValue() != null ? examDatePicker.getValue().toString() : null);
                 return e;
             }
             return null;
@@ -244,7 +248,10 @@ public class ExamManagementController {
                 }
             };
             saveTask.setOnSucceeded(ev -> { CrudHelper.showAlert(existing != null ? "更新成功" : "新增成功"); loadData(); });
-            saveTask.setOnFailed(ev -> CrudHelper.showError("操作失败"));
+            saveTask.setOnFailed(ev -> {
+                Throwable ex = saveTask.getException();
+                CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "操作失败");
+            });
             AppExecutors.submit(saveTask::run);
         });
     }

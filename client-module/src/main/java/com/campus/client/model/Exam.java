@@ -18,7 +18,8 @@ public class Exam {
     @JsonProperty("examDate")
     private String examDate;
     @JsonProperty("isArchived")
-    private boolean isArchived;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer isArchived;
     @JsonProperty("createdAt")
     private String createdAt;
 
@@ -34,8 +35,8 @@ public class Exam {
     public void setClassId(int classId) { this.classId = classId; }
     public String getExamDate() { return examDate; }
     public void setExamDate(String examDate) { this.examDate = examDate; }
-    public boolean getIsArchived() { return isArchived; }
-    public void setIsArchived(boolean isArchived) { this.isArchived = isArchived; }
+    public Integer getIsArchived() { return isArchived; }
+    public void setIsArchived(Integer isArchived) { this.isArchived = isArchived; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
