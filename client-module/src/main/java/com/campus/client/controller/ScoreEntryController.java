@@ -32,8 +32,16 @@ public class ScoreEntryController {
     @FXML private TableColumn<StudentScoreEntry, TextField> colFinal;
     @FXML private TableColumn<StudentScoreEntry, String> colStatus;
     @FXML private TableColumn<StudentScoreEntry, Void> colAction;
+    @FXML private Pagination pagination;
 
     private final ObservableList<StudentScoreEntry> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
+
+    private Exam currentExam;
+    private Course currentCourse;
+    private ClassInfo currentClass;
 
     public static class StudentScoreEntry {
         private final Student student;
@@ -150,6 +158,7 @@ public class ScoreEntryController {
         });
 
         table.setItems(tableData);
+        pagination.setPageFactory(this::buildPage);
     }
 
     private void loadExams() {
@@ -181,23 +190,42 @@ public class ScoreEntryController {
 
     @FXML
     private void handleLoadStudents() {
-        Exam exam = examCombo.getValue();
-        Course course = courseCombo.getValue();
-        ClassInfo selectedClass = classCombo.getValue();
-        if (selectedClass == null || exam == null || course == null) {
+        currentExam = examCombo.getValue();
+        currentCourse = courseCombo.getValue();
+        currentClass = classCombo.getValue();
+        if (currentClass == null || currentExam == null || currentCourse == null) {
             CrudHelper.showAlert("请选择考试、课程和班级");
             return;
         }
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
+        loadData();
+    }
 
-        Task<List<StudentScoreEntry>> task = new Task<>() {
-            @Override protected List<StudentScoreEntry> call() throws Exception {
-                List<Student> students = StudentService.getPage(1, 200, null, selectedClass.getId()).getRecords();
-                List<Score> existingScores = ScoreService.getScoresByExamAndCourse(exam.getId(), course.getId());
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
+    }
+
+    private void loadData() {
+        if (currentClass == null || currentExam == null || currentCourse == null) return;
+        int classId = currentClass.getId();
+        int examId = currentExam.getId();
+        int courseId = currentCourse.getId();
+
+        Task<PageResult<StudentScoreEntry>> task = new Task<>() {
+            @Override protected PageResult<StudentScoreEntry> call() throws Exception {
+                PageResult<Student> studentPage = StudentService.getPage(currentPage, pageSize, null, classId);
+                List<Score> existingScores = ScoreService.getScoresByExamAndCourse(examId, courseId);
                 Map<Integer, Score> scoreMap = new HashMap<>();
                 for (Score s : existingScores) scoreMap.put(s.getStudentId(), s);
 
                 List<StudentScoreEntry> entries = new ArrayList<>();
-                for (Student student : students) {
+                for (Student student : studentPage.getRecords()) {
                     StudentScoreEntry entry = new StudentScoreEntry(student);
                     Score existing = scoreMap.get(student.getId());
                     if (existing != null) {
@@ -220,10 +248,25 @@ public class ScoreEntryController {
                     entry.updateStatus();
                     entries.add(entry);
                 }
-                return entries;
+                PageResult<StudentScoreEntry> result = new PageResult<>();
+                result.setRecords(entries);
+                result.setTotal(studentPage.getTotal());
+                result.setPage(currentPage);
+                result.setSize(pageSize);
+                return result;
             }
         };
-        task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
+        task.setOnSucceeded(e -> {
+            PageResult<StudentScoreEntry> result = task.getValue();
+            tableData.clear();
+            if (result != null && result.getRecords() != null) {
+                tableData.addAll(result.getRecords());
+            }
+            totalItems = result != null ? result.getTotal() : 0;
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
+        });
         task.setOnFailed(e -> CrudHelper.showError("加载数据失败"));
         AppExecutors.submit(task::run);
     }

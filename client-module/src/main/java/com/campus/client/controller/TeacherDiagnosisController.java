@@ -20,6 +20,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.GridPane;
 import javafx.beans.property.SimpleStringProperty;
 
+import com.campus.client.model.PageResult;
 import java.util.List;
 
 public class TeacherDiagnosisController {
@@ -34,12 +35,21 @@ public class TeacherDiagnosisController {
     @FXML private ComboBox<String> semesterCombo;
     @FXML private ComboBox<Student> studentCombo;
     @FXML private TextField searchField;
+    @FXML private Pagination pagination;
 
     private final ObservableList<AiDiagnosis> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
 
     @FXML
     public void initialize() {
-        semesterCombo.setOnAction(e -> loadData());
+        pagination.setPageFactory(this::buildPage);
+        semesterCombo.setOnAction(e -> {
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
+            loadData();
+        });
         loadSemesters();
 
         loadStudents();
@@ -118,7 +128,6 @@ public class TeacherDiagnosisController {
         });
 
         table.setItems(tableData);
-        loadData();
     }
 
     private void loadSemesters() {
@@ -152,22 +161,40 @@ public class TeacherDiagnosisController {
 
     @FXML
     private void handleSearch() {
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
         loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
     }
 
     private void loadData() {
         String semester = semesterCombo.getValue();
         final String keyword = searchField != null && searchField.getText() != null
                 ? searchField.getText().trim() : "";
-        Task<List<AiDiagnosis>> task = new Task<>() {
+        Task<PageResult<AiDiagnosis>> task = new Task<>() {
             @Override
-            protected List<AiDiagnosis> call() throws Exception {
-                return DiagnosisService.getPage(1, 50, semester, keyword).getRecords();
+            protected PageResult<AiDiagnosis> call() throws Exception {
+                return DiagnosisService.getPage(currentPage, pageSize, semester, keyword);
             }
         };
         task.setOnSucceeded(e -> {
+            PageResult<AiDiagnosis> result = task.getValue();
             tableData.clear();
-            tableData.addAll(task.getValue());
+            if (result != null && result.getRecords() != null) {
+                tableData.addAll(result.getRecords());
+            }
+            totalItems = result != null ? result.getTotal() : 0;
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
@@ -194,6 +221,8 @@ public class TeacherDiagnosisController {
         };
         task.setOnSucceeded(e -> {
             CrudHelper.showAlert("诊断生成成功");
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
             loadData();
         });
         task.setOnFailed(e -> CrudHelper.showError("生成失败"));

@@ -1,5 +1,6 @@
 package com.campus.client.controller;
 
+import com.campus.client.model.PageResult;
 import com.campus.client.model.RiskWarning;
 import com.campus.client.service.RiskWarningService;
 import com.campus.client.service.SemesterService;
@@ -32,8 +33,12 @@ public class TeacherRiskController {
     @FXML private ComboBox<String> riskLevelCombo;
     @FXML private ComboBox<String> statusCombo;
     @FXML private TextField searchField;
+    @FXML private Pagination pagination;
 
     private final ObservableList<RiskWarning> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
 
     @FXML
     public void initialize() {
@@ -68,11 +73,25 @@ public class TeacherRiskController {
         });
 
         table.setItems(tableData);
+        pagination.setPageFactory(this::buildPage);
         loadData();
     }
 
     @FXML
-    private void handleSearch() { loadData(); }
+    private void handleSearch() {
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
+        loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
+    }
 
     private void loadData() {
         String semester = semesterCombo.getValue();
@@ -81,12 +100,22 @@ public class TeacherRiskController {
         final String keyword = searchField != null && searchField.getText() != null
                 ? searchField.getText().trim() : "";
 
-        Task<List<RiskWarning>> task = new Task<>() {
-            @Override protected List<RiskWarning> call() throws Exception {
-                return RiskWarningService.getPage(1, 50, semester, riskLevel, status, keyword).getRecords();
+        Task<PageResult<RiskWarning>> task = new Task<>() {
+            @Override protected PageResult<RiskWarning> call() throws Exception {
+                return RiskWarningService.getPage(currentPage, pageSize, semester, riskLevel, status, keyword);
             }
         };
-        task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
+        task.setOnSucceeded(e -> {
+            PageResult<RiskWarning> result = task.getValue();
+            tableData.clear();
+            if (result != null && result.getRecords() != null) {
+                tableData.addAll(result.getRecords());
+            }
+            totalItems = result != null ? result.getTotal() : 0;
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
+        });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
             CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
@@ -150,7 +179,12 @@ public class TeacherRiskController {
                     return null;
                 }
             };
-            task.setOnSucceeded(e -> { CrudHelper.showAlert("处理成功"); loadData(); });
+            task.setOnSucceeded(e -> {
+                CrudHelper.showAlert("处理成功");
+                currentPage = 1;
+                pagination.setCurrentPageIndex(0);
+                loadData();
+            });
             task.setOnFailed(e -> CrudHelper.showError("处理失败"));
             AppExecutors.submit(task::run);
         });

@@ -34,8 +34,12 @@ public class TeacherStudentsController {
     @FXML private TableColumn<Student, Integer> colEnrollYear;
     @FXML private TableColumn<Student, Integer> colStatus;
     @FXML private TableColumn<Student, Void> colAction;
+    @FXML private Pagination pagination;
 
     private final ObservableList<Student> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
 
     @FXML
     public void initialize() {
@@ -84,13 +88,19 @@ public class TeacherStudentsController {
 
         table.setItems(tableData);
 
+        pagination.setPageFactory(this::buildPage);
+
         // ComboBox 显示: 复用 ClassInfo.toString() = "grade className"
         classComboBox.setConverter(new StringConverter<>() {
             @Override public String toString(ClassInfo c) { return c == null ? "" : c.toString(); }
             @Override public ClassInfo fromString(String s) { return null; }
         });
         // 用 valueProperty 监听而非 setOnAction: 程序化 selectFirst() 与用户选择都可靠触发
-        classComboBox.valueProperty().addListener((obs, old, newVal) -> loadData());
+        classComboBox.valueProperty().addListener((obs, old, newVal) -> {
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
+            loadData();
+        });
 
         loadMyClasses();
     }
@@ -124,7 +134,18 @@ public class TeacherStudentsController {
 
     @FXML
     private void handleSearch() {
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
         loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
     }
 
     private void loadData() {
@@ -139,24 +160,27 @@ public class TeacherStudentsController {
         final Integer classId = selected.getId();
         final String keyword = searchField != null && searchField.getText() != null
                 ? searchField.getText().trim() : "";
-        Task<List<Student>> task = new Task<>() {
+        String cn = selected.getClassName();
+        Task<PageResult<Student>> task = new Task<>() {
             @Override
-            protected List<Student> call() throws Exception {
+            protected PageResult<Student> call() throws Exception {
                 String kw = keyword.isEmpty() ? null : keyword;
-                return StudentService.getPage(1, 200, kw, classId).getRecords();
+                return StudentService.getPage(currentPage, pageSize, kw, classId);
             }
         };
         task.setOnSucceeded(e -> {
+            PageResult<Student> result = task.getValue();
             tableData.clear();
-            List<Student> records = task.getValue();
-            // 已按 classId 过滤, 直接用选中班级名填充, 不再做 classList 异步匹配
-            String cn = selected.getClassName();
-            if (records != null) {
-                for (Student s : records) {
+            if (result != null && result.getRecords() != null) {
+                for (Student s : result.getRecords()) {
                     s.setClassName(cn);
                 }
-                tableData.addAll(records);
+                tableData.addAll(result.getRecords());
             }
+            totalItems = result != null ? result.getTotal() : 0;
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
         });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();

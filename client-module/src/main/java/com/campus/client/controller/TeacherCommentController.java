@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 
+import com.campus.client.model.PageResult;
 import java.util.List;
 
 public class TeacherCommentController {
@@ -32,14 +33,27 @@ public class TeacherCommentController {
     @FXML private ComboBox<ClassInfo> classCombo;
     @FXML private ComboBox<String> semesterCombo;
     @FXML private TextField searchField;
+    @FXML private Pagination pagination;
 
     private final ObservableList<AiComment> tableData = FXCollections.observableArrayList();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalItems = 0;
 
     @FXML
     public void initialize() {
-        semesterCombo.setOnAction(e -> loadData());
+        pagination.setPageFactory(this::buildPage);
+        semesterCombo.setOnAction(e -> {
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
+            loadData();
+        });
         classCombo.getSelectionModel().selectedItemProperty()
-                .addListener((obs, old, val) -> loadData());
+                .addListener((obs, old, val) -> {
+                    currentPage = 1;
+                    pagination.setCurrentPageIndex(0);
+                    loadData();
+                });
         loadClasses();
         loadSemesters();
 
@@ -134,7 +148,18 @@ public class TeacherCommentController {
 
     @FXML
     private void handleSearch() {
+        currentPage = 1;
+        pagination.setCurrentPageIndex(0);
         loadData();
+    }
+
+    private Label buildPage(int pageIndex) {
+        int targetPage = pageIndex + 1;
+        if (targetPage != currentPage) {
+            currentPage = targetPage;
+            loadData();
+        }
+        return new Label("");
     }
 
     private void loadData() {
@@ -144,12 +169,22 @@ public class TeacherCommentController {
         int classId = cls.getId();
         final String keyword = searchField != null && searchField.getText() != null
                 ? searchField.getText().trim() : "";
-        Task<List<AiComment>> task = new Task<>() {
-            @Override protected List<AiComment> call() throws Exception {
-                return CommentService.getPage(1, 200, classId, semester, keyword).getRecords();
+        Task<PageResult<AiComment>> task = new Task<>() {
+            @Override protected PageResult<AiComment> call() throws Exception {
+                return CommentService.getPage(currentPage, pageSize, classId, semester, keyword);
             }
         };
-        task.setOnSucceeded(e -> { tableData.clear(); tableData.addAll(task.getValue()); });
+        task.setOnSucceeded(e -> {
+            PageResult<AiComment> result = task.getValue();
+            tableData.clear();
+            if (result != null && result.getRecords() != null) {
+                tableData.addAll(result.getRecords());
+            }
+            totalItems = result != null ? result.getTotal() : 0;
+            int pageCount = (int) Math.ceil((double) totalItems / pageSize);
+            if (pageCount < 1) pageCount = 1;
+            pagination.setPageCount(pageCount);
+        });
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
             CrudHelper.showError(ex != null && ex.getMessage() != null ? ex.getMessage() : "加载失败");
@@ -177,6 +212,8 @@ public class TeacherCommentController {
         };
         task.setOnSucceeded(e -> {
             CrudHelper.showAlert("批量生成已启动成功");
+            currentPage = 1;
+            pagination.setCurrentPageIndex(0);
             loadData();
         });
         task.setOnFailed(e -> CrudHelper.showError("批量生成失败"));

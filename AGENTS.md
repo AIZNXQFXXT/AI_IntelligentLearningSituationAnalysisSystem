@@ -4,170 +4,106 @@ Maven multi-module (Java 17, Spring Boot 3.2, MyBatis-Plus, PostgreSQL, Redis). 
 
 ## Modules
 
-```
-<<<<<<< Updated upstream
-common-module/   DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups, prompt templates, Excel row models
-backend-module/  Spring Boot REST API :8080, JWT auth, MyBatis-Plus ORM, AOP logging, AI integration, controllers
-client-module/   JavaFX/FXML desktop client (older/incomplete, part of root pom.xml)
-=======
-common-module/   → shared DTOs, enums (ErrorCode, RoleEnum), VOs (ApiResponse, PageResult), validation groups
-backend-module/  → Spring Boot REST API on :8080, JWT auth, MyBatis-Plus ORM, AOP logging, No tests
-client-module/   → JavaFX/FXML desktop client via OkHttp → backend; **CampusApp.java is empty (0 bytes)** — no FXML, no CSS, no resources exist
->>>>>>> Stashed changes
-```
-
-`client-module` is the only frontend module — there is no standalone `javafx-frontend/`.
+| Module | Role |
+|--------|------|
+| `common-module` | Shared DTOs, enums (`ErrorCode`, `RoleEnum`), VOs (`ApiResponse`, `PageResult`), validation groups, prompt templates, Excel row models |
+| `backend-module` | Spring Boot REST API on `:8080`, JWT auth, MyBatis-Plus ORM, AOP logging, AI providers (DeepSeek/GLM/Qianfan/Mock via OkHttp), async import pipeline |
+| `client-module` | JavaFX/FXML desktop client (OkHttp → backend). 34 FXML views, 35 controllers, 25 models, 17 services. Entry: `com.campus.client.App` |
 
 ## Build & Run
 
 ```bash
-# compile everything
-mvn compile -DskipTests
-
-# full start (auto-installs common-module, starts backend + JavaFX client)
-bash start.sh          # Linux
-start.bat              # Windows (double-click or cmd)
-
-# start.sh / start.bat poll GET /api/health (2s × 60 tries) before
-# launching the client — backend must be ready first.
-
-# run backend only
-export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-mvn spring-boot:run -pl backend-module -Dmaven.test.skip=true
-
-# run a single test class
-mvn test -pl backend-module -Dtest=StudentServiceImplTest -DfailIfNoTests=false
-
-# run tests with common-module recompilation
-mvn test -pl backend-module -am -Dtest=SystemControllerTest,SystemServiceImplTest -DfailIfNoTests=false
+mvn compile -DskipTests                              # compile all
+mvn spring-boot:run -pl backend-module               # backend only
+mvn javafx:run -pl client-module                     # client only
+mvn test -pl backend-module -am -Dtest=FooTest       # single test
+mvn install -DskipTests -pl common-module -am        # reinstall common (required after any change!)
 ```
 
-> **CRITICAL**: Adding/editing any class in `common-module` requires installing the JAR:
-> ```bash
-> mvn install -DskipTests -pl common-module -am
-> ```
-> Otherwise `spring-boot:run -pl backend-module` silently ignores new fields.
-> Tests with `-pl backend-module` resolve `common-module` from `target/classes` — re-compilation suffices.
+**Full start**: `bash start.sh` — common install → backend → health poll (2s × 60) → client launch.
 
-Default admin: `admin / 123456`. Three profiles (`application.yml`, `-dev.yml`, `-prod.yml`) are identical copies — env differences come from `.env` overrides.
+After editing a class in `common-module` you **must** `mvn install -DskipTests -pl common-module -am` for the backend to pick up new fields. Tests resolve via `target/classes` — recompilation suffices.
 
-Credentials and secrets come from `.env` (not tracked): `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_URL`, `REDIS_PORT`, `JWT_SECRET`, `DEEPSEEK_API_KEY`, `GLM_API_KEY`.
+`client-module` hardcodes `<javafx.platform>win</javafx.platform>` — Linux/macOS runs need that overridden, or the javafx-maven-plugin won't find native binaries.
+
+Default admin: `admin / 123456`.
+
+## Gitignore Traps
+
+`*.yml`, `*.txt`, `*.bat`, `.xlsx`, `test/`, `docs/`, `.log`, `logs/`, `.opencode/`, `.env` are all gitignored. Only `!application.yml` (the default, at `backend-module/src/main/resources/application.yml`) is tracked — `-dev.yml`, `-prod.yml`, and any other YAMLs are invisible to git and must be created locally. Credentials pass via `.env` env vars: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `REDIS_URL`, `REDIS_PORT`, `JWT_SECRET`, `DEEPSEEK_API_KEY`, `GLM_API_KEY`.
 
 ## Architecture
 
-- **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`)
-- **Entity → DTO**: manual `*Converter` per domain (13 converters), no MapStruct. Converters map IDs only; identifier resolution (studentNo→studentId, etc.) done in service layer.
-- **Identifier lookups**: most mappers use `@Select` with `is_deleted = 0`. Each has `*IncludeDeleted` variants omitting that filter for soft-delete recovery.
-  Key methods: `StudentMapper.selectByStudentNo(String)`, `TeacherMapper.selectByTeacherNo(String)`, `ClassMapper.selectByClassName(String)`, `CourseMapper.selectByName(String)`
-- **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`.
-- **JWT**: access token (2h) + refresh token (7d). `JwtAuthInterceptor` on `/api/**` sets `request.setAttribute("userId", ...)` and `request.setAttribute("role", ...)`. Bypasses: `/api/auth/login`, `/api/auth/refresh`, `/api/health`.
-- **AOP**: `OperationLogAspect` logs `@PostMapping`/`@PutMapping`/`@DeleteMapping`. It resolves `username` from `operatorId` via `UserMapper.selectById(...)` and writes both `username` + `operatorId`. When `userId` is null (unauthenticated, or `/api/auth/login` + `/api/auth/refresh` which bypass the JWT interceptor) or the user can't be resolved, `username` falls back to `"游客"` (operatorId stays NULL). Do NOT regress to writing only `operatorId` — the log list UI filters/displays by `username`. `AiCallLogAspect` logs AI calls.
-- **RBAC**: `SecurityHelper.requireAdmin(request)` / `SecurityHelper.requireAnyRole(request, "TEACHER", "ADMIN")`. Pass `HttpServletRequest request` as controller param. Do NOT use `@RequireRole`.
-- **Pagination**: `PageResult.of(records, total, page, size)` from MyBatis-Plus `Page`.
-- **All entities** extend `BaseEntity` (`Long id`, `LocalDateTime createdAt/updatedAt`, `Integer isDeleted`).
-- **Validation**: `@Validated(Create.class)` / `@Validated(Update.class)` on request DTOs, not `@Valid`.
+- **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus `BaseMapper`) — 3-layer plumbing required for new filters
+- **Converters**: 13 manual `*Converter` classes (no MapStruct). Map IDs only; identifier resolution in service layer
+- **Soft delete**: `is_deleted` (0=active, 1=deleted). Never `DELETE FROM`. Unique-key lookup for recovery in `create()` methods
+- **Entities** extend `BaseEntity` (`id`, `createdAt`, `updatedAt`, `isDeleted`) — located in `backend-module` only
+- **JWT**: access (2h) + refresh (7d). `JwtAuthInterceptor` on `/api/**` sets `request.setAttribute("userId", role)`. Bypasses: `/api/auth/login`, `/api/auth/refresh`, `/api/health`
+- **RBAC**: `SecurityHelper.requireAdmin(request)` / `requireAnyRole(request, "TEACHER", "ADMIN")`. Pass `HttpServletRequest` as controller param
+- **Business errors**: `BusinessException(ErrorCode)` → `GlobalExceptionHandler` → HTTP 200 + `ApiResponse.error()` with error code. Do not check HTTP status
+- **`@AllArgsConstructor` + `@Qualifier`**: Lombok drops `@Qualifier`. Write a manual constructor (see `TaskController`)
+- **Pagination**: Backend: `PageResult.of(records, total, page, size)`. Client: same `PageResult` model, JavaFX `Pagination` control
+- **GPA formula**: `StatsServiceImpl.bracketGpa()` / `weightedGpa()`. 90-100→4.0-5.0, 80-89→3.0-3.9, etc. `(score - lowerBound) * 0.1 + tierBaseGpa`, weighted = Σ(绩点×学分) ÷ Σ学分
 
-<<<<<<< Updated upstream
 ## AI Module
 
-`backend-module/.../ai/` — AI provider abstraction via OkHttp. Config key: `campus.ai.provider` (`qianfan` default, also `deepseek`, `glm4`, or `mock`). All four providers are always registered (no `@ConditionalOnProperty`); `provider` selects the primary, others serve as connect-timeout fallbacks.
+`backend-module/.../ai/` — OkHttp-based provider abstraction. Config key: `campus.ai.provider` (`qianfan` default). All four providers registered unconditionally as `@Service`.
 
-`AiServiceFactory.execute()` retries with linear backoff (1s, 2s, 3s), falls back to `LocalMockProvider` if primary fails. Always check `aiResult.isSuccess()` before using content. Clean Markdown fences: `content.replaceAll("^```json\\s*|```$", "").trim()`. Do NOT put `@Transactional` on methods calling `AiServiceFactory` (HTTP call).
+`AiServiceFactory.execute()`: 3-phase retry (primary backoff → connect-timeout poll other real providers → `LocalMockProvider` fallback). Always check `aiResult.isSuccess()`. Strip Markdown fences: `content.replaceAll("^```json\\s*|```$", "").trim()`. No `@Transactional` on methods calling `AiServiceFactory`.
 
-- **Connect-timeout provider polling**: When the primary provider's OkHttp `connectTimeout` fires (`SocketTimeoutException` with `connect` in message), `AiServiceFactory.executeWithRetry` breaks out of phase-1 retry and **polls every other registered real provider once** (skipping the primary and `localmock`). If any succeeds, its result is returned; otherwise phase-3 `LocalMockProvider` fallback runs as before. `readTimeout`, HTTP errors, and other IOExceptions do NOT trigger polling — they stay in phase-1 retry. The `connectionTimeout` signal is carried via `AiResult.isConnectionTimeout()`. To support polling, all four providers (`DeepSeekProvider`, `GLM4Provider`, `QianfanProvider`, `LocalMockProvider`) are unconditionally registered as `@Service` beans — no `@ConditionalOnProperty`. Provider-key derivation in `AiServiceFactory.init()` is unchanged: class simple name minus `Provider` suffix, lowercased → `deepseek` / `glm4` / `qianfan` / `localmock`.
+Student JWT resolve: `userId` → `studentMapper.selectByUserId(userId)` (not `Student.id`).
 
-AI analysis endpoints: `POST /api/diagnoses`, `POST /api/comments` (single + batch), `POST /api/risk-warnings/detect`, `GET /api/suggestions`. Prompt templates in `common-module/.../constant/PromptTemplate.java`.
+## JavaFX Pagination Pattern (Single Source of Truth)
 
-Student-facing APIs at `/api/my/*` (`MyController`). Key: JWT `userId` maps to `Student.userId`, not `Student.id`. Always resolve `studentMapper.selectByUserId(userId)` first.
+```java
+// initialize(): register ONCE
+pagination.setPageFactory(this::buildPage);
 
-## Async Import Pipeline
+// buildPage: guard prevents reload loops
+private Label buildPage(int pageIndex) {
+    int targetPage = pageIndex + 1;
+    if (targetPage != currentPage) {
+        currentPage = targetPage;
+        loadData();
+    }
+    return new Label("");
+}
 
-- Domain-specific: `POST /api/{domain}/batch` (MultipartFile) → `{taskId}`. Poll `GET /api/scores/{taskId}/progress` / `result`.
-- Generic: `POST /api/tasks?type=SCORE_IMPORT&examId=&courseId=` (MultipartFile). `GET /api/tasks/{taskId}` for progress.
-- Batch comments: `POST /api/comments/batch` with `@RequestBody Map<String, Object>` (JSON `{classId, semester}`), NOT `@RequestParam`.
-- File path parsing: `Path.of(URI.create(fileUrl))` — NOT string replace (breaks on Windows `file:///C:/...`).
-- Catch `Throwable`, progress every 50 rows (or every 10 for AI), delete temp file in `finally`.
-- `ObjectMapper` per invocation (no shared state). `@Transactional(propagation = REQUIRES_NEW)` on `TaskServiceImpl` methods called from background threads.
-- Thread pool: `importExecutor` (core=2, max=4, queue=10, `CallerRunsPolicy`).
+// loadData success: ONLY setPageCount — never setCurrentPageIndex / setPageFactory
+task.setOnSucceeded(e -> {
+    PageResult<T> result = task.getValue();
+    tableData.setAll(result.getRecords());
+    int pageCount = (int) Math.ceil((double) result.getTotal() / pageSize);
+    pagination.setPageCount(Math.max(pageCount, 1));
+});
 
-## Sync Excel Export
-
-`ReportController` streams `.xlsx` via EasyExcel: `GET /api/reports/excel/score-table`, `/comments`, `/risk-list`, `/stats`. No temp file, no async. Content-Disposition: `attachment; filename*=UTF-8''{encoded}`. Export DTOs in `common-module/.../dto/report/` with `@ExcelProperty`.
+// filter/search reset: 3-step
+filterChangeListener = (obs, old, val) -> {
+    currentPage = 1;
+    pagination.setCurrentPageIndex(0);
+    loadData();
+};
+```
 
 ## Testing
 
-`@WebMvcTest` / `@SpringBootTest` **will fail** (`@MapperScan` forces DataSource). All tests use `MockMvcBuilders.standaloneSetup()` with `GlobalExceptionHandler` and `LocalValidatorFactoryBean`.
-
-Test files under `backend-module/src/test/` — most are gitignored by `test/` in `.gitignore`, but 4 files were tracked before the pattern was added: `AsyncConfigTest`, `ClassServiceImplTest`, `StudentServiceImplTest`, `TaskServiceImplTest`. New tests won't be tracked unless force-added.
-
-Existing test classes (on disk, 17 total): `UserControllerTest`, `SystemControllerTest`, `LogControllerTest`, `AcademicStatsControllerTest`, `GenericTaskControllerTest`, `StatsControllerTest`, `AcademicStatsServiceImplTest`, `ClassServiceImplTest`, `StudentServiceImplTest`, `SystemServiceImplTest`, `TaskServiceImplTest`, `StatsServiceImplTest`, `AsyncConfigTest`, `WebMvcConfigTest`, `ApiRateLimitInterceptorTest`, `ErrorCodeTest`, `GenerateTestExcel`.
-
-## Soft-Delete Recovery
-
-Embedded in `create()` methods: look up by unique key **without** `is_deleted` filter, recover if found, insert if not. Entities with recovery: `ClassInfo` (`className`), `Course` (`name`), `User` (`username`), `Student` (`studentNo`, also recovers `User`), `Teacher` (`teacherNo`, also recovers `User`).
+19 test files under `backend-module/src/test/`. All use `MockMvcBuilders.standaloneSetup()` + `GlobalExceptionHandler` + `LocalValidatorFactoryBean` — `@WebMvcTest`/`@SpringBootTest` fail due to `@MapperScan` requiring DataSource. `.gitignore` excludes `test/` — force-add with `git add -f` for new test files.
 
 ## Known Pitfalls
 
-- **Auto-fill timestamps**: `BaseEntity` uses `createdAt`/`updatedAt`, and `MyBatisPlusConfig`'s `MetaObjectHandler` fills these via `strictInsertFill`/`strictUpdateFill` on INSERT and INSERT_UPDATE. Time is set automatically — no need to set `setCreatedAt`/`setUpdatedAt` manually in service code. `strictInsertFill` does NOT overwrite a non-null value, so manual timestamps (if any) still win. Legacy service code with manual `setCreatedAt`/`setUpdatedAt` calls is redundant but harmless.
-- **`@AllArgsConstructor` + `@Qualifier`**: Lombok drops `@Qualifier`. Write a manual constructor (see `TaskController`, `TeacherController`, etc.).
-- **BusinessException returns HTTP 200**: `GlobalExceptionHandler.handleBusiness()` uses `@ResponseStatus(HttpStatus.OK)` — all business errors come as HTTP 200 with error code in JSON body. Don't rely on HTTP status.
-- **`.gitignore` traps**: `*.yml` excludes most config files (but `!application.yml` exempts the default), `.xlsx`, `test/`, `docs/`, `.log` (not `*.log`), `.opencode/`, `.env`.
+- **List-page filter plumbing**: Adding a `@RequestParam` filter requires touching **3 layers**: `@GetMapping` → Service interface → Service impl. Spring silently drops undeclared params.
+- **Service method changes**: Use `rg` before changing shared methods like `pageHistory()` or `listByStudent()`. All callers (admin + teacher + student controllers) need updating.
+- **Converter/VO 6-layer chain**: DB → Entity → VO → Converter → API JSON → client model → FXML column. Empty column? Check converter first.
+- **Score lacks `semester`**: Must JOIN `score` → `exam` on `exam_id` for semester filtering.
+- **PostgreSQL `<script>` in `@Select`**: Never `AND (#{param} IS NULL OR ...)` — PG can't infer type. Use `<if test='param != null'>`.
+- **`MyBatisPlusConfig` auto-fill**: `insertFill()` uses `strictInsertFill` for `createdAt` + `strictUpdateFill` for `updatedAt`. `strictInsertFill` does NOT overwrite non-null values.
 - **Redis unreachable**: App starts fine (Lettuce lazy connect).
-- **`Map<String, Integer>` for status**: `PUT /{id}/status` accepts `?status=1` query param, not JSON body.
-- **Comment content may be JSON**: AI sometimes wraps comment text in JSON. `ReportController.extractContent()` parses JSON and extracts `comment`/`content`/`text` fields as fallback.
-- **PostgreSQL `<script>` in `@Select`**: Never use `AND (#{param} IS NULL OR ...)` — PG can't infer type. Use `<if test='param != null'>`.
-- **Score lacks `semester`**: JOIN `score` → `exam` on `exam_id` for semester filtering. `RiskWarningServiceImpl.autoDetect()` queries ALL scores.
-- **JavaFX `Pagination` reload loop (client-module)**: The 11 list controllers (`OperationLogController`, `AiCallLogController`, `StudentManagementController`, `TeacherManagementController`, `ClassManagementController`, `CourseManagementController`, `ExamManagementController`, `TeachingTaskManagementController`, plus student-facing `StudentCommentController`, `StudentRiskController`, `StudentDiagnosisController`) all use a unified pattern. **Do NOT call `pagination.setCurrentPageIndex(...)` or `pagination.setPageFactory(...)` inside the async `task.setOnSucceeded` callback** — each response would yank the index back to "this response's page", re-triggering the factory → guarded `loadData()` → next response → infinite reload loop + page jitter. Correct pattern: register `pagination.setPageFactory(this::buildPage)` **once** in `initialize()`; in the success callback only update table data + `pagination.setPageCount(...)`. Search/filter reset (`handleSearch` / `onSearchKeyPressed` / filter listeners) sets `currentPage = 1` then calls `pagination.setCurrentPageIndex(0)` before `loadData()` to sync the visual index. New list controllers must follow this exact pattern.
-- **List-page query filters need full 3-layer plumbing**: A frontend filter (e.g. `AiCallLogController` success dropdown, `functionName` field) sends `success=1/0` / `functionName=...` as query params, but if the backend `@GetMapping` endpoint doesn't declare the matching `@RequestParam(required = false)`, Spring silently drops the param and the service returns unfiltered data — UI looks "broken but no error". When adding a filter, update **all three layers together**: `LogController.pageAiCalls` (or equivalent) → `LogService` interface signature → `LogServiceImpl` wrapper (`wrapper.eq(...)` / `wrapper.like(...)`). Compare against `/api/logs/operation` which is the reference implementation. Frontend `success` maps to entity `Integer success` (0/1) — type matches.
-- **Student semester-filter pages have an async race on first load**: All three student-facing filter pages (`StudentCommentController`, `StudentRiskController`, `StudentDiagnosisController`) load semesters via async `loadSemesters()` then call `loadData()`. The `selectFirst()` in the success callback triggers `setOnAction` → `handleFilterChange()` → another `loadData()`. If the initial (unfiltered) async request completes AFTER the filter-triggered one, it overwrites the table with unfiltered results. Fix: **do NOT call `loadData()` in `initialize()`** — let `selectFirst()` → `setOnAction` naturally trigger the first load with the correct semester filter.
-- **Service method signature changes must update ALL callers**: Use `grep` (or `rg`) to find every call site before changing a shared method like `pageHistory()` or `listByStudent()`. Example: `DiagnosisService.pageHistory()` was called by both `MyController` and `DiagnosisController`; updating only one silently breaks compilation of the other. `RiskWarningService.listByStudent()` had the same pattern.
-- **`OperationLogAspect` does NOT write `targetType` / `targetId` / `oldData` / `newData`**: The aspect only fills `operation` (HTTP method), `detail` (method signature), `ip`, `durationMs`, `resultStatus`, `failReason`, `username`/`operatorId`. The four "target" columns are NULL in DB for every row. `targetType` is NOT derivable from the JWT token — token carries operator identity (`userId`/`role`), while `targetType` is the operation's target entity (STUDENT/TEACHER/...) which is orthogonal to identity; same admin token can hit `/api/students` or `/api/teachers`. To populate it later, either parse the `@PostMapping`/`@PutMapping`/`@DeleteMapping` URL path in the aspect (zero-touch, auto-covers all endpoints) or add a `@OperationTarget` annotation on each controller method (precise but touches dozens of methods). The frontend "目标类型" column in `OperationLogView.fxml` has been removed to hide the empty column; restoring it later only needs the FXML + `colTargetType` field/cellValueFactory re-added.
-- **Converter/VO must expose every entity field the frontend needs**: DB entity → VO → API JSON → client model → FXML column is a 5-layer chain; a single missing link makes a column silently blank with no error. Example: `AIDiagnosisRecord.aiModel` and `tokensUsed` are written by `DiagnosisServiceImpl` and stored in DB, but `DiagnosisVO` originally omitted both fields and `DiagnosisConverter.toVO()` didn't map them, so the API JSON had no `aiModel` key and the frontend `colAiModel` / `colTokens` columns were always empty. Client model `AiDiagnosis` already had the fields — the break was purely server-side VO/Converter. **Rule**: when a frontend table column is empty but the DB column is populated, check `Entity → VO → Converter` first, not the DB. Adding a field to `common-module` VO requires `mvn install -DskipTests -pl common-module -am` (see Build & Run) before the backend picks it up.
-- **JavaFX `styleClass` referenced in FXML must exist in CSS or it's a silent no-op**: Many `styleClass=` across the codebase were missing CSS rules — `chart-card`, `section-title`, and the entire `crud-card` / `crud-card-header` / `crud-card-header-title` / `crud-card-body` family had no definitions, making card borders/shadows/hover effects invisible. Adding CSS for these was batched together — any new FXML `styleClass=` must be cross-checked against `client-module/src/main/resources/css/styles.css`. Combined with `Button`'s default `maxWidth = USE_COMPUTED_SIZE`, buttons sized by text content won't stretch to fill parent; fix: `.quick-action-btn { -fx-max-width: Infinity; -fx-alignment: CENTER; }`.
-- **GPA 5-tier formula (single source of truth)**: `StatsServiceImpl.bracketGpa(score)` and `weightedGpa(scores, credits)` are the ONLY GPA implementation. Brackets: `90-100→4.0-5.0`, `80-89→3.0-3.9`, `70-79→2.0-2.9`, `60-69→1.0-1.9`, `<60→0`. Formula per tier: `(score - lowerBound) * 0.1 + tierBaseGpa`. Weighted GPA = `Σ(绩点×学分) ÷ Σ学分`, rounded to 2 decimals. If the GPA definition ever changes, update these two `static` methods AND the spec/API doc — do NOT duplicate the formula elsewhere. `getGradePoints(classId, courseId)` behavior: `courseId != null` → single-course GPA using the student's latest `Score` (by `id DESC`); `courseId == null` → credit-weighted GPA across ALL the student's courses (no exam/semester filter, aggregates mock+midterm+final — documented limitation).
-- **Top-bar HBox must lock all 3 height bounds in `MainLayout.fxml`**: `<HBox styleClass="top-bar" prefHeight="60" minHeight="60" maxHeight="60">`. Without `minHeight`/`maxHeight`, the VBox layout pass triggered by child-view swaps (`contentArea.setCenter()`) may compress the top bar below 60px. `prefHeight` alone is a suggestion, not a hard limit in JavaFX VBox.
-- **Class stats chart page uses ScatterChart + 3-series BarChart**: `ClassStatsView.fxml` replaced the old `distributionChart` (BarChart 分数段) and `trendChart` (LineChart 学期) with `gradePointChart` (`ScatterChart<String,Number>`, Y axis fixed `0-5`, tickUnit `1`, X = student name) and `courseGradeChart` (`BarChart<String,Number>` with 3 series 平均分/最高分/最低分 per course). `handleLoadStats()` requires ONLY `classId` — `courseId` is now OPTIONAL (course dropdown may be empty). When the chart FXML fields are renamed, the controller `@FXML` fields MUST be renamed identically or JavaFX silently NPEs on load. Backend endpoints: `GET /api/stats/grade-points?classId=&courseId=` and `GET /api/stats/course-grades?classId=`.
-=======
-## Architecture
+- **Top-bar HBox**: `<HBox prefHeight="60" minHeight="60" maxHeight="60">` — all three required to prevent collapse.
+- **Comment content may be JSON**: `ReportController.extractContent()` parses JSON and extracts `comment`/`content`/`text` fields.
+- **JavaFX `styleClass`**: Must exist in `client-module/src/main/resources/css/styles.css` or it's a silent no-op.
+- **Backend easyexcel dependency**: Duplicated in `pom.xml` (two identical declarations). Harmless but a Maven warning.
+- **`.gitignore` covers**: `*.yml` (except `application.yml`), `*.txt`, `*.bat`, `.xlsx`, `test/`, `docs/`, `.log`, `.opencode/`, `.env`.
 
-- **Layers**: controller → service(interface) → impl → mapper(MyBatis-Plus BaseMapper)
-- **Injection**: constructor injection via `@AllArgsConstructor` + `final` fields (no `@Autowired`)
-- **Response**: all controllers return `ApiResponse<T>`; service layer returns entities, not DTOs
-- **Pagination**: MyBatis-Plus `Page<>` → `PageResult.of(records, total, page, size)`
-- **Soft delete**: `is_deleted` field (0=active, 1=deleted). Never `DELETE FROM`.
-- **Entity → DTO**: dedicated `@Component` `*Converter` classes per domain, manual hand-written (no MapStruct)
-- **Validation**: `Create.class` / `Update.class` marker interfaces on request DTOs
-- **JWT**: access token (2h) + refresh token (7d), custom `JwtAuthInterceptor` — no Spring Security
-- **AOP**: `OperationLogAspect` logs every `@PostMapping`/`@PutMapping`/`@DeleteMapping` automatically
-- **RBAC**: `ADMIN / TEACHER / STUDENT` enum, role checked manually in controllers (no annotation-based RBAC)
-- **Error handling**: `BusinessException(ErrorCode)` → `GlobalExceptionHandler` → `ApiResponse.error()`
+## API Documentation
 
-## Known bugs / gotchas
-
-- **`MyBatisPlusConfig` auto-fill broken**: `BaseEntity` uses `createdAt`/`updatedAt` but the auto-fill handler sets `"createTime"`/`"updateTime"` (wrong field names). Auto-fill is effectively dead — services manually set `setCreatedAt(LocalDateTime.now())`.
-- **`TaskService` has no implementation**: interface + empty `TaskController` exist, but `service/impl/` has no `TaskServiceImpl`. `ScoreImportTask` references a non-existent bean.
-- **`ScoreImportTask.convertRow()`** throws `UnsupportedOperationException("未实现")` — unimplemented.
-- **`ScoreRow` DTO missing**: referenced in common-module as `com.campus.common.dto.ScoreRow` but no file exists.
-- **AI module is skeleton**: 5 tables + entities exist (`ai_diagnosis_record`, `ai_comment`, `ai_comment_version`, `ai_call_log`, `risk_warning`) but no services, controllers, or DeepSeek LLM client code.
-- **No tests anywhere** — no `src/test` in any module.
-- **No Maven wrapper** (`mvnw`), no `lombok.config`, no CI/CD, no `.github/`.
-- **Plaintext secrets in YAML**: DB password (`123456`) and JWT secret committed. Rotate before production.
-- **`application*.yml` in `.gitignore`** but already tracked — changes ignored after first commit.
-- **Only `application.yml` used**: dev/prod YAMLs are identical copies; no `spring.profiles.active` set.
-- **Custom `PasswordEncoder`**: thin BCrypt wrapper around Spring Security's `BCryptPasswordEncoder` — no Spring Security `SecurityFilterChain`.
-
-## Client module
-
-- **Skeleton only**: `CampusApp.java` is empty (0 bytes). No `src/main/resources/` at all.
-- Dependencies declared (`JavaFX`, `OkHttp 4.12`, `Jackson 2.16`) but unused.
-- Needs full implementation: `Application` subclass, FXML views, controllers, OkHttp client setup.
-
-## Commands
-
-| Action | Command |
-|--------|---------|
-| Compile | `mvn clean compile -DskipTests` (from root) |
-| Run backend | `mvn spring-boot:run -pl backend-module` |
-| Run single module | `mvn compile -pl <module>` |
-| Init DB | `psql -U test -d ai_campus -f backend-module/src/main/resources/db/init.sql` |
->>>>>>> Stashed changes
+Maintained at `API-DOCUMENT.md` (441 lines). After adding/changing API endpoints, update it.
