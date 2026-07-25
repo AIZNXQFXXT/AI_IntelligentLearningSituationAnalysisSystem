@@ -3,13 +3,13 @@ package com.campus.client.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ScoreDistribution {
-    @JsonProperty("range")
-    private String range;
+    @JsonProperty("rangeLabel")
+    private String rangeLabel;
     @JsonProperty("count")
     private int count;
 
-    public String getRange() { return range; }
-    public void setRange(String range) { this.range = range; }
+    public String getRangeLabel() { return rangeLabel; }
+    public void setRangeLabel(String rangeLabel) { this.rangeLabel = rangeLabel; }
     public int getCount() { return count; }
     public void setCount(int count) { this.count = count; }
 }

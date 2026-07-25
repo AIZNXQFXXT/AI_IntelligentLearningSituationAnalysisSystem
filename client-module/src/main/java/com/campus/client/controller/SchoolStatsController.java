@@ -95,8 +95,8 @@ public class SchoolStatsController {
             if (list == null || list.isEmpty()) return;
             XYChart.Series<String, Number> series = new XYChart.Series<>();
             for (ScoreDistribution d : list) {
-                if (d.getRange() == null) continue;
-                series.getData().add(new XYChart.Data<>(d.getRange(), d.getCount()));
+                if (d.getRangeLabel() == null) continue;
+                series.getData().add(new XYChart.Data<>(d.getRangeLabel(), d.getCount()));
             }
             chart.getData().add(series);
         });

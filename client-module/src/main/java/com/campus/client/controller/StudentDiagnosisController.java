@@ -7,6 +7,7 @@ import com.campus.client.service.DiagnosisService;
 import com.campus.client.service.SemesterService;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
+import com.campus.client.util.JsonContentExtractor;
 import com.campus.client.util.JsonFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -71,10 +72,10 @@ public class StudentDiagnosisController {
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
-                    String preview = item;
                     DiagnosisReport report = JsonFormatter.parseDiagnosisReport(item);
-                    if (report.getOverall() != null && !report.getOverall().isBlank()) {
-                        preview = report.getOverall();
+                    String preview = report.getOverall();
+                    if (preview == null || preview.isBlank()) {
+                        preview = JsonContentExtractor.extractDiagnosisPreview(item);
                     }
                     if (preview.length() > 60) preview = preview.substring(0, 60) + "...";
                     Label label = new Label(preview);

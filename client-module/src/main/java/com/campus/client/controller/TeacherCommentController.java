@@ -8,6 +8,7 @@ import com.campus.client.service.SemesterService;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.ClientLogger;
 import com.campus.client.util.CrudHelper;
+import com.campus.client.util.JsonContentExtractor;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -69,7 +70,7 @@ public class TeacherCommentController {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); return; }
-                Label label = new Label(item); label.setWrapText(true); setGraphic(label);
+                Label label = new Label(JsonContentExtractor.extractCommentContent(item)); label.setWrapText(true); setGraphic(label);
             }
         });
 
@@ -225,7 +226,7 @@ public class TeacherCommentController {
         dialog.setTitle("编辑评语");
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        TextArea textArea = new TextArea(c.getContent());
+        TextArea textArea = new TextArea(JsonContentExtractor.extractCommentContent(c.getContent()));
         textArea.setPrefRowCount(6);
         textArea.setWrapText(true);
         dialog.getDialogPane().setContent(textArea);
@@ -259,7 +260,7 @@ public class TeacherCommentController {
         javafx.scene.layout.VBox vbox = new javafx.scene.layout.VBox(10);
         vbox.setPadding(new javafx.geometry.Insets(20));
 
-        Label current = new Label(String.format("当前版本 - %s\n%s", c.getCreatedAt(), c.getContent()));
+        Label current = new Label(String.format("当前版本 - %s\n%s", c.getCreatedAt(), JsonContentExtractor.extractCommentContent(c.getContent())));
         current.setWrapText(true);
         vbox.getChildren().add(current);
 

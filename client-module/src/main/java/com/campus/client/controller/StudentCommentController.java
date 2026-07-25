@@ -6,6 +6,7 @@ import com.campus.client.service.CommentService;
 import com.campus.client.service.SemesterService;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
+import com.campus.client.util.JsonContentExtractor;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -52,7 +53,7 @@ public class StudentCommentController {
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
-                    Label label = new Label(item);
+                    Label label = new Label(JsonContentExtractor.extractCommentContent(item));
                     label.setWrapText(true);
                     setGraphic(label);
                 }
@@ -175,7 +176,7 @@ public class StudentCommentController {
         vbox.setPadding(new Insets(20));
         vbox.getChildren().addAll(
             new Label("学期: " + c.getSemester()),
-            new Label(c.getContent())
+            new Label(JsonContentExtractor.extractCommentContent(c.getContent()))
         );
         dialog.getDialogPane().setContent(vbox);
         dialog.showAndWait();
