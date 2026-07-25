@@ -18,6 +18,18 @@
             <Label fx:id="valueAvgScore" styleClass="stat-card-value" text="--"/>
         </VBox>
         <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="综合 GPA"/>
+            <Label fx:id="valueGpa" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="班级排名"/>
+            <Label fx:id="valueClassRank" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+            <Label styleClass="stat-card-title" text="年级排名"/>
+            <Label fx:id="valueGradeRank" styleClass="stat-card-value" text="--"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
             <Label styleClass="stat-card-title" text="预警数量"/>
             <Label fx:id="valueWarnings" styleClass="stat-card-value" text="--"/>
         </VBox>

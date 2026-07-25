@@ -3,11 +3,16 @@ package com.campus.client.controller;
 import com.campus.client.model.ApiResponse;
 import com.campus.client.model.ClassInfo;
 import com.campus.client.model.Course;
+import com.campus.client.model.GpaRanking;
 import com.campus.client.service.ApiClient;
 import com.campus.client.service.ClassService;
 import com.campus.client.service.CourseService;
+import com.campus.client.service.StatsService;
 import com.campus.client.util.AppExecutors;
 import com.fasterxml.jackson.core.type.TypeReference;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -33,8 +38,17 @@ public class GradeAnalyticsController {
     @FXML private TableColumn<Map<String, Object>, Number> colMaxScore;
     @FXML private TableColumn<Map<String, Object>, Number> colMinScore;
     @FXML private Label noDataLabel;
+    @FXML private TableView<GpaRanking> gpaRankTable;
+    @FXML private TableColumn<GpaRanking, Number> colGpaRank;
+    @FXML private TableColumn<GpaRanking, String> colGpaStudentNo;
+    @FXML private TableColumn<GpaRanking, String> colGpaStudentName;
+    @FXML private TableColumn<GpaRanking, String> colGpaClassName;
+    @FXML private TableColumn<GpaRanking, Number> colGpaScore;
+    @FXML private TableColumn<GpaRanking, Number> colGpaCourseCount;
+    @FXML private Label noGpaDataLabel;
 
     private final ObservableList<Map<String, Object>> tableData = FXCollections.observableArrayList();
+    private final ObservableList<GpaRanking> gpaRankData = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -51,6 +65,14 @@ public class GradeAnalyticsController {
         colMinScore.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(
                 Double.parseDouble(String.valueOf(data.getValue().getOrDefault("minScore", 0)))));
         dataTable.setItems(tableData);
+
+        colGpaRank.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRank()));
+        colGpaStudentNo.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStudentNo()));
+        colGpaStudentName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStudentName()));
+        colGpaClassName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getClassName()));
+        colGpaScore.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().getGpa()));
+        colGpaCourseCount.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCourseCount()));
+        gpaRankTable.setItems(gpaRankData);
 
         loadFilters();
     }
@@ -154,6 +176,47 @@ public class GradeAnalyticsController {
             noDataLabel.setManaged(true);
             dataTable.setVisible(false);
             dataTable.setManaged(false);
+        });
+        AppExecutors.submit(task::run);
+        loadGpaRanking(finalGrade);
+    }
+
+    private void loadGpaRanking(String grade) {
+        if (grade == null || grade.isEmpty()) {
+            gpaRankData.clear();
+            noGpaDataLabel.setVisible(true);
+            noGpaDataLabel.setManaged(true);
+            gpaRankTable.setVisible(false);
+            gpaRankTable.setManaged(false);
+            return;
+        }
+        Task<List<GpaRanking>> task = new Task<>() {
+            @Override protected List<GpaRanking> call() throws Exception {
+                return StatsService.getGpaRanking(grade);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            List<GpaRanking> result = task.getValue();
+            gpaRankData.clear();
+            if (result != null && !result.isEmpty()) {
+                gpaRankData.addAll(result);
+                noGpaDataLabel.setVisible(false);
+                noGpaDataLabel.setManaged(false);
+                gpaRankTable.setVisible(true);
+                gpaRankTable.setManaged(true);
+            } else {
+                noGpaDataLabel.setVisible(true);
+                noGpaDataLabel.setManaged(true);
+                gpaRankTable.setVisible(false);
+                gpaRankTable.setManaged(false);
+            }
+        });
+        task.setOnFailed(e -> {
+            gpaRankData.clear();
+            noGpaDataLabel.setVisible(true);
+            noGpaDataLabel.setManaged(true);
+            gpaRankTable.setVisible(false);
+            gpaRankTable.setManaged(false);
         });
         AppExecutors.submit(task::run);
     }

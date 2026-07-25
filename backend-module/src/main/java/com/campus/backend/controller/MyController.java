@@ -16,6 +16,7 @@ import com.campus.backend.mapper.UserMapper;
 import com.campus.backend.service.CommentService;
 import com.campus.backend.service.DiagnosisService;
 import com.campus.backend.service.RiskWarningService;
+import com.campus.backend.service.StatsService;
 import com.campus.backend.service.SuggestionService;
 import com.campus.backend.util.SecurityHelper;
 import com.campus.common.enums.ErrorCode;
@@ -23,11 +24,14 @@ import com.campus.common.exception.BusinessException;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.CommentVO;
 import com.campus.common.vo.DiagnosisVO;
+import com.campus.common.vo.GpaRankingVO;
+import com.campus.common.vo.GradePointVO;
 import com.campus.common.vo.PageResult;
 import com.campus.common.vo.RiskWarningVO;
 import com.campus.common.vo.ScoreArchiveVO;
 import com.campus.common.vo.ScoreRadarVO;
 import com.campus.common.vo.ScoreTrendVO;
+import com.campus.common.vo.StudentGpaVO;
 import com.campus.common.vo.StudentProfileVO;
 import com.campus.common.vo.SuggestionVO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,6 +58,7 @@ public class MyController {
     private final SuggestionService suggestionService;
     private final CommentService commentService;
     private final RiskWarningService riskWarningService;
+    private final StatsService statsService;
 
     private Student resolveStudent(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -85,6 +90,37 @@ public class MyController {
         vo.setPhone(user != null ? user.getPhone() : null);
         vo.setGuardianPhone(student.getGuardianPhone());
         vo.setStatus(student.getStatus());
+        return ApiResponse.success(vo);
+    }
+
+    @GetMapping("/gpa")
+    public ApiResponse<StudentGpaVO> gpa(HttpServletRequest request) {
+        SecurityHelper.requireAnyRole(request, "STUDENT");
+        Student student = resolveStudent(request);
+        ClassInfo classInfo = student.getClassId() != null ? classMapper.selectById(student.getClassId()) : null;
+
+        StudentGpaVO vo = new StudentGpaVO();
+        if (classInfo == null) return ApiResponse.success(vo);
+
+        List<GradePointVO> classGpas = statsService.getGradePoints(student.getClassId(), null);
+        for (int i = 0; i < classGpas.size(); i++) {
+            if (classGpas.get(i).getStudentId().equals(student.getId())) {
+                vo.setClassRank(i + 1);
+                vo.setGpa(classGpas.get(i).getGpa());
+                break;
+            }
+        }
+        vo.setClassTotal(classGpas.size());
+
+        List<GpaRankingVO> gradeGpas = statsService.getGpaRanking(classInfo.getGrade());
+        for (GpaRankingVO item : gradeGpas) {
+            if (item.getStudentId().equals(student.getId())) {
+                vo.setGradeRank(item.getRank());
+                break;
+            }
+        }
+        vo.setGradeTotal(gradeGpas.size());
+
         return ApiResponse.success(vo);
     }
 

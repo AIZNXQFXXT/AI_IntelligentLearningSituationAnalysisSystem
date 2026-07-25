@@ -4,6 +4,7 @@ import com.campus.backend.service.StatsService;
 import com.campus.common.vo.ApiResponse;
 import com.campus.common.vo.ClassStatsVO;
 import com.campus.common.vo.CourseGradeVO;
+import com.campus.common.vo.GpaRankingVO;
 import com.campus.common.vo.GradePointVO;
 import com.campus.common.vo.RankingItemVO;
 import com.campus.common.vo.ScoreDistributionVO;
@@ -66,5 +67,11 @@ public class StatsController {
     public ApiResponse<List<CourseGradeVO>> getCourseGrades(
             @RequestParam Long classId) {
         return ApiResponse.success(statsService.getCourseGrades(classId));
+    }
+
+    @GetMapping("/gpa-ranking")
+    public ApiResponse<List<GpaRankingVO>> getGpaRanking(
+            @RequestParam String grade) {
+        return ApiResponse.success(statsService.getGpaRanking(grade));
     }
 }

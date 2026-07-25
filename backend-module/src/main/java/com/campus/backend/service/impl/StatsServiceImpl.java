@@ -14,6 +14,7 @@ import com.campus.backend.mapper.StudentMapper;
 import com.campus.backend.service.StatsService;
 import com.campus.common.vo.ClassStatsVO;
 import com.campus.common.vo.CourseGradeVO;
+import com.campus.common.vo.GpaRankingVO;
 import com.campus.common.vo.GradePointVO;
 import com.campus.common.vo.RankingItemVO;
 import com.campus.common.vo.ScoreDistributionVO;
@@ -320,6 +321,76 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<CourseGradeVO> getCourseGrades(Long classId) {
         return scoreMapper.selectCourseGradeStats(classId);
+    }
+
+    @Override
+    public List<GpaRankingVO> getGpaRanking(String grade) {
+        if (grade == null || grade.isEmpty()) return Collections.emptyList();
+
+        List<ClassInfo> classInfos = classMapper.selectList(
+                new LambdaQueryWrapper<ClassInfo>().eq(ClassInfo::getGrade, grade).eq(ClassInfo::getIsDeleted, 0));
+        if (classInfos.isEmpty()) return Collections.emptyList();
+        List<Long> classIds = classInfos.stream().map(ClassInfo::getId).toList();
+
+        List<Student> students = studentMapper.selectList(
+                new LambdaQueryWrapper<Student>().in(Student::getClassId, classIds).eq(Student::getStatus, 1));
+        if (students.isEmpty()) return Collections.emptyList();
+        Map<Long, Student> studentMap = students.stream()
+                .collect(Collectors.toMap(Student::getId, s -> s));
+        Map<Long, Long> studentClassIdMap = students.stream()
+                .collect(Collectors.toMap(Student::getId, Student::getClassId));
+        Map<Long, String> classNameMap = classInfos.stream()
+                .collect(Collectors.toMap(ClassInfo::getId, ClassInfo::getClassName));
+
+        List<Long> studentIds = students.stream().map(Student::getId).toList();
+        List<Score> scores = scoreMapper.selectList(
+                new LambdaQueryWrapper<Score>()
+                        .in(Score::getStudentId, studentIds)
+                        .eq(Score::getIsDeleted, 0)
+                        .isNotNull(Score::getFinalScore));
+
+        List<Long> courseIds = scores.stream().map(Score::getCourseId).distinct().toList();
+        List<Course> courses = courseMapper.selectList(
+                new LambdaQueryWrapper<Course>().in(Course::getId, courseIds));
+        Map<Long, Double> creditMap = courses.stream()
+                .collect(Collectors.toMap(Course::getId,
+                        c -> c.getCredit() == null ? 0.0 : c.getCredit()));
+
+        Map<Long, List<Score>> byStudent = scores.stream()
+                .collect(Collectors.groupingBy(Score::getStudentId));
+
+        List<GpaRankingVO> ranking = new ArrayList<>();
+        for (Map.Entry<Long, List<Score>> entry : byStudent.entrySet()) {
+            Long sid = entry.getKey();
+            Student stu = studentMap.get(sid);
+            if (stu == null) continue;
+
+            List<Double> sList = new ArrayList<>();
+            List<Double> cList = new ArrayList<>();
+            for (Score s : entry.getValue()) {
+                if (s.getFinalScore() == null) continue;
+                sList.add(s.getFinalScore().doubleValue());
+                cList.add(creditMap.getOrDefault(s.getCourseId(), 0.0));
+            }
+            if (sList.isEmpty()) continue;
+
+            double gpa = weightedGpa(sList, cList);
+            GpaRankingVO vo = new GpaRankingVO();
+            vo.setStudentId(sid);
+            vo.setStudentNo(stu.getStudentNo());
+            vo.setStudentName(stu.getName());
+            vo.setClassName(classNameMap.get(studentClassIdMap.get(sid)));
+            vo.setGpa(gpa);
+            vo.setCourseCount(sList.size());
+            ranking.add(vo);
+        }
+
+        ranking.sort((a, b) -> Double.compare(b.getGpa(), a.getGpa()));
+        int rank = 1;
+        for (GpaRankingVO vo : ranking) {
+            vo.setRank(rank++);
+        }
+        return ranking;
     }
 
     private List<Long> getStudentIdsByClass(Long classId) {

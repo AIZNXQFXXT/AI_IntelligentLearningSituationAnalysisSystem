@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.backend.converter.ScoreConverter;
+import com.campus.backend.entity.ClassInfo;
 import com.campus.backend.entity.Course;
 import com.campus.backend.entity.Score;
 import com.campus.backend.entity.ScoreCorrection;
 import com.campus.backend.entity.Student;
+import com.campus.backend.mapper.ClassMapper;
 import com.campus.backend.mapper.CourseMapper;
 import com.campus.backend.mapper.ScoreCorrectionMapper;
 import com.campus.backend.mapper.ScoreMapper;
@@ -25,7 +27,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -35,6 +41,7 @@ public class ScoreServiceImpl implements ScoreService {
     private final ScoreConverter converter;
     private final StudentMapper studentMapper;
     private final CourseMapper courseMapper;
+    private final ClassMapper classMapper;
 
     @Override
     @Transactional
@@ -90,9 +97,12 @@ public class ScoreServiceImpl implements ScoreService {
         correction.setOperatedAt(LocalDateTime.now());
         correctionMapper.insert(correction);
         // 更新成绩
+        Long examId = oldScore.getExamId();
+        Long courseId = oldScore.getCourseId();
         oldScore.setFinalScore(dto.getFinalScore());
         oldScore.setReason(dto.getReason());
         scoreMapper.updateById(oldScore);
+        updateRankings(examId, courseId);
         return oldScore;
     }
 
@@ -142,14 +152,59 @@ public class ScoreServiceImpl implements ScoreService {
     }
 
     private void updateRankings(Long examId, Long courseId) {
-        // 计算该考试该课程的所有学生排名
         List<Score> scores = scoreMapper.selectList(new LambdaQueryWrapper<Score>()
                 .eq(Score::getExamId, examId)
                 .eq(Score::getCourseId, courseId)
+                .eq(Score::getIsDeleted, 0)
                 .orderByDesc(Score::getFinalScore));
-        int rank = 1;
+        if (scores.isEmpty()) return;
+
+        List<Long> studentIds = scores.stream().map(Score::getStudentId).toList();
+        List<Student> students = studentMapper.selectList(
+                new LambdaQueryWrapper<Student>().in(Student::getId, studentIds).eq(Student::getIsDeleted, 0));
+        Map<Long, Long> studentClassMap = students.stream()
+                .collect(Collectors.toMap(Student::getId, Student::getClassId));
+
+        List<Long> classIds = students.stream().map(Student::getClassId).distinct().toList();
+        List<ClassInfo> classInfos = classMapper.selectList(
+                new LambdaQueryWrapper<ClassInfo>().in(ClassInfo::getId, classIds).eq(ClassInfo::getIsDeleted, 0));
+        Map<Long, String> classGradeMap = classInfos.stream()
+                .collect(Collectors.toMap(ClassInfo::getId, ClassInfo::getGrade));
+
         for (Score s : scores) {
-            s.setRankClass(rank++);
+            s.setRankClass(null);
+            s.setRankGrade(null);
+        }
+
+        Map<Long, List<Score>> byClass = new LinkedHashMap<>();
+        for (Score s : scores) {
+            Long cid = studentClassMap.get(s.getStudentId());
+            if (cid == null) continue;
+            byClass.computeIfAbsent(cid, k -> new ArrayList<>()).add(s);
+        }
+        for (List<Score> classScores : byClass.values()) {
+            int rank = 1;
+            for (Score s : classScores) {
+                s.setRankClass(rank++);
+            }
+        }
+
+        Map<String, List<Score>> byGrade = new LinkedHashMap<>();
+        for (Score s : scores) {
+            Long cid = studentClassMap.get(s.getStudentId());
+            if (cid == null) continue;
+            String grade = classGradeMap.get(cid);
+            if (grade == null) continue;
+            byGrade.computeIfAbsent(grade, k -> new ArrayList<>()).add(s);
+        }
+        for (List<Score> gradeScores : byGrade.values()) {
+            int rank = 1;
+            for (Score s : gradeScores) {
+                s.setRankGrade(rank++);
+            }
+        }
+
+        for (Score s : scores) {
             scoreMapper.updateById(s);
         }
     }

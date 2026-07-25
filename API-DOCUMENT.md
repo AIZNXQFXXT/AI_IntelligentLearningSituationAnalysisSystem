@@ -262,12 +262,15 @@ Headers: `Authorization: Bearer {accessToken}`
 | GET | `/api/stats/trend` | 趋势，?classId, courseId |
 | GET | `/api/stats/grade-points` | 学生绩点（GPA），?classId（必填）, courseId（可选）→ GradePointVO[] |
 | GET | `/api/stats/course-grades` | 课程成绩统计（平均/最高/最低），?classId（必填）→ CourseGradeVO[] |
+| GET | `/api/stats/gpa-ranking` | 年级 GPA 排名，?grade（必填）→ GpaRankingVO[] |
 
 **ClassStatsVO：** classId, className, courseName, totalStudents, scoredStudents, avgScore, passRate, maxScore, minScore, medianScore, excellentCount, goodCount, mediumCount, passCount, failCount
 
 **ScoreDistributionVO：** `[{"rangeLabel":"90-100","count":10,"percentage":20.0}]`
 
 **RankingItemVO：** `[{"rank":1,"studentId":1,"studentNo":"2024001","studentName":"张三","classId":1,"className":"计算机一班","finalScore":98.0}]`
+
+**GpaRankingVO：** `[{"rank":1,"studentId":1,"studentNo":"2024001","studentName":"张三","className":"计算机一班","gpa":4.25,"courseCount":6}]`
 
 **TrendItemVO：** `[{"semester":"2024-2025-1","studentCount":48,"avgScore":78.5,"passRate":85.0,"maxScore":98.0,"minScore":35.0}]`
 
@@ -307,6 +310,7 @@ Headers: `Authorization: Bearer {accessToken}`
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
+| GET | `/api/my/gpa` | 我的综合 GPA 及排名 → StudentGpaVO（gpa, classRank, classTotal, gradeRank, gradeTotal） |
 | GET | `/api/my/profile` | 个人信息 → StudentProfileVO |
 | GET | `/api/my/courses` | 我的课程，?semester → Course[] |
 | GET | `/api/my/scores` | 我的成绩分页，?semester |
@@ -438,4 +442,4 @@ Headers: `Authorization: Bearer {accessToken}`
 
 ---
 
-**接口总数：93 | 文档版本 1.0**
+**接口总数：95 | 文档版本 1.2**

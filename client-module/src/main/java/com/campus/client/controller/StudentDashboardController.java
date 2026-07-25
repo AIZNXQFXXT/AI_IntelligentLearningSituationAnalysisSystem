@@ -3,8 +3,10 @@ package com.campus.client.controller;
 import com.campus.client.model.PageResult;
 import com.campus.client.model.RiskWarning;
 import com.campus.client.model.Score;
+import com.campus.client.model.StudentGpa;
 import com.campus.client.service.RiskWarningService;
 import com.campus.client.service.ScoreService;
+import com.campus.client.service.StatsService;
 import com.campus.client.session.UserSession;
 import com.campus.client.util.AppExecutors;
 import com.campus.client.util.CrudHelper;
@@ -21,6 +23,9 @@ import java.util.List;
 public class StudentDashboardController {
 
     @FXML private Label valueAvgScore;
+    @FXML private Label valueGpa;
+    @FXML private Label valueClassRank;
+    @FXML private Label valueGradeRank;
     @FXML private Label valueWarnings;
     @FXML private Label valueUsername;
     @FXML private TableView<Score> scoreTable;
@@ -64,6 +69,7 @@ public class StudentDashboardController {
             protected Void call() throws Exception {
                 PageResult<Score> scoreRes = ScoreService.getMyScores(1, 5);
                 List<RiskWarning> warnings = RiskWarningService.getMyWarnings();
+                StudentGpa gpa = StatsService.getMyGpa();
 
                 Platform.runLater(() -> {
                     List<Score> scores = scoreRes.getRecords().size() > 5
@@ -82,11 +88,20 @@ public class StudentDashboardController {
                         valueAvgScore.setText(String.format("%.1f", avg));
                     }
 
+                    if (gpa != null && gpa.getGpa() != null) {
+                        valueGpa.setText(String.format("%.2f", gpa.getGpa()));
+                        valueClassRank.setText(gpa.getClassRank() + "/" + gpa.getClassTotal());
+                        valueGradeRank.setText(gpa.getGradeRank() + "/" + gpa.getGradeTotal());
+                    } else {
+                        valueGpa.setText("--");
+                        valueClassRank.setText("--");
+                        valueGradeRank.setText("--");
+                    }
+
                     List<RiskWarning> recentWarnings = warnings.size() > 5
                             ? warnings.subList(0, 5)
                             : warnings;
                     warningData.addAll(recentWarnings);
-                    // 预警数量只统计中风险(MEDIUM)和高风险(HIGH/CRITICAL)
                     long effectiveWarnings = warnings.stream()
                             .filter(w -> {
                                 String lvl = w.getRiskLevel();

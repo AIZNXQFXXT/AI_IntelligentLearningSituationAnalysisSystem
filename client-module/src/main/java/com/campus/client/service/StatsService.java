@@ -2,11 +2,13 @@ package com.campus.client.service;
 
 import com.campus.client.model.ApiResponse;
 import com.campus.client.model.CourseGrade;
+import com.campus.client.model.GpaRanking;
 import com.campus.client.model.GradePoint;
 import com.campus.client.model.ScoreDistribution;
 import com.campus.client.model.SchoolOverview;
 import com.campus.client.model.SchoolOverviewVO;
 import com.campus.client.model.SchoolStats;
+import com.campus.client.model.StudentGpa;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
@@ -51,6 +53,15 @@ public class StatsService {
     public static List<CourseGrade> getCourseGrades(int classId) throws Exception {
         return ApiClient.get("/stats/course-grades?classId=" + classId,
                 new TypeReference<ApiResponse<List<CourseGrade>>>() {});
+    }
+
+    public static List<GpaRanking> getGpaRanking(String grade) throws Exception {
+        return ApiClient.get("/stats/gpa-ranking?grade=" + ApiClient.encodeParam(grade),
+                new TypeReference<ApiResponse<List<GpaRanking>>>() {});
+    }
+
+    public static StudentGpa getMyGpa() throws Exception {
+        return ApiClient.get("/my/gpa", new TypeReference<ApiResponse<StudentGpa>>() {});
     }
 
     @SuppressWarnings("unchecked")
