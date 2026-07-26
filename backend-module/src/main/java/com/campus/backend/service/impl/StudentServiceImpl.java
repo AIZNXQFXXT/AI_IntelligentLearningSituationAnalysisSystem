@@ -69,7 +69,7 @@ public class StudentServiceImpl implements StudentService {
             existing.setGuardianPhone(dto.getGuardianPhone());
             existing.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
             existing.setUpdatedAt(LocalDateTime.now());
-            studentMapper.updateById(existing);
+            studentMapper.recoverByStudentNo(existing.getStudentNo());
 
             // 恢复关联的 User（如果也处于软删除状态）
             String username = dto.getUsername() != null ? dto.getUsername() : dto.getStudentNo();
