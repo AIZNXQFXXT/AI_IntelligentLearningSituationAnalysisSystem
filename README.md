@@ -1,271 +1,241 @@
-# AI 智能校园学情分析系统
+# AI 智能校园学情分析系统（AI Campus）
 
-> 版本：v1.0
-> 日期：2026-07-09
-> 产品形态：C/S 架构桌面应用（JavaFX 客户端 + Spring Boot 后端）
-> 运行环境：Windows 本地 PC
+基于 **JavaFX 桌面客户端 + Spring Boot 后端** 的 C/S 架构学业分析平台。面向**管理员 / 教师 / 学生**三种角色，覆盖基础数据管理、成绩管理、学情统计与 AI 智能学情诊断（诊断报告、评语生成、学习建议、风险预警）。
 
----
+> 项目背景与完整需求见 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)。
 
-## 1. 背景与目标
+## 功能特性
 
-### 1.1 背景
+### 基础数据管理（管理员）
+- 学生 / 教师 / 课程 / 班级 / 考试批次 / 教学任务（教师-班级-课程绑定）的增删改查
+- 学生、教师 Excel 批量导入（异步任务 + 进度轮询）与导出
+- 班主任绑定、选修改（ELECTIVE / REQUIRED / MAJOR）等课程类型管理
 
-当前高校教学管理中，学情分析主要依赖人工统计 Excel，存在以下痛点：
+### 成绩管理（教师 / 管理员）
+- 成绩录入、提交审核、归档；修改全程留痕（成绩修改审计）
+- Excel 批量导入：异步执行，前端实时展示导入进度与结果
+- 缺考、违纪标记，平时分 / 考试分 / 总评分分开管理
 
-- **数据分散**：学生成绩、排名、异常数据散布在不同表格，无法集中查看
-- **分析滞后**：缺乏实时统计分析能力，学情问题（挂科、成绩下滑）难以及时发现
-- **评语模板化**：期末评语编写工作量大，容易出现千篇一律、缺乏针对性
-- **诊断缺失**：教师难以从单一分数中快速定位学生薄弱学科和具体问题
+### 学情统计
+- 班级统计、年级分析、学科分析、排名（班级 / 年级）、成绩趋势与分数段分布
+- GPA 计算：分段绩点（90-100 → 4.0-5.0、80-89 → 3.0-3.9 …），加权 GPA = Σ(绩点×学分) ÷ Σ学分
 
-### 1.2 目标
+### AI 智能
+- **学情诊断**： strengths / weaknesses / 趋势分析 / 风险等级
+- **评语生成**： AI 生成 + 版本管理，支持教师改写
+- **学习建议**： 短期 / 长期目标、每日计划、学习资源推荐
+- **风险预警**： 风险等级评定、原因分析、处理闭环（处理人 + 处理备注）
 
-构建一套面向高校的**学情分析管理系统**，以 Java 桌面应用形式部署在本地 PC，实现：
+### 系统管理（管理员）
+- 操作日志、AI 调用日志（模型、Token 用量、耗时、成本）审计
+- 动态系统配置、数据字典、异步任务状态查询
 
-1. 教务数据（班级/教师/学生/课程/成绩）的集中统一管理
-2. 成绩的全生命周期管理（录入 → 审核 → 归档）
-3. 多维度统计可视化（班级平均分、分数分布、排名、学期趋势）
-4. **AI 智能学情分析**：对学生成绩进行深度诊断、风险预警、个性化建议
-5. 学生端自助查询功能
+### 角色 / 认证
+- 三种角色：`ADMIN` / `TEACHER` / `STUDENT`，接口级 RBAC 校验
+- JWT 双 Token：access 2 小时 + refresh 7 天，自动续期
 
-### 1.3 核心指标
+## 技术栈
 
-| 指标 | 目标 |
+| 层次 | 技术 |
 |------|------|
-| 单条成绩录入 | ≤ 3 秒 |
-| Excel 批量导入（500 条） | ≤ 10 秒 |
-| AI 单生诊断响应 | ≤ 30 秒 |
-| 并发用户 | 单机 1 人使用 |
-| 数据安全 | 操作全程留痕，成绩修改可追溯 |
+| 语言 | Java 17 |
+| 后端 | Spring Boot 3.2、Spring AOP、spring-security-crypto（BCrypt） |
+| ORM | MyBatis-Plus 3.5.5（逻辑删除、字段自动填充） |
+| 数据库 / 缓存 | PostgreSQL、Redis（Lettuce） |
+| 认证 | JJWT 0.12.3（access + refresh 双 Token） |
+| AI 接入 | OkHttp 4.12（DeepSeek / GLM / Qianfan / 本地 Mock 四种 Provider） |
+| Excel | EasyExcel 4.0.3（后端解析导入）、Apache POI 5.2.5（客户端导出） |
+| 客户端 | JavaFX 17（FXML + CSS）、Jackson 2.16 |
 
----
+## 系统架构
 
-## 2. 产品定义
-
-### 2.1 用户角色
-
-| 角色 | 描述 |
-|------|------|
-| **管理员（admin）** | 教务管理人员，负责全校基础数据配置与监督 |
-| **教师（teacher）** | 授课/班主任教师，负责所带班级的成绩管理与分析 |
-| **学生（student）** | 在校学生，可查看个人成绩与 AI 诊断报告 |
-
-### 2.2 核心业务流程
+Maven 多模块工程：
 
 ```
-管理员录入基础数据（班级/教师/学生/课程/考试）
-    ↓
-管理员分配教学任务（哪个教师教哪个班哪门课）
-    ↓
-教师录入或导入学生成绩
-    ↓
-教师查看班级统计 → AI 分析 → 生成诊断报告 & 评语 & 预警
-    ↓
-学生端：查询成绩 → 查看诊断报告 → 查看评语
+┌─────────────────┐   HTTP(OkHttp + JWT)   ┌──────────────────────────┐
+│  client-module   │ ─────────────────────► │      backend-module       │
+│  JavaFX 桌面端    │ ◄───────────────────── │  Spring Boot REST :8080   │
+│  35 个 FXML 视图  │    JSON(ApiResponse)   │  controller→service→mapper│
+└─────────────────┘                        └───────────┬──────────────┘
+        ▲                                              │
+        │ 共享 DTO/VO/枚举/Excel 行模型                    │ MyBatis-Plus / Lettuce
+        └────────────── common-module ─────────────────┘
+                                                    ┌────┴────┐
+                                                    │PostgreSQL│  Redis
+                                                    └─────────┘
 ```
 
----
+- **common-module**：前后端共享的 DTO、VO、枚举（`ErrorCode`、`RoleEnum`）、统一响应（`ApiResponse`、`PageResult`）、校验分组、AI Prompt 模板、Excel 行模型。
+- **backend-module**：REST API（23 个 Controller、21 个 Service、21 个 Mapper）、JWT 认证拦截器、AOP 操作日志、异步导入任务、AI Provider 抽象（三段式重试：主 Provider 退避重试 → 连接超时轮询其他 Provider → 最终降级 `LocalMockProvider`）。
+- **client-module**：JavaFX 桌面端，35 个 FXML 视图、35 个控制器、17 个服务，按角色展示不同工作台。
 
-## 3. 功能需求
+## 环境要求
 
-### 3.1 基础通用功能
+| 依赖 | 版本 | 说明 |
+|------|------|------|
+| JDK | 17+ | 前后端共用 |
+| Maven | 3.6+ | |
+| PostgreSQL | 14+ | 数据库名 `ai_campus` |
+| Redis | 7+ | 未启动时应用仍可运行（懒连接），限流等功能降级 |
+| 操作系统 | Windows | 客户端硬编码 `javafx.platform=win` |
 
-| 功能 | 说明 |
-|------|------|
-| F1. 账号登录 | 账号密码 + JWT Token 登录态管理，密码 BCrypt 加密 |
-| F2. 角色区分 | ADMIN/TEACHER/STUDENT 三角色，登录后自动跳转对应工作台 |
-| F3. 个人信息 | 修改头像、手机号、密码 |
-| F4. 接口权限 | 角色级和数据级双重权限校验 |
+## 快速开始
 
-### 3.2 管理员功能
+### 1. 初始化数据库
 
-| 功能 | 说明 |
-|------|------|
-| F5. 班级管理 | 新增/编辑/删除班级，绑定班主任；分页模糊查询 |
-| F6. 教师管理 | 增删改查 + Excel 批量导入 |
-| F7. 学生管理 | 增删改查 + Excel 批量导入 + 休学/退学标记 |
-| F8. 课程管理 | 增删改 + 课程分类（选修/必修/专业） |
-| F9. 考试批次管理 | 创建/编辑/删除月考/期中/期末/补考 |
-| F10. 教学任务分配 | 教师-班级-课程-学期 4 维关联分配 |
-| F11. 全校学情总览 | 全校平均分/及格率/挂科人数汇总 |
-| F12. 系统配置 | AI Token 限额、学期参数等动态配置 |
-| F13. 数据字典 | 字典项管理（评语语气、风险等级等）|
-| F14. 操作日志 | 全局操作日志检索 |
-| F15. AI 调用日志 | AI 调用频率/Token 消耗/费用/失败率监控 |
+创建 `ai_campus` 数据库后，执行初始化脚本：
 
-### 3.3 教师功能
+```bash
+psql -U postgres -d ai_campus -f backend-module/src/main/resources/db/init.sql
+```
 
-| 功能 | 说明 |
-|------|------|
-| F16. 本班学生 | 查看本班学生花名册，学生 360 度画像 |
-| F17. 成绩录入 | 单条录入，选中学生+课程+考试，填写分数 |
-| F18. 批量导入 | 下载模板 → Excel 填写 → 上传批量导入 |
-| F19. 成绩修改 | 修改已录入成绩，自动记录修改日志（需填写原因）|
-| F20. 成绩查询 | 按学期/课程/分数区间筛选分页查看 |
-| F21. 班级统计 | 平均分/最高/最低/及格率/优秀率/分数分布/排名 |
-| F22. 多学期对比 | 近 3 学期平均分升降趋势 |
-| F23. AI 学情诊断 | 选中学生 → 拉取历史成绩 → AI 生成诊断报告 |
-| F24. AI 批量评语 | 全班勾选 → AI 批量生成个性化评语 → 教师可手动修改 |
-| F25. 学业风险预警 | Java 初筛 + AI 综合评估 → 高风险/中风险/低风险 |
-| F26. 报表导出 | Excel：成绩表/评语汇总/高风险清单/统计报表 |
+### 2. 配置 `.env`
 
-### 3.4 学生功能
+在项目根目录创建 `.env`（`application.yml` 通过 `spring.config.import` 自动加载）：
 
-| 功能 | 说明 |
-|------|------|
-| F27. 成绩查询 | 按学期查看各科成绩 + 班级排名 |
-| F28. 成绩趋势 | 多学期折线图趋势 |
-| F29. 能力雷达图 | 各科能力分布可视化 |
-| F30. AI 诊断报告 | 查看系统生成专属学情分析 |
-| F31. AI 学习建议 | 查看针对性学习提升方案 |
-| F32. 期末评语 | 查看/回溯多学期教师评语 |
-| F33. 学业预警 | 查看个人预警及教师跟进建议 |
+| 环境变量 | 必填 | 说明 |
+|----------|:----:|------|
+| `DB_URL` | ✅ | PostgreSQL 地址，如 `localhost:5432` |
+| `DB_USERNAME` | ✅ | 数据库用户名 |
+| `DB_PASSWORD` | ✅ | 数据库密码 |
+| `REDIS_URL` | ✅ | Redis 地址，如 `localhost` |
+| `REDIS_PORT` | ✅ | Redis 端口，如 `6379` |
+| `REDIS_PASSWORD` | — | Redis 密码（无密码则留空） |
+| `JWT_SECRET` | ✅ | JWT 签名密钥 |
+| `DEEPSEEK_API_KEY` | — | DeepSeek，AI 功能可选 |
+| `GLM_API_KEY` | — | 智谱 GLM，AI 功能可选 |
+| `QIANFAN_API_KEY` | — | Qianfan / OpenAI 兼容接口，AI 功能可选 |
 
----
+### 3. 启动
 
-## 4. 非功能需求
+**一键启动（Windows）**：
 
-### 4.1 安全需求
+```bat
+start.bat
+```
 
-- 密码 BCrypt 加密存储
-- 敏感操作（修改成绩/冻结账号）必须记录操作人、时间、原因
-- 所有数据采用逻辑删除（`is_deleted`），禁止物理删除
-- 监护人手机号等个人信息 API 返回层脱敏
+脚本自动完成：安装 common-module → 后台启动后端（日志写入 `backend.log`）→ 轮询 `http://localhost:8080/api/health` 直至就绪 → 启动 JavaFX 客户端；退出时自动清理 8080 端口进程。
 
-### 4.2 性能需求
+**手动启动**：
 
-- 接口响应时间：简单查询 < 500ms，统计计算 < 3s
-- AI 调用（含网络请求）< 30s
-- 支持同时缓存常用数据（Redis 加速）
+```bash
+# 1. 安装共享模块（common-module 有改动后必须重新执行）
+mvn install -DskipTests -pl common-module -am
 
-### 4.3 可用性需求
+# 2. 启动后端（:8080）
+mvn spring-boot:run -pl backend-module
 
-- 主窗口导航清晰，分角色侧边栏菜单
-- 批量操作提供进度条/弹窗提示
-- 操作失败给出明确错误信息及引导
+# 3. 另开终端，启动客户端
+mvn javafx:run -pl client-module
+```
 
----
+### 4. 登录
 
-## 5. 数据对象定义
+默认管理员账号：**`admin` / `123456`**
 
-| 数据对象 | 说明 |
+## AI 能力配置
+
+后端通过 `campus.ai.provider` 切换 AI 服务，四种 Provider 均已注册：
+
+| Provider | 说明 |
 |----------|------|
-| 系统用户 | 账号/密码/角色/状态 |
-| 教师档案 | 工号/姓名/职称/学科/学历 |
-| 学生档案 | 学号/姓名/班级/入学年份/状态 |
-| 班级 | 年级/名称/班主任 |
-| 课程 | 名称/类型(选修/必修/专业)/学分/状态 |
-| 考试批次 | 名称/类型(月考/期中/期末/补考)/学期/日期 |
-| 成绩 | 学生/考试/课程/平时分/卷面分/最终分/排名 |
-| 成绩修改记录 | 原分数/新分数/原因/操作人/时间 |
-| 教学任务 | 教师/班级/课程/学期 |
-| AI 诊断记录 | 诊断报告/优势/薄弱/趋势/风险等级 |
-| 评语 | 内容/版本/教师修改标记 |
-| 风险预警 | 等级/原因/处理状态/处理备注 |
-| 知识点 | 树形结构/科目 |
-| 异步任务 | 类型/进度/状态/结果 |
+| `qianfan` | 默认值，兼容 OpenAI 接口协议 |
+| `deepseek` | DeepSeek（`deepseek-chat`） |
+| `glm4` | 智谱 GLM |
+| `localmock` | 本地 Mock，无需任何 API Key |
 
----
+每个 Provider 独立配置 `api-key` / `base-url` / `model`，另有每日调用限额（`daily-limit`）、连接 / 读取超时与最大重试次数。
 
-## 6. 用户界面概览
+**无 API Key 也能完整运行**：`AiServiceFactory` 在主 Provider 调用失败（含连接超时）时会依次尝试其他真实 Provider，最终降级到 `LocalMockProvider` 返回模拟结果，AI 相关功能不会阻塞系统。
 
-### 6.1 主窗口结构
-
-桌面应用采用**单窗口 + 侧边栏导航**布局：
+## 项目结构
 
 ```
-┌──────────────────────────────────────────────────────┐
-│  顶部栏：[角色头像] 用户信息 | 当前页面标题 | 退出    │
-├──────────┬───────────────────────────────────────────┤
-│ 侧边栏   │  主要内容区域                              │
-│          │                                            │
-│ 根据角色 │  根据左侧菜单动态切换页面                   │
-│ 动态渲染 │                                            │
-│          │                                            │
-│ 菜单项   │  - 表格展示/表单输入/统计图表               │
-│          │  - AI 诊断报告展示                         │
-└──────────┴───────────────────────────────────────────┘
+ai-campus-system
+├── common-module/                 # 共享 DTO/VO/枚举/校验/Prompt 模板/Excel 行模型
+├── backend-module/                # Spring Boot REST API (:8080)
+│   └── src/main/
+│       ├── java/com/campus/backend/
+│       │   ├── controller/        # 23 个 Controller
+│       │   ├── service/impl/      # 业务实现（统计、GPA、AI 编排）
+│       │   ├── mapper/            # MyBatis-Plus BaseMapper
+│       │   ├── entity/            # 20 个业务实体 + BaseEntity
+│       │   ├── ai/                # AI Provider 抽象与工厂
+│       │   ├── async/             # 异步导入/批处理任务
+│       │   ├── security/          # JWT、限流拦截器
+│       │   └── config/            # 全局异常、MyBatis-Plus、异步配置
+│       └── resources/
+│           ├── application.yml
+│           └── db/init.sql        # 数据库初始化脚本
+├── client-module/                 # JavaFX 桌面客户端
+│   └── src/main/resources/
+│       ├── fxml/                  # 35 个视图
+│       └── css/styles.css
+├── docs/
+│   └── REQUIREMENTS.md            # 需求规格说明书（v1.0）
+├── API-DOCUMENT.md                # API 文档：21 组 / 约 99 个端点
+├── AGENTS.md                      # 开发规范与架构约定
+└── start.bat                      # Windows 一键启动脚本
 ```
 
-### 6.2 角色菜单结构
+## API 文档
 
-**管理员侧边栏：**
-```
-📊 控制台
-📦 班级管理
-👨‍🏫 教师管理
-👩‍🎓 学生管理
-📚 课程管理
-📝 考试批次
-📋 教学任务
-📈 全校学情
-⚙️ 系统配置
-📜 操作日志
-🤖 AI 调用日志
-```
+完整接口说明（请求方法、路径、参数、权限）见 [API-DOCUMENT.md](API-DOCUMENT.md)，共 21 组、约 99 个端点，覆盖认证、用户、学生、教师、课程、班级、考试、成绩、教学任务、统计、工作台、AI 诊断 / 评语 / 建议、风险预警、Excel 报表、异步任务、日志与系统配置。
 
-**教师侧边栏：**
-```
-📊 控制台
-👥 本班学生
-📝 成绩录入
-📂 批量导入
-📊 班级统计
-🤖 AI 诊断
-✍️ 评语管理
-⚠️ 风险预警
-📄 报表导出
+统一约定：
+
+- 所有响应为 HTTP 200 + `ApiResponse` 包装，业务错误通过错误码区分（`GlobalExceptionHandler`）
+- 分页返回 `PageResult`（records / total / page / size）
+- JWT 通过请求头携带，登录 / 刷新 / 健康检查接口豁免
+
+## 测试
+
+```bash
+# 全部后端测试
+mvn test -pl backend-module -am
+
+# 单个测试类
+mvn test -pl backend-module -am -Dtest=StatsControllerTest
 ```
 
-**学生侧边栏：**
+测试基于 `MockMvcBuilders.standaloneSetup()` + `GlobalExceptionHandler` + `LocalValidatorFactoryBean`，不依赖真实数据库。
+
+## 常见问题
+
+<details>
+<summary><b>Redis 未启动会影响运行吗？</b></summary>
+
+不会。Redis 客户端为懒连接，后端可正常启动；仅限流、缓存等相关功能在调用时降级。
+</details>
+
+<details>
+<summary><b>为什么改了 common-module 后端不生效？</b></summary>
+
+backend / client 依赖本地仓库中的 common-module 构件，改动后必须重新执行：
+
+```bash
+mvn install -DskipTests -pl common-module -am
 ```
-📊 控制台
-📝 成绩查询
-📈 成绩分析
-📋 诊断报告
-💡 学习建议
-✉️ 期末评语
-⚠️ 我的预警
+</details>
+
+<details>
+<summary><b>Linux / macOS 能运行客户端吗？</b></summary>
+
+client-module 硬编码了 `javafx.platform=win`，非 Windows 环境需覆盖该属性：
+
+```bash
+mvn javafx:run -pl client-module -Djavafx.platform=linux
 ```
+</details>
 
----
+<details>
+<summary><b>8080 端口被占用？</b></summary>
 
-## 7. 约束与前提
+`start.bat` 退出时会自动清理 8080 端口进程；手动启动时可修改 `application.yml` 中的 `server.port`。
+</details>
 
-### 7.1 技术约束
+## 相关文档
 
-- 桌面应用：Java 17+，JavaFX，基于 FXML 布局
-- 后端服务：Java 17+，Spring Boot 3.x，MyBatis-Plus，PostgreSQL（WSL 部署）
-- 缓存中间件：Redis（WSL 部署）
-- 构建工具：Maven 3.8+
-- AI 大模型：DeepSeek API（云端调用）
-- 通信方式：REST API，JSON 格式
-
-### 7.2 前提条件
-
-- 运行环境需安装 JDK 17+
-- 后端需连接 WSL 中的 PostgreSQL 和 Redis（已就绪）
-- AI 功能需要联网，且需配置 DeepSeek API Key
-- 无 AI 功能时系统仍可正常运行（Mock 模式）
-
----
-
-## 8. 功能优先级矩阵
-
-| 优先级 | 功能 |
-|--------|------|
-| **P0（必须）** | 登录、班级/教师/学生/课程 CRUD、成绩录入/批量导入/修改/查询 |
-| **P1（重要）** | 班级统计、成绩排名、AI 诊断、AI 评语、操作日志 |
-| **P2（增强）** | 风险预警、多学期对比、全校学情总览、学生端诊断查看 |
-| **P3（锦上添花）** | 成绩趋势图、能力雷达图、系统配置、数据字典、AI 调用监控 |
-
----
-
-## 9. 版本规划
-
-| 版本 | 阶段 | 功能范围 | 预期时间 |
-|------|------|----------|----------|
-| v0.5 | 基础设施 | 项目骨架 + 登录 + 基础 CRUD | 阶段一 |
-| v1.0 | MVP | 成绩管理 + 班级统计 + AI 诊断 | 阶段二~四 |
-| v1.5 | 增强 | 风险预警 + 学生端 + 报表导出 | 阶段五 |
-| v2.0 | 完善 | 效率工具 + 监控 + 部署打包 | 阶段六 |
+- [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — 需求规格说明书（功能需求 F1–F33、优先级矩阵、版本路线）
+- [API-DOCUMENT.md](API-DOCUMENT.md) — REST API 文档
+- [AGENTS.md](AGENTS.md) — 开发规范：分层约定、已知陷阱、构建命令
